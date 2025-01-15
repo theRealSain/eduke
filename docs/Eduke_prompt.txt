@@ -1,0 +1,150 @@
+I am working on a web-based system named Eduke, which is designed for academic performance prediction and management. The system will be used by three main types of users: students, teachers, and parents.
+
+Users and Their Tasks:
+
+Students:
+View attendance, marks, and performance evaluations.
+Receive personalized study tips from the chatbot.
+Interact with teachers via the chat feature.
+
+Parents:
+View their child’s attendance, marks, and evaluation data.
+Fill out evaluation metrics (e.g., study time, sleep time).
+Interact with teachers via the chat feature.
+Provide a "Parent Rating" for the child as a percentage.
+
+Teachers:
+Manage attendance for their classes.
+Enter marks and performance evaluations for students.
+Fill teacher-specific evaluation metrics (e.g., class participation, homework completion).
+Provide a "Teacher Rating" for each student as a percentage.
+Interact with students and parents via the chat feature.
+
+Admins:
+Create and manage user accounts (students, parents, and teachers).
+Assign classes and subjects to teachers and students.
+Monitor system usage and reports.
+
+
+Additional Notes:
+
+Chatbot Integration:
+The chatbot fetches data from the database to respond to user queries.
+It recognizes the user role (student, teacher, parent) and tailors its responses accordingly.
+It offers study tips and suggestions for improving attendance, grades, and overall performance.
+
+Role-Specific UI:
+Students, parents, and teachers see dashboards tailored to their roles with features like chat, attendance, marks, and evaluation data.
+
+Machine Learning:
+The system uses historical data (attendance, marks, evaluations) to predict student performance and provide actionable insights.
+The Eduke system is designed to streamline academic processes, provide insightful predictions, and foster collaboration among students, parents, and teachers.
+
+
+Database Design:
+
+Users table:
+CREATE TABLE users (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    name VARCHAR(255) NOT NULL,
+    role ENUM('admin', 'teacher', 'student', 'parent') NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+Student table:
+CREATE TABLE students (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL,                -- Foreign key to users table
+    roll_number BIGINT NOT NULL UNIQUE,     -- Student roll number (used for parent login)
+    class_id BIGINT NOT NULL,               -- Foreign key to classes table
+    password VARCHAR(255) NOT NULL,         -- Student login password
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (class_id) REFERENCES classes(id) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+Parents table:
+CREATE TABLE parents (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL,                 -- Foreign key to users table
+    student_roll_no BIGINT NOT NULL,         -- Link to a specific student's roll number
+    password VARCHAR(255) NOT NULL,          -- Parent login password (same as student roll number by default)
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (student_roll_no) REFERENCES students(roll_number) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+Teachers table:
+CREATE TABLE teachers (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL,                 -- Foreign key to users table
+    class_id BIGINT NOT NULL,                -- Foreign key to classes table
+    password VARCHAR(255) NOT NULL,          -- Teacher login password
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (class_id) REFERENCES classes(id) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+Classes table:
+CREATE TABLE classes (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL UNIQUE,       -- Name of the class (e.g., Class 10A)
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+Subject table:
+CREATE TABLE subjects (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,   -- Subject name (e.g., Mathematics)
+    subject_id VARCHAR(50) NOT NULL UNIQUE,  -- Unique subject code (e.g., MATH101)
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+Attendance table:
+CREATE TABLE attendance (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    student_id BIGINT NOT NULL,             -- Foreign key to students table
+    subject_id BIGINT NOT NULL,             -- Foreign key to subjects table
+    attendance_date DATE NOT NULL,          -- Date of attendance
+    status ENUM('present', 'absent') NOT NULL,
+    FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (subject_id) REFERENCES subjects(id) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+Marks table:
+CREATE TABLE marks (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    student_id BIGINT NOT NULL,             -- Foreign key to students table
+    subject_id BIGINT NOT NULL,             -- Foreign key to subjects table
+    mark_percentage DECIMAL(5, 2) NOT NULL, -- Percentage of marks obtained by the student
+    FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (subject_id) REFERENCES subjects(id) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+Student Evaluation table:
+CREATE TABLE student_evaluations (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    student_id BIGINT NOT NULL UNIQUE,      -- Foreign key to students table (one evaluation per student)
+    study_time_rating INT,                  -- Study time rating (1–5 stars, by parent)
+    sleep_time_rating INT,                  -- Sleep time rating (1–5 stars, by parent)
+    stress_handling_rating INT,             -- Stress handling rating (1–5 stars, by parent)
+    homework_completion_rating INT,         -- Homework completion rating (1–5 stars, by teacher)
+    class_participation_rating INT,         -- Class participation rating (1–5 stars, by teacher)
+    focus_rating INT,                       -- Focus rating during class/study (1–5 stars, by teacher)
+    test_preparation_rating INT,            -- Test preparation rating (1–5 stars, by teacher)
+    class_difficulty_rating INT,            -- Class difficulty rating (1–5 stars, by teacher)
+    parent_rating INT,                      -- Parent's overall rating (1–5 stars)
+    teacher_rating INT,                     -- Teacher's overall rating (1–5 stars)
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+Chat table:
+CREATE TABLE chat (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    message TEXT NOT NULL,                  -- Message content
+    sender_id BIGINT NOT NULL,              -- User ID of the sender
+    receiver_id BIGINT NOT NULL,            -- User ID of the receiver
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (receiver_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
