@@ -12,6 +12,10 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 import os
+import pymysql
+
+pymysql.install_as_MySQLdb()
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -32,21 +36,20 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
     'django.contrib.contenttypes',
+    'django.contrib.auth',
     'django.contrib.sessions',
-    'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.messages',
     'main',
 ]
 
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',  # Remove if sessions are not used
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -56,7 +59,7 @@ ROOT_URLCONF = 'eduke.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -77,10 +80,16 @@ WSGI_APPLICATION = 'eduke.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',  # Backend for MySQL
+        'NAME': 'eduke',                        # Your database name
+        'USER': 'root',                        # Your database username (default is 'root' for XAMPP)
+        'PASSWORD': '2519',                         # Your database password
+        'HOST': 'localhost',                   # Host (usually localhost for XAMPP)
+        'PORT': '3307',                        # Default MySQL port
     }
 }
+
+
 
 
 # Password validation
@@ -121,7 +130,8 @@ STATIC_URL = '/static/'  # Base URL for static files
 
 # Paths for static files
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, "static"),  # Your project-level static folder
+    os.path.join(BASE_DIR, 'static'),    # For project-level static files (if any)
+    os.path.join(BASE_DIR, 'main', 'static')  # For app-level static files
 ]
 
 # Directory to collect all static files in production

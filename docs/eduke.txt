@@ -1,0 +1,66 @@
+eduke/
+    eduke/
+        __pycache__/
+        ...
+        ...
+        settings.py
+        ...
+        ...
+    main/
+        __pycache__/
+            ...
+            ...
+            ...
+            ...
+            ...
+            ...
+        migrations/
+            __pycache__/
+                ...
+            ...
+        static/
+            main/
+                images/
+                    image files...
+                    ...
+                    ...
+                    ...
+                    ...
+                    ...image files
+        templates/
+		admin/
+			admin_dashboard.html
+		registration/
+			institution_register.html
+		index.html
+		login.html
+        __init__.py
+        admin.py
+        apps.py
+        models.py
+        tests.py
+        urls.py
+        views.py
+    static/
+        admin/
+            css
+            img
+            js
+        main/
+	...
+	...
+	...
+    venv/
+    db.sqlite3
+    manage.py
+
+
+
+
+
+
+
+
+
+
+mysql -u root -p -P 3307 -h 127.0.0.1
