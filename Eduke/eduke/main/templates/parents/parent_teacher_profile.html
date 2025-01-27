@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Eduke Admin</title>
+  <title>Eduke Parent</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
   <link rel="icon" href="{% static 'main/images/logobase_white.png' %}">
@@ -44,35 +44,23 @@
         <aside id="sidebar" class="w-64 bg-[#e5e5e5] text-black flex flex-col py-6 transform transition-transform -translate-x-full sm:translate-x-0 sm:relative absolute top-0 left-0 h-full z-10">
           <nav class="flex-1">
             <ul class="space-y-4 px-4">
-              <li class="bg-gray-300 rounded-md">
-                <a href="#" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+              <li>
+                <a href="{% url 'parent_dashboard' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
                   <i class="fa-solid fa-table-columns"></i> &nbsp;
                   Dashboard
                 </a>
               </li>
-              <li>
-                <a href="{% url 'admin_classes' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
-                  <i class="fa-solid fa-chalkboard"></i> &nbsp;
-                  Classes
-                </a>
-              </li>
-              <li>
-                <a href="{% url 'admin_teachers' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+              <li class="bg-gray-300 rounded-md">
+                <a href="#" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
                   <i class="fa-solid fa-chalkboard-user"></i> &nbsp;
-                  Teachers
+                  Your Teacher
                 </a>
               </li>
               <li>
-                <a href="{% url 'admin_students' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
-                  <i class="fa-solid fa-user-group"></i> &nbsp;
-                  Students
-                </a>
-              </li>
-              <li>
-                  <a href="{% url 'admin_profile' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                <a href="{% url 'parent_profile' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
                   <i class="fa-solid fa-circle-user"></i> &nbsp;
                   Profile
-                  </a>
+                </a>
               </li>
               <li>
                 <a href="{% url 'logout' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
@@ -83,52 +71,44 @@
             </ul>
           </nav>
         </aside>
-        
-        <!-- Dashboard Content -->
+
         <div id="content-wrapper" class="p-6 space-y-6 w-full">
-          
-          <!-- Welcome Text -->
-          <section class="bg-gray-200 py-6 px-6">
-            <h1 class="text-2xl font-bold text-gray-800">Welcome to Eduke!</h1>
-            <p class="text-lg font-bold text-purple-700">{{ institution_name }}</p>
-          </section>
+          <div class="container mx-auto p-8">
+            <div class="bg-white p-6 rounded-lg shadow-md px-[120px]">
+              <h1 class="text-2xl text-center text-[#4f0074] font-bold mb-5">Your Teacher Profile</h1>
+                <!-- Section 2: Child Details -->
+              <div class="mb-[20px]">
+                <!-- Row 1 -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label class="text-sm font-semibold ml-2 text-gray-700">Name</label>
+                    <p class="text-md bg-[#f2d7ff] px-4 py-2 rounded-[30px] text-purple-700 font-bold mt-2">{{ teacher_name }}</p>                      
+                  </div>
+                  <div>
+                    <label class="text-sm font-semibold ml-2 text-gray-700">Teacher's Email</label>
+                    <p class="text-md bg-[#f2d7ff] px-4 py-2 rounded-[30px] text-purple-700 font-bold mt-2">
+                      <a href="mailto:{{ teacher_email }}" class="hover:underline">{{ teacher_email }}</a>
+                    </p>
+                  </div>
+                </div>                
 
-          <!-- Stats -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            <a href="{% url 'admin_teachers' %}">
-              <div class="bg-white p-4 rounded-md shadow hover:bg-gray-100">
-                <h3 class="text-gray-600 font-bold">Active Teachers</h3>
-                <p class="text-2xl font-bold text-purple-700">{{ teacher_count }}</p>
+                <!-- Row 2 -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                  <div>
+                    <label class="text-sm font-semibold ml-2 text-gray-700">Class</label>
+                    <p class="text-md bg-[#f2d7ff] px-4 py-2 rounded-[30px] text-purple-700 font-bold mt-2">{{ class_name }}</p>                      
+                  </div>
+                  <div>
+                    <label class="text-sm font-semibold ml-2 text-gray-700">Institution</label>
+                    <p class="text-md bg-[#f2d7ff] px-4 py-2 rounded-[30px] text-purple-700 font-bold mt-2">{{ institution_name }}</p>                      
+                  </div>
+                </div>
               </div>
-            </a>
-            <a href="{% url 'admin_students' %}">
-              <div class="bg-white p-4 rounded-md shadow hover:bg-gray-100">
-                <h3 class="text-gray-600 font-bold">Active Students</h3>
-                <p class="text-2xl font-bold text-purple-700">{{ student_count }}</p>
-              </div>
-            </a>
-            <a href="{% url 'admin_classes' %}">
-              <div class="bg-white p-4 rounded-md shadow hover:bg-gray-100">
-                <h3 class="text-gray-600 font-bold">Total Classes</h3>
-                <p class="text-2xl font-bold text-purple-700">{{ total_classes }}</p>
-              </div>
-            </a>
-          </div>
-
-
-
-
-          <!-- Recent Activity -->
-          <div class="bg-white p-4 rounded-md shadow">
-            <h3 class="text-lg font-bold mb-4">Recent Activity</h3>
-            <ul class="space-y-2">
-              <li class="border-b pb-2">User John Doe updated profile</li>
-              <li class="border-b pb-2">New teacher registered: Jane Smith</li>
-              <li class="border-b pb-2">Student Mary submitted assignment</li>
-            </ul>
+            </div>
           </div>
         </div>
-        
+
+
       </div>
     </main>
 

@@ -19,7 +19,7 @@
       <!-- Top Navbar -->
       <header class="bg-white shadow p-1 pr-4 flex justify-between items-center">
         <div class="flex items-center space-x-4">
-          <!-- Hamburger Button outside Sidebar -->
+          <!-- Hamburger Button -->
           <button id="hamburger-button" class="sm:hidden text-gray-800 ml-5 focus:outline-none">
             <i class="fas fa-bars text-2xl"></i>
           </button>
@@ -28,7 +28,6 @@
           </div>
         </div>
         <div class="flex items-center space-x-4">
-          <!-- Logout Button, visible on large screens and hidden on small screens -->
           <a href="{% url 'logout' %}" class="hidden lg:block">
             <button class="bg-[#4f0074] hover:bg-violet-700 text-white px-4 py-2 rounded-md">
               <i class="fa-solid fa-power-off"></i> &nbsp; Logout
@@ -44,8 +43,8 @@
         <aside id="sidebar" class="w-64 bg-[#e5e5e5] text-black flex flex-col py-6 transform transition-transform -translate-x-full sm:translate-x-0 sm:relative absolute top-0 left-0 h-full z-10">
           <nav class="flex-1">
             <ul class="space-y-4 px-4">
-              <li class="bg-gray-300 rounded-md">
-                <a href="#" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+              <li>
+                <a href="{% url 'admin_dashboard' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
                   <i class="fa-solid fa-table-columns"></i> &nbsp;
                   Dashboard
                 </a>
@@ -62,8 +61,8 @@
                   Teachers
                 </a>
               </li>
-              <li>
-                <a href="{% url 'admin_students' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+              <li class="bg-gray-300 rounded-md">
+                <a href="#" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
                   <i class="fa-solid fa-user-group"></i> &nbsp;
                   Students
                 </a>
@@ -86,66 +85,71 @@
         
         <!-- Dashboard Content -->
         <div id="content-wrapper" class="p-6 space-y-6 w-full">
+
+            <!-- Welcome Text -->
+            <section class="bg-gray-200 py-6 px-6">
+                <h1 class="text-2xl font-bold text-gray-800">Manage Students</h1>
+                <p class="text-lg font-bold text-purple-700">{{ institution_name }}</p>
+            </section>
           
-          <!-- Welcome Text -->
-          <section class="bg-gray-200 py-6 px-6">
-            <h1 class="text-2xl font-bold text-gray-800">Welcome to Eduke!</h1>
-            <p class="text-lg font-bold text-purple-700">{{ institution_name }}</p>
-          </section>
+          <!-- Students Section -->
+            <div class="bg-white p-4 rounded-md shadow">
+                <h3 class="text-lg font-bold mb-4">Students</h3>
+                <p class="text-gray-600 font-sm">The students are added by the teachers!</p>
 
-          <!-- Stats -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            <a href="{% url 'admin_teachers' %}">
-              <div class="bg-white p-4 rounded-md shadow hover:bg-gray-100">
-                <h3 class="text-gray-600 font-bold">Active Teachers</h3>
-                <p class="text-2xl font-bold text-purple-700">{{ teacher_count }}</p>
-              </div>
-            </a>
-            <a href="{% url 'admin_students' %}">
-              <div class="bg-white p-4 rounded-md shadow hover:bg-gray-100">
-                <h3 class="text-gray-600 font-bold">Active Students</h3>
-                <p class="text-2xl font-bold text-purple-700">{{ student_count }}</p>
-              </div>
-            </a>
-            <a href="{% url 'admin_classes' %}">
-              <div class="bg-white p-4 rounded-md shadow hover:bg-gray-100">
-                <h3 class="text-gray-600 font-bold">Total Classes</h3>
-                <p class="text-2xl font-bold text-purple-700">{{ total_classes }}</p>
-              </div>
-            </a>
-          </div>
+                <!-- Students Table -->
+                <table class="min-w-full table-auto border-collapse mt-[30px]">
+                  <thead>
+                      <tr class="bg-[#4f0074] text-white">
+                          <th class="p-3 border-b text-left">ID</th>
+                          <th class="p-3 border-b text-left">Name</th>
+                          <th class="p-3 border-b text-left">Class</th>
+                          <th class="p-3 border-b text-left">Teacher</th>
+                          <th class="p-3 border-b text-left">Actions</th>
+                      </tr>
+                  </thead>
+                  <tbody>
+                      {% for student in students %}
+                      <tr>
+                          <td class="px-4 py-3 bg-gray-200 border-b">{{ student.id }}</td>
+                          <td class="px-4 py-3 bg-gray-200 border-b">{{ student.name }}</td>
+                          <td class="px-4 py-3 bg-gray-200 border-b">{{ student.class_name }}</td>
+                          <td class="px-4 py-3 bg-gray-200 border-b">{{ student.teacher_name }}</td>
+                          <td class="px-4 py-3 bg-gray-200 border-b">
+                              <button type="button" class="text-red-700 hover:text-white border border-red-700 hover:bg-red-600 rounded-md px-2 py-1">
+                                  <i class="fa-solid fa-trash"></i> Delete
+                              </button>
+                          </td>
+                      </tr>
+                      {% empty %}
+                      <tr>
+                          <td colspan="5" class="px-4 py-2 border-b text-center text-gray-600">No students available</td>
+                      </tr>
+                      {% endfor %}
+                  </tbody>
+                </table>
 
+            </div>
 
-
-
-          <!-- Recent Activity -->
-          <div class="bg-white p-4 rounded-md shadow">
-            <h3 class="text-lg font-bold mb-4">Recent Activity</h3>
-            <ul class="space-y-2">
-              <li class="border-b pb-2">User John Doe updated profile</li>
-              <li class="border-b pb-2">New teacher registered: Jane Smith</li>
-              <li class="border-b pb-2">Student Mary submitted assignment</li>
-            </ul>
-          </div>
         </div>
-        
       </div>
     </main>
-
   </div>
 
-  <!-- JavaScript to toggle sidebar visibility -->
+  <!-- JavaScript -->
   <script>
-    const hamburgerButton = document.getElementById('hamburger-button');
-    const sidebar = document.getElementById('sidebar');
-    const mainContent = document.getElementById('main-content');
+    function addTeacher() {
+      const name = document.getElementById('teacher_name').value;
+      const email = document.getElementById('teacher_email').value;
 
-    hamburgerButton.addEventListener('click', () => {
-      sidebar.classList.toggle('-translate-x-full');
-      // Adjust main content width when the sidebar is hidden
-      mainContent.classList.toggle('lg:w-full');
-    });
+      if (!name || !email) {
+        alert('Please fill in all fields');
+        return;
+      }
+
+      alert(`Teacher added: ${name}, ${email}`);
+      // You can replace the alert with an AJAX request to add a teacher
+    }
   </script>
-
 </body>
 </html>

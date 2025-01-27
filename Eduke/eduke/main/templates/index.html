@@ -67,25 +67,30 @@
                     <img src="{% static 'main/images/admin.png' %}" alt="Admin" class="w-3/4 mx-auto mb-4">
                     <h4 class="text-xl font-semibold mb-4">Admin</h4>
                     <p class="text-gray-600">Oversee system operations, manage user roles, and maintain a seamless experience for all users.</p>
+                    <a href="{% url 'login' %}" class="text-violet-900 hover:text-black mt-4 inline-block">Login as Admin</a>
                 </div>
                 <div class="p-6 bg-white rounded shadow-md text-center">
                     <img src="{% static 'main/images/students.png' %}" alt="Student" class="w-3/4 mx-auto mb-4">
                     <h4 class="text-xl font-semibold mb-4">Students</h4>
                     <p class="text-gray-600">Access study materials, view attendance records, and get personalized insights for academic growth.</p>
+                    <a href="{% url 'student_login' %}" class="text-violet-900 hover:text-black mt-4 inline-block">Login as Student</a>
                 </div>
                 <div class="p-6 bg-white rounded shadow-md text-center">
                     <img src="{% static 'main/images/teachers.png' %}" alt="Teacher" class="w-3/4 mx-auto mb-4">
                     <h4 class="text-xl font-semibold mb-4">Teachers</h4>
                     <p class="text-gray-600">Manage attendance, evaluate performance, and provide feedback to students and parents.</p>
+                    <a href="{% url 'teacher_login' %}" class="text-violet-900 hover:text-black mt-4 inline-block">Login as Teacher</a>
                 </div>
                 <div class="p-6 bg-white rounded shadow-md text-center">
                     <img src="{% static 'main/images/parents.png' %}" alt="Parent" class="w-3/4 mx-auto mb-4">
                     <h4 class="text-xl font-semibold mb-4">Parents</h4>
                     <p class="text-gray-600">Monitor your child's performance, attendance, and communicate with teachers seamlessly.</p>
+                    <a href="{% url 'parent_login' %}" class="text-violet-900 hover:text-black mt-4 inline-block">Login as Parent</a>
                 </div>
             </div>
         </div>
     </section>
+
 
 
 

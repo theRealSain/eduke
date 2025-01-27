@@ -1,0 +1,169 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eduke Admin</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+  <link rel="icon" href="{% static 'main/images/logobase_white.png' %}">
+</head>
+<body class="bg-gray-100 text-gray-900">
+
+  <!-- Dashboard Wrapper -->
+  <div class="flex h-screen">
+    <!-- Main Content -->
+    <main id="main-content" class="flex-1 overflow-y-auto w-full transition-all">
+      
+      <!-- Top Navbar -->
+        <header class="bg-white shadow p-1 pr-4 flex justify-between items-center">
+            <div class="flex items-center space-x-4">
+            <!-- Hamburger Button outside Sidebar -->
+            <button id="hamburger-button" class="sm:hidden text-gray-800 ml-5 focus:outline-none">
+                <i class="fas fa-bars text-2xl"></i>
+            </button>
+            <div class="py-0">
+                <img src="{% static 'main/images/logo_text_long.png' %}" alt="Eduke Logo" class="w-full h-[80px] mx-auto">
+            </div>
+            </div>
+            <div class="flex items-center space-x-4">
+            <!-- Logout Button, visible on large screens and hidden on small screens -->
+            <a href="{% url 'logout' %}" class="hidden lg:block">
+                <button class="bg-[#4f0074] hover:bg-violet-700 text-white px-4 py-2 rounded-md">
+                <i class="fa-solid fa-power-off"></i> &nbsp; Logout
+                </button>
+            </a>
+            </div>
+        </header>
+
+        <!-- Wrapper for Sidebar and Main Content -->
+        <div class="flex h-screen relative">
+
+            <!-- Sidebar -->
+            <aside id="sidebar" class="w-64 bg-[#e5e5e5] text-black flex flex-col py-6 transform transition-transform -translate-x-full sm:translate-x-0 sm:relative absolute top-0 left-0 h-full z-10">
+                <nav class="flex-1">
+                    <ul class="space-y-4 px-4">
+                    <li>
+                        <a href="{% url 'admin_dashboard' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                            <i class="fa-solid fa-table-columns"></i> &nbsp;
+                            Dashboard
+                        </a>
+                    </li>
+                    <li class="bg-gray-300 rounded-md">
+                        <a href="#" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                        <i class="fa-solid fa-chalkboard"></i> &nbsp;
+                        Classes
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'admin_teachers' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                        <i class="fa-solid fa-chalkboard-user"></i> &nbsp;
+                        Teachers
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'admin_students' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                        <i class="fa-solid fa-user-group"></i> &nbsp;
+                        Students
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'admin_profile' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                        <i class="fa-solid fa-circle-user"></i> &nbsp;
+                        Profile
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'logout' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                        <i class="fa-solid fa-power-off"></i> &nbsp;
+                        Log Out
+                        </a>
+                    </li>
+                    </ul>
+                </nav>
+            </aside>
+        
+            <!-- Dashboard Content -->
+            <div id="content-wrapper" class="p-6 space-y-6 w-full">
+
+                <!-- Welcome Text -->
+                <section class="bg-gray-200 py-6 px-6">
+                    <h1 class="text-2xl font-bold text-gray-800">Manage Classes</h1>
+                    <p class="text-lg font-bold text-purple-700">{{ institution_name }}</p>
+                </section>
+                
+                <!-- Classes Section -->
+                <div class="bg-white p-4 rounded-md shadow">
+                    <h3 class="text-lg font-bold mb-4">Classes</h3>
+                    
+                    <!-- Add New Class Form -->
+                    <div class="mb-4 flex items-center space-x-4">
+                        <form method="post">
+                            {% csrf_token %}
+                            
+                            <!-- Render the class name field from the form -->
+                            {{ form.name }}
+                            <input type="hidden" name="institution_id" value="{{ request.session.institution_id }}">
+
+                            <button type="submit" class="bg-[#4f0074] hover:bg-violet-700 text-white px-4 py-2 rounded-md ml-2      ">
+                                <i class="fa-solid fa-plus"></i> Add New Class
+                            </button>
+                        </form>
+                    </div>
+                    
+                    <!-- Classes Table -->
+                    <table class="min-w-full table-auto border-collapse mt-[30px]">
+                        <thead>
+                            <tr class="bg-[#4f0074] text-white">
+                                <th class="p-3 border-b text-center mx-auto">Class Name</th>                                
+                                <th class="p-3 border-b text-center mx-auto">Details</th>
+                                <th class="p-3 border-b text-center mx-auto">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for class in classes %}
+                                <tr>
+                                    <td class="px-4 py-2 text-center border-b-2 border-b-gray-300 bg-gray-200">{{ class.name }}</td>
+                                    <td class="px-4 py-2 text-center border-b-2 border-b-gray-300 bg-gray-200">Details</td>
+                                    <td class="px-4 py-2 text-center border-b-2 border-b-gray-300 bg-gray-200">
+                                        <button type="button" class="text-gray-900 hover:text-white border border-purple-600 hover:bg-purple-600 rounded-md px-2 py-1">
+                                            <i class="fa-solid fa-pen-to-square"></i> &nbsp;Edit
+                                        </button>
+                                        <button type="button" class="text-red-700 hover:text-white border border-red-700 hover:bg-red-600 rounded-md px-2 py-1">
+                                            <i class="fa-solid fa-trash-can"></i> &nbsp;Delete
+                                        </button>
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="4" class="px-4 py-2 border-b text-center text-gray-600">No classes available</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+
+                </div>
+
+            </div>
+
+        </div>
+    </main>
+
+  </div>
+
+  <!-- JavaScript to toggle sidebar visibility -->
+  <script>
+    const hamburgerButton = document.getElementById('hamburger-button');
+    const sidebar = document.getElementById('sidebar');
+    const mainContent = document.getElementById('main-content');
+
+    hamburgerButton.addEventListener('click', () => {
+      sidebar.classList.toggle('-translate-x-full');
+      // Adjust main content width when the sidebar is hidden
+      mainContent.classList.toggle('lg:w-full');
+    });
+  </script>
+
+</body>
+</html>

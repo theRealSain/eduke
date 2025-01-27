@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Eduke Admin</title>
+  <title>Eduke Teacher</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
   <link rel="icon" href="{% static 'main/images/logobase_white.png' %}">
@@ -44,35 +44,29 @@
         <aside id="sidebar" class="w-64 bg-[#e5e5e5] text-black flex flex-col py-6 transform transition-transform -translate-x-full sm:translate-x-0 sm:relative absolute top-0 left-0 h-full z-10">
           <nav class="flex-1">
             <ul class="space-y-4 px-4">
-              <li class="bg-gray-300 rounded-md">
-                <a href="#" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+              <li>
+                <a href="{% url 'teacher_dashboard' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
                   <i class="fa-solid fa-table-columns"></i> &nbsp;
                   Dashboard
                 </a>
               </li>
-              <li>
-                <a href="{% url 'admin_classes' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+              <li class="bg-gray-300 rounded-md">
+                <a href="#" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
                   <i class="fa-solid fa-chalkboard"></i> &nbsp;
-                  Classes
+                  Your Class
                 </a>
               </li>
               <li>
-                <a href="{% url 'admin_teachers' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
-                  <i class="fa-solid fa-chalkboard-user"></i> &nbsp;
-                  Teachers
-                </a>
-              </li>
-              <li>
-                <a href="{% url 'admin_students' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                <a href="{% url 'teacher_students' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
                   <i class="fa-solid fa-user-group"></i> &nbsp;
                   Students
                 </a>
               </li>
               <li>
-                  <a href="{% url 'admin_profile' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                <a href="{% url 'teacher_profile' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
                   <i class="fa-solid fa-circle-user"></i> &nbsp;
                   Profile
-                  </a>
+                </a>
               </li>
               <li>
                 <a href="{% url 'logout' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
@@ -87,46 +81,49 @@
         <!-- Dashboard Content -->
         <div id="content-wrapper" class="p-6 space-y-6 w-full">
           
-          <!-- Welcome Text -->
-          <section class="bg-gray-200 py-6 px-6">
-            <h1 class="text-2xl font-bold text-gray-800">Welcome to Eduke!</h1>
-            <p class="text-lg font-bold text-purple-700">{{ institution_name }}</p>
-          </section>
+            <!-- Welcome Text -->
+            <section class="bg-gray-200 py-6 px-6">
+                <h1 class="text-2xl font-bold text-gray-800">{{ teacher_class }}</h1>
+                <p class="mt-2 text-lg text-gray-600 font-semibold">
+                  Faculty: <span class="font-bold text-purple-700">{{ teacher_name }}</span>
+                </p>
+            </section>
 
-          <!-- Stats -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            <a href="{% url 'admin_teachers' %}">
-              <div class="bg-white p-4 rounded-md shadow hover:bg-gray-100">
-                <h3 class="text-gray-600 font-bold">Active Teachers</h3>
-                <p class="text-2xl font-bold text-purple-700">{{ teacher_count }}</p>
-              </div>
-            </a>
-            <a href="{% url 'admin_students' %}">
-              <div class="bg-white p-4 rounded-md shadow hover:bg-gray-100">
-                <h3 class="text-gray-600 font-bold">Active Students</h3>
-                <p class="text-2xl font-bold text-purple-700">{{ student_count }}</p>
-              </div>
-            </a>
-            <a href="{% url 'admin_classes' %}">
-              <div class="bg-white p-4 rounded-md shadow hover:bg-gray-100">
-                <h3 class="text-gray-600 font-bold">Total Classes</h3>
-                <p class="text-2xl font-bold text-purple-700">{{ total_classes }}</p>
-              </div>
-            </a>
-          </div>
+            <!-- Teachers Section -->
+            <div class="bg-white p-4 rounded-md shadow">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-bold">Students of {{ teacher_class }}</h3>
+                    <p class="font-bold text-purple-700 mr-[20px]">Total Students: {{ student_count }}</p>
+                </div>
 
+                <!-- Students Table -->
+                <table class="min-w-full table-auto border-collapse mt-[30px]">
+                  <thead>
+                    <tr class="bg-[#4f0074] text-white">
+                      <th class="p-3 border-b text-center mx-auto">Roll No</th>
+                      <th class="p-3 border-b text-center mx-auto">Name</th>
+                      <th class="p-3 border-b text-center mx-auto">Class</th>
+                      <th class="p-3 border-b text-center mx-auto">Information</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for student in students %}
+                    <tr>
+                      <td class="px-4 py-2 text-center border-b-2 border-b-gray-300 bg-gray-200">{{ student.roll_no }}</td>
+                      <td class="px-4 py-2 text-center border-b-2 border-b-gray-300 bg-gray-200">{{ student.name }}</td>
+                      <td class="px-4 py-2 text-center border-b-2 border-b-gray-300 bg-gray-200">{{ teacher_class }}</td>
+                      <td class="px-4 py-2 text-center border-b-2 border-b-gray-300 bg-gray-200">Details</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                      <td colspan="5" class="px-4 py-2 border-b text-center text-gray-600">No students available</td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
 
-
-
-          <!-- Recent Activity -->
-          <div class="bg-white p-4 rounded-md shadow">
-            <h3 class="text-lg font-bold mb-4">Recent Activity</h3>
-            <ul class="space-y-2">
-              <li class="border-b pb-2">User John Doe updated profile</li>
-              <li class="border-b pb-2">New teacher registered: Jane Smith</li>
-              <li class="border-b pb-2">Student Mary submitted assignment</li>
-            </ul>
-          </div>
+            </div>
+          
         </div>
         
       </div>

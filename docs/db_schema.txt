@@ -18,7 +18,8 @@ teachers:
 	id
 	email
 	password
-	class_id [FK classes - id]
+	name
+	class_id [FK classes - id] [ALLOW NULL]
 	institution_id [FK institution - institution_id]
 	user_id [FK users - id]
 
@@ -26,13 +27,15 @@ students:
 	id
 	roll_no
 	password
-	class_id [FK classes - id]
+	name
+	class_id [FK classes - id] [ALLOW NULL]
 	user_id [FK users - id]
 
 parents:
 	id
 	student_roll_no [FK students - roll_no]
 	password
+	name [ALLOW NULL]
 	user_id [FK users - id]
 
 marks:
@@ -46,7 +49,7 @@ attendance:
 	student_id [FK students - id]
 	subject_id [FK subjects - id]
 	attendance_date
-	status (present, absent')
+	status (present, absent)
 
 student_evaluations:
 	id
@@ -70,24 +73,18 @@ chat:
 
 users:
 	id
-	email
-	name
 	role (teacher, student, parent)
 
 quizzes:
 	id
 	name
-	class_id [FK classes- id]
+	class_id [FK classes- id] [ALLOW NULL]
 	subject_id [FK subjects - id]
-
-questions_responses:
-	id
-	quiz_id [FK quizzes - id]
 	question
 	option_a
 	option_b
 	option_c
 	option_d
-	correct_option(A,B,C,D)
+	correct_option (A,B,C,D)
 	student_id [FK students - id]
-	student_response(A,B,C,D)
+	student_response (A,B,C,D)

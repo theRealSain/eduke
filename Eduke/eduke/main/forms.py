@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm
-from .models import Institution
+from .models import Institution, Classes
 
 class InstitutionRegisterForm(forms.ModelForm):
     class Meta:
@@ -45,3 +45,69 @@ class LoginForm(forms.Form):
         })
     )
 
+class AddClassForm(forms.ModelForm):
+    class Meta:
+        model = Classes
+        fields = ['name']  # Only need the class name for now
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['name'].widget.attrs.update({
+            'class': 'px-4 py-2 border rounded-md',
+            'placeholder': 'Enter class name',
+            'required': True
+        })
+
+
+class TeacherLoginForm(forms.Form):
+    email = forms.EmailField(
+        widget=forms.EmailInput(attrs={
+            'class': 'block w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#4f0074] focus:outline-none',
+            'placeholder': 'Enter your email',
+            'id': 'email',
+        }),
+        label='Email Address'
+    )
+    password = forms.CharField(
+        widget=forms.PasswordInput(attrs={
+            'class': 'block w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#4f0074] focus:outline-none',
+            'placeholder': 'Enter your password',
+            'id': 'password',
+        }),
+        label='Password'
+    )
+
+class StudentLoginForm(forms.Form):
+    roll_no = forms.CharField(
+        max_length=20,
+        widget=forms.TextInput(attrs={
+            'class': 'block w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#4f0074] focus:outline-none',
+            'placeholder': 'Enter your Roll No.',
+            'id': 'roll_no',
+        }),
+        label="Roll No."
+    )
+    password = forms.CharField(
+        widget=forms.PasswordInput(attrs={
+            'class': 'block w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#4f0074] focus:outline-none',
+            'placeholder': 'Enter your Password',
+            'id': 'password',
+        }),
+        label="Password"
+    )
+
+class ParentLoginForm(forms.Form):
+    roll_no = forms.CharField(
+        max_length=20,
+        widget=forms.TextInput(attrs={
+            'class': 'block w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#4f0074] focus:outline-none',
+            'placeholder': 'Enter your Roll No.',
+            'id': 'roll_no',
+        }),
+        label="Roll No."
+    )
+    password = forms.CharField(widget=forms.PasswordInput(attrs={
+        'class': 'block w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#4f0074] focus:outline-none',
+        'placeholder': 'Enter your password',
+        'id': 'password'
+    }))
