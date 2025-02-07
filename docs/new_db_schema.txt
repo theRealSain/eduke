@@ -1,0 +1,88 @@
+institution:
+	institution_id
+	email
+	institution_name
+	password
+
+classes:
+	id
+	class_name
+	class_head
+	email
+	password
+	user_id
+	institution_id [FK institution - institution_id]
+
+subjects:
+	id
+	subject_name
+	subject_head
+	email
+	password
+	user_id
+	class_id [FK classes - id]
+
+students:
+	id
+	roll_no
+	password
+	name
+	class_id [FK classes - id] [ALLOW NULL]
+	user_id [FK users - id]
+
+parents:
+	id
+	student_roll_no [FK students - roll_no]
+	password
+	name [ALLOW NULL]
+	user_id [FK users - id]
+
+marks:
+	id
+	student_id [FK students - id]
+	subject_id [FK subjects - id]
+	mark_percentage
+
+attendance:
+	id
+	student_id [FK students - id]
+	subject_id [FK subjects - id]
+	attendance_date
+	status (present, absent)
+
+student_evaluations:
+	id
+	student_id [FK students - id]
+	study_time_rating
+	sleep_time_rating
+	homework_completion_rating
+	class_participation_rating
+	test_preparation_rating
+	class_difficulty_rating
+	parent_rating
+	teacher_rating
+
+chat:
+	id
+	message
+	sender_id [FK users - id]
+	reciever_id [FK users - id]
+	created_at [timestamp]	
+
+users:
+	id
+	role (class_head, subject_head, student, parent)
+
+quizzes:
+	id
+	name
+	class_id [FK classes- id] [ALLOW NULL]
+	subject_id [FK subjects - id]
+	question
+	option_a
+	option_b
+	option_c
+	option_d
+	correct_option (A,B,C,D)
+	student_id [FK students - id]
+	student_response (A,B,C,D)

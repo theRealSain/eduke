@@ -1,0 +1,29 @@
+#message-container {
+    overflow-y: scroll;
+}
+
+#message-container::-webkit-scrollbar {
+    width: 5px;
+    height: 0;
+}
+
+/* Style the scrollbar itself */
+#message-container::-webkit-scrollbar {
+    width: 5px; /* Width of the vertical scrollbar */
+    height: 5px; /* Height of the horizontal scrollbar */
+}
+
+/* Style the track (the area the scrollbar thumb moves within) */
+::-webkit-scrollbar-track {
+    border-radius: 10px;
+}
+
+/* Style the thumb (the draggable part of the scrollbar) */
+::-webkit-scrollbar-thumb {
+    background-color: #a955f772;
+    border-radius: 10px;
+}
+
+#scrollbar-off::-webkit-scrollbar {
+    display: none;
+}

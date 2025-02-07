@@ -57,12 +57,6 @@
                         </a>
                     </li>
                     <li>
-                        <a href="{% url 'admin_teachers' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
-                        <i class="fa-solid fa-chalkboard-user"></i> &nbsp;
-                        Teachers
-                        </a>
-                    </li>
-                    <li>
                         <a href="{% url 'admin_students' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
                         <i class="fa-solid fa-user-group"></i> &nbsp;
                         Students
@@ -102,21 +96,35 @@
                         <form method="post">
                             {% csrf_token %}
                             
-                            <!-- Render the class name field from the form -->
-                            {{ form.name }}
+                            <!-- Render the class name field -->
+                            {{ form.class_name }}
+
+                            <!-- Render the class head (dropdown for selecting a teacher) -->
+                            {{ form.class_head }}
+
+                            <!-- Render the email field -->
+                            {{ form.email }}
+
+                            <!-- Render the password field -->
+                            {{ form.password }}
+
+                            <!-- Hidden input for institution ID -->
                             <input type="hidden" name="institution_id" value="{{ request.session.institution_id }}">
 
-                            <button type="submit" class="bg-[#4f0074] hover:bg-violet-700 text-white px-4 py-2 rounded-md ml-2      ">
+                            <button type="submit" class="bg-[#4f0074] hover:bg-violet-700 text-white px-4 py-2 rounded-md ml-2">
                                 <i class="fa-solid fa-plus"></i> Add New Class
                             </button>
                         </form>
+
                     </div>
                     
                     <!-- Classes Table -->
                     <table class="min-w-full table-auto border-collapse mt-[30px]">
                         <thead>
                             <tr class="bg-[#4f0074] text-white">
-                                <th class="p-3 border-b text-center mx-auto">Class Name</th>                                
+                                <th class="p-3 border-b text-center mx-auto">Class Name</th>
+                                <th class="p-3 border-b text-center mx-auto">Class Head</th>
+                                <th class="p-3 border-b text-center mx-auto">Email</th>
                                 <th class="p-3 border-b text-center mx-auto">Details</th>
                                 <th class="p-3 border-b text-center mx-auto">Actions</th>
                             </tr>
@@ -124,8 +132,14 @@
                         <tbody>
                             {% for class in classes %}
                                 <tr>
-                                    <td class="px-4 py-2 text-center border-b-2 border-b-gray-300 bg-gray-200">{{ class.name }}</td>
-                                    <td class="px-4 py-2 text-center border-b-2 border-b-gray-300 bg-gray-200">Details</td>
+                                    <td class="px-4 py-2 text-center border-b-2 border-b-gray-300 bg-gray-200">{{ class.class_name }}</td>
+                                    <td class="px-4 py-2 text-center border-b-2 border-b-gray-300 bg-gray-200">{{ class.class_head }}</td>
+                                    <td class="px-4 py-2 text-center border-b-2 border-b-gray-300 bg-gray-200">{{ class.email }}</td>
+                                    <td class="px-4 py-2 text-center border-b-2 border-b-gray-300 bg-gray-200">
+                                        <a href="" class="text-gray-900 hover:underline">
+                                            View
+                                        </a>
+                                    </td>
                                     <td class="px-4 py-2 text-center border-b-2 border-b-gray-300 bg-gray-200">
                                         <button type="button" class="text-gray-900 hover:text-white border border-purple-600 hover:bg-purple-600 rounded-md px-2 py-1">
                                             <i class="fa-solid fa-pen-to-square"></i> &nbsp;Edit
@@ -137,11 +151,12 @@
                                 </tr>
                             {% empty %}
                                 <tr>
-                                    <td colspan="4" class="px-4 py-2 border-b text-center text-gray-600">No classes available</td>
+                                    <td colspan="5" class="px-4 py-2 border-b text-center text-gray-600">No classes available</td>
                                 </tr>
                             {% endfor %}
                         </tbody>
                     </table>
+
 
                 </div>
 

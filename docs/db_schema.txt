@@ -56,10 +56,8 @@ student_evaluations:
 	student_id [FK students - id]
 	study_time_rating
 	sleep_time_rating
-	stress_handling_rating
 	homework_completion_rating
 	class_participation_rating
-	focus_rating
 	test_preparation_rating
 	class_difficulty_rating
 	parent_rating
@@ -70,6 +68,7 @@ chat:
 	message
 	sender_id [FK users - id]
 	reciever_id [FK users - id]
+	created_at [timestamp]
 
 users:
 	id

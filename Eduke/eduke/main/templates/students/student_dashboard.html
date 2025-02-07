@@ -57,6 +57,12 @@
                 </a>
               </li>
               <li>
+                <a href="{% url 'student_chat' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-comments"></i> &nbsp;
+                  Eduke Chat
+                </a>
+              </li>
+              <li>
                 <a href="{% url 'student_profile' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
                   <i class="fa-solid fa-circle-user"></i> &nbsp;
                   Profile
@@ -87,30 +93,58 @@
 
 
           <!-- Stats -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6">
-            <a href="{% url 'student_class' %}">
-              <div class="bg-white p-4 rounded-md shadow hover:bg-gray-100">
-                <h3 class="text-gray-600 font-semibold">Your Class</h3>
-                <p class="text-2xl font-bold text-purple-700">{{ teacher_class }}</p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Card 1 -->
+            <a href="{% url 'student_class' %}" class="block relative group">
+              <div class="bg-white p-6 rounded-lg shadow-lg pt-[15px] pl-[15px]">
+                <h3 class="text-2xl font-bold text-gray-800 uppercase mb-[20px]">YOUR CLASS</h3>
+                <p class="font-semibold text-purple-700 text-[20px]">{{ class_name }}</p>
               </div>
+              <!-- Cartoon PNG Image positioned at the bottom-right corner -->
+              <img src="{% static 'main/images/your_class.png' %}" alt="Cartoon" class="absolute bottom-0 right-0 w-[150px] transform translate-x-4 translate-y-4 opacity-80 group-hover:opacity-100 transition-opacity duration-300" />
             </a>
-            <a href="{% url 'student_profile' %}">
-              <div class="bg-white p-4 rounded-md shadow hover:bg-gray-100">
-                <h3 class="text-gray-600 font-semibold">Your Teacher</h3>
-                <p class="text-2xl font-bold text-purple-700">{{ teacher_name }}</p>
+            <a href="{% url 'student_class' %}" class="block relative group">
+              <div class="bg-white p-6 rounded-lg shadow-lg pt-[15px] pl-[15px]">
+                <h3 class="text-2xl font-bold text-gray-800 uppercase mb-[20px]">SUBJECTS</h3>
+                <p class="font-semibold text-purple-700 text-[20px]">{{ subject_count }}</p>
               </div>
+              <!-- Cartoon PNG Image positioned at the bottom-right corner -->
+              <img src="{% static 'main/images/subject.png' %}" alt="Cartoon" class="absolute bottom-0 right-0 w-[150px] transform translate-x-4 translate-y-4 opacity-80 group-hover:opacity-100 transition-opacity duration-300" />
+            </a>
+            <a href="{% url 'student_chat' %}" class="block relative group">
+              <div class="bg-white p-6 rounded-lg shadow-lg pt-[15px] pl-[15px]">
+                <h3 class="text-2xl font-bold text-gray-800 uppercase mb-[20px]">EDUKE CHAT</h3>
+                <p class="font-semibold text-purple-700 text-[20px]">Communicate with other Eduke Users</p>
+              </div>
+              <!-- Cartoon PNG Image positioned at the bottom-right corner -->
+              <img src="{% static 'main/images/chat.png' %}" alt="Cartoon" class="absolute bottom-0 right-0 w-[150px] transform translate-x-4 translate-y-4 opacity-80 group-hover:opacity-100 transition-opacity duration-300" />
+            </a>
+            <a href="" class="block relative group">
+              <div class="bg-white p-6 rounded-lg shadow-lg pt-[15px] pl-[15px]">
+                <h3 class="text-2xl font-bold text-gray-800 uppercase mb-[20px]">EVALUATION</h3>
+                <p class="font-semibold text-purple-700 text-[20px]">View your Evaluation</p>
+              </div>
+              <!-- Cartoon PNG Image positioned at the bottom-right corner -->
+              <img src="{% static 'main/images/eval.png' %}" alt="Cartoon" class="absolute bottom-0 right-0 w-[150px] transform translate-x-4 translate-y-4 opacity-80 group-hover:opacity-100 transition-opacity duration-300" />
+            </a>
+            <a href="" class="block relative group">
+              <div class="bg-white p-6 rounded-lg shadow-lg pt-[15px] pl-[15px]">
+                <h3 class="text-2xl font-bold text-gray-800 uppercase mb-[20px]">CHATBOT</h3>
+                <p class="font-semibold text-purple-700 text-[20px]">Interact with Chatbot</p>
+              </div>
+              <!-- Cartoon PNG Image positioned at the bottom-right corner -->
+              <img src="{% static 'main/images/bot.png' %}" alt="Cartoon" class="absolute bottom-0 right-0 w-[150px] transform translate-x-4 translate-y-4 opacity-80 group-hover:opacity-100 transition-opacity duration-300" />
+            </a>
+            <a href="{% url 'student_profile' %}" class="block relative group">
+              <div class="bg-white p-6 rounded-lg shadow-lg pt-[15px] pl-[15px]">
+                <h3 class="text-2xl font-bold text-gray-800 uppercase mb-[20px]">PROFILE</h3>
+                <p class="font-semibold text-purple-700 text-[20px]">View your Profile</p>
+              </div>
+              <!-- Cartoon PNG Image positioned at the bottom-right corner -->
+              <img src="{% static 'main/images/profile.png' %}" alt="Cartoon" class="absolute bottom-0 right-0 w-[150px] transform translate-x-4 translate-y-4 opacity-80 group-hover:opacity-100 transition-opacity duration-300" />
             </a>
           </div>
-
-          <!-- Recent Activity -->
-          <div class="bg-white p-4 rounded-md shadow">
-            <h3 class="text-lg font-bold mb-4">Recent Activity</h3>
-            <ul class="space-y-2">
-              <li class="border-b pb-2">User John Doe updated profile</li>
-              <li class="border-b pb-2">New teacher registered: Jane Smith</li>
-              <li class="border-b pb-2">Student Mary submitted assignment</li>
-            </ul>
-          </div>
+        
         </div>
         
       </div>

@@ -1,0 +1,275 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eduke Subject Head</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="{% static 'main/css/style.css' %}">
+  <link rel="icon" href="{% static 'main/images/logobase_white.png' %}">
+</head>
+<body class="bg-gray-100 text-gray-900">
+
+  <!-- Dashboard Wrapper -->
+  <div class="flex h-screen">
+    <!-- Main Content -->
+    <main id="main-content" class="flex-1 overflow-y-auto w-full transition-all">
+      
+      <!-- Top Navbar -->
+      <header class="bg-white shadow p-1 pr-4 flex justify-between items-center">
+        <div class="flex items-center space-x-4">
+          <!-- Hamburger Button outside Sidebar -->
+          <button id="hamburger-button" class="sm:hidden text-gray-800 ml-5 focus:outline-none">
+            <i class="fas fa-bars text-2xl"></i>
+          </button>
+          <div class="py-0">
+            <img src="{% static 'main/images/logo_text_long.png' %}" alt="Eduke Logo" class="w-full h-[80px] mx-auto">
+          </div>
+        </div>
+        <div class="flex items-center space-x-4">
+          <!-- Logout Button, visible on large screens and hidden on small screens -->
+          <a href="{% url 'logout' %}" class="hidden lg:block">
+            <button class="bg-[#4f0074] hover:bg-violet-700 text-white px-4 py-2 rounded-md">
+              <i class="fa-solid fa-power-off"></i> &nbsp; Logout
+            </button>
+          </a>
+        </div>
+      </header>
+
+      <!-- Wrapper for Sidebar and Main Content -->
+      <div class="flex h-screen relative">
+
+        <!-- Sidebar -->
+        <aside id="sidebar" class="w-64 bg-[#e5e5e5] text-black flex flex-col py-6 transform transition-transform -translate-x-full sm:translate-x-0 sm:relative absolute top-0 left-0 h-full z-10">
+          <nav class="flex-1">
+            <ul class="space-y-4 px-4">
+              <li>
+                <a href="{% url 'subject_head_dashboard' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-table-columns"></i> &nbsp;
+                  Dashboard
+                </a>
+              </li>
+              <li>
+                <a href="{% url 'subject_head_subjects' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-book"></i> &nbsp;
+                  Your Subject
+                </a>
+              </li>
+              <li>
+                <a href="{% url 'subject_head_class' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-chalkboard"></i> &nbsp;
+                  Your Class
+                </a>
+              </li>
+              <li class="bg-gray-300 rounded-md">
+                <a href="#" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-comments"></i> &nbsp;
+                  Eduke Chat
+                </a>
+              </li>
+              <li>
+                <a href="{% url 'subject_head_profile' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-circle-user"></i> &nbsp;
+                  Profile
+                </a>
+              </li>
+              <li>
+                <a href="{% url 'logout' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-power-off"></i> &nbsp;
+                  Log Out
+                </a>
+              </li>
+            </ul>
+          </nav>
+        </aside>
+        
+        <!-- Dashboard Content -->
+        <div id="content-wrapper" class="p-6 space-y-6 w-full">
+            <div class="bg-white p-4 rounded-lg shadow-md w-full h-[750px] overflow-y-auto" id="scrollbar-off">
+                <h2 class="text-2xl font-bold text-[#4f0074] ml-3 mb-5">
+                    <i class="fa-solid fa-comments"></i> Eduke Chat
+                </h2>
+
+                <h3 class="text-[20px] font-semibold mb-3 ml-3">Recent Chats</h3>
+
+                <ul id="chat-list" class="space-y-3">
+                    {% if chat_users %}
+                        {% for user in chat_users %}
+                            {% if user.role == "student" %}
+                            <li class="chat-item ml-3 mr-3">
+                                <a href="{% url 'subject_head_chat_user' user.id %}" class="flex items-center p-4 bg-gray-200 rounded-lg hover:bg-gray-300 transition w-full">
+                                    <div class="w-12 h-12 bg-[#0093ff] text-white flex items-center justify-center rounded-full text-lg font-bold">
+                                        {{ user.name|first|upper }}
+                                    </div>
+                                    <div class="ml-4">
+                                        <p class="font-bold text-lg chat-name">{{ user.name }}</p>  <!-- Display the user name -->
+                                        <p class="text-sm text-gray-500">Student</p>
+                                    </div>
+                                </a>
+                            </li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% for user in chat_users %}
+                            {% if user.role == "parent" %}
+                                <li class="chat-item ml-3 mr-3">
+                                    <a href="{% url 'subject_head_chat_user' user.id %}" class="flex items-center p-4 bg-gray-200 rounded-lg hover:bg-gray-300 transition w-full">
+                                        <div class="w-12 h-12 bg-[#008152] text-white flex items-center justify-center rounded-full text-lg font-bold">
+                                            {{ user.name|first|upper }}
+                                        </div>
+                                        <div class="ml-4">
+                                            <p class="font-bold text-lg chat-name">{{ user.name }}</p>  <!-- Display the user name -->
+                                        <p class="text-sm text-gray-500">Parent</p>
+                                        </div>
+                                    </a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% for user in chat_users %}
+                            {% if user.role == "subject_head" %}
+                                <li class="chat-item ml-3 mr-3">
+                                    <a href="{% url 'subject_head_chat_user' user.id %}" class="flex items-center p-4 bg-gray-200 rounded-lg hover:bg-gray-300 transition w-full">
+                                        <div class="w-12 h-12 bg-[#7f00db] text-white flex items-center justify-center rounded-full text-lg font-bold">
+                                            {{ user.name|first|upper }}
+                                        </div>
+                                        <div class="ml-4">
+                                            <p class="font-bold text-lg chat-name">{{ user.name }}</p>  <!-- Display the user name -->
+                                        <p class="text-sm text-gray-500">Subject Head</p>
+                                        </div>
+                                    </a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% for user in chat_users %}
+                            {% if user.role == "class_head" %}
+                                <li class="chat-item ml-3 mr-3">
+                                    <a href="{% url 'subject_head_chat_user' user.id %}" class="flex items-center p-4 bg-gray-200 rounded-lg hover:bg-gray-300 transition w-full">
+                                        <div class="w-12 h-12 bg-[#3a0065] text-white flex items-center justify-center rounded-full text-lg font-bold">
+                                            {{ user.name|first|upper }} 
+                                        </div>
+                                        <div class="ml-4">
+                                            <p class="font-bold text-lg chat-name">{{ user.name }}</p>  <!-- Display the user name -->
+                                        <p class="text-sm text-gray-500">Class Head</p>
+                                        </div>
+                                    </a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+
+                    {% else %}
+                        <p class="text-muted">No chat history available.</p>
+                    {% endif %}
+                </ul>
+
+                <h3 class="text-[20px] font-semibold mb-3 mt-[30px] ml-3">Suggested users</h3>
+
+                <h4 class="text-[15px] font-semibold mb-3 ml-3 mt-5">Your Class Head:</h4>
+
+                <ul id="chat-list" class="space-y-3">
+                    {% for user in message_users %}
+                        {% if user.role == 'class_head' %}
+                        <li class="chat-item ml-3 mr-3">
+                        <a href="{% url 'subject_head_chat_user' user.id %}" class="flex items-center p-4 bg-gray-200 rounded-lg hover:bg-gray-300 transition w-full">
+                            <div class="w-12 h-12 bg-[#3a0065] text-white flex items-center justify-center rounded-full text-lg font-bold">
+                                {{ user.name|first|upper }}
+                            </div>
+                            <div class="ml-4">
+                                <p class="font-bold text-lg chat-name">{{ user.name }}</p>  <!-- Display the student's name for the parent -->
+                                <p class="text-sm text-gray-500">Class Head</p>  <!-- Show the parent's corresponding student's name -->
+                            </div>
+                        </a>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+                </ul>
+
+                <h4 class="text-[15px] font-semibold mb-3 ml-3 mt-5">Subject Heads:</h4>
+
+                <ul id="chat-list" class="space-y-3">
+                    {% for user in message_users %}
+                        {% if user.role == 'subject_head' %}
+                        <li class="chat-item ml-3 mr-3">
+                        <a href="{% url 'subject_head_chat_user' user.id %}" class="flex items-center p-4 bg-gray-200 rounded-lg hover:bg-gray-300 transition w-full">
+                            <div class="w-12 h-12 bg-[#7f00db] text-white flex items-center justify-center rounded-full text-lg font-bold">
+                                {{ user.name|first|upper }}
+                            </div>
+                            <div class="ml-4">
+                                <p class="font-bold text-lg chat-name">{{ user.name }}</p>  <!-- Display the student's name for the parent -->
+                                <p class="text-sm text-gray-500">Subject Head</p>  <!-- Show the parent's corresponding student's name -->
+                            </div>
+                        </a>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+                </ul>
+
+                <h4 class="text-[15px] font-semibold mb-3 ml-3 mt-5">Students:</h4>
+
+                <ul id="chat-list" class="space-y-3">
+                    {% for user in message_users %}
+                        {% if user.role == 'student' %}
+                        <li class="chat-item ml-3 mr-3">
+                        <a href="{% url 'subject_head_chat_user' user.id %}" class="flex items-center p-4 bg-gray-200 rounded-lg hover:bg-gray-300 transition w-full">
+                            <div class="w-12 h-12 bg-[#0093ff] text-white flex items-center justify-center rounded-full text-lg font-bold">
+                                {{ user.name|first|upper }}
+                            </div>
+                            <div class="ml-4">
+                                <p class="font-bold text-lg chat-name">{{ user.name }}</p>  <!-- Display the student's name for the parent -->
+                                <p class="text-sm text-gray-500">Student</p>  <!-- Show the parent's corresponding student's name -->
+                            </div>
+                        </a>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+                </ul>
+
+                <h4 class="text-[15px] font-semibold mb-3 ml-3 mt-5">Parents:</h4>
+
+                <ul id="chat-list" class="space-y-3">
+                    {% for user in message_users %}
+                        {% if user.role == 'parent' %}
+                        <li class="chat-item ml-3 mr-3">
+                        <a href="{% url 'subject_head_chat_user' user.id %}" class="flex items-center p-4 bg-gray-200 rounded-lg hover:bg-gray-300 transition w-full">
+                            <div class="w-12 h-12 bg-[#008152] text-white flex items-center justify-center rounded-full text-lg font-bold">
+                                {{ user.name|first|upper }}
+                            </div>
+                            <div class="ml-4">
+                                <p class="font-bold text-lg chat-name">{{ user.name }}</p>  <!-- Display the student's name for the parent -->
+                                <p class="text-sm text-gray-500">Parent</p>  <!-- Show the parent's corresponding student's name -->
+                            </div>
+                        </a>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+                </ul>
+
+            </div>
+        </div>
+
+        
+
+        
+      </div>
+    </main>
+
+  </div>
+
+  <!-- JavaScript to toggle sidebar visibility -->
+  <script>
+    const hamburgerButton = document.getElementById('hamburger-button');
+    const sidebar = document.getElementById('sidebar');
+    const mainContent = document.getElementById('main-content');
+
+    hamburgerButton.addEventListener('click', () => {
+      sidebar.classList.toggle('-translate-x-full');
+      // Adjust main content width when the sidebar is hidden
+      mainContent.classList.toggle('lg:w-full');
+    });
+  </script>
+
+</body>
+</html>

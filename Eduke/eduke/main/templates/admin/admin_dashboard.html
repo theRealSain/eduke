@@ -57,12 +57,6 @@
                 </a>
               </li>
               <li>
-                <a href="{% url 'admin_teachers' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
-                  <i class="fa-solid fa-chalkboard-user"></i> &nbsp;
-                  Teachers
-                </a>
-              </li>
-              <li>
                 <a href="{% url 'admin_students' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
                   <i class="fa-solid fa-user-group"></i> &nbsp;
                   Students
@@ -94,23 +88,17 @@
           </section>
 
           <!-- Stats -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            <a href="{% url 'admin_teachers' %}">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6">
+            <a href="{% url 'admin_classes' %}">
               <div class="bg-white p-4 rounded-md shadow hover:bg-gray-100">
-                <h3 class="text-gray-600 font-bold">Active Teachers</h3>
-                <p class="text-2xl font-bold text-purple-700">{{ teacher_count }}</p>
+                <h3 class="text-gray-600 font-bold">Active Classes</h3>
+                <p class="text-2xl font-bold text-purple-700">{{ total_classes }}</p>
               </div>
             </a>
             <a href="{% url 'admin_students' %}">
               <div class="bg-white p-4 rounded-md shadow hover:bg-gray-100">
                 <h3 class="text-gray-600 font-bold">Active Students</h3>
                 <p class="text-2xl font-bold text-purple-700">{{ student_count }}</p>
-              </div>
-            </a>
-            <a href="{% url 'admin_classes' %}">
-              <div class="bg-white p-4 rounded-md shadow hover:bg-gray-100">
-                <h3 class="text-gray-600 font-bold">Total Classes</h3>
-                <p class="text-2xl font-bold text-purple-700">{{ total_classes }}</p>
               </div>
             </a>
           </div>
