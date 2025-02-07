@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3307
--- Generation Time: Feb 01, 2025 at 06:54 AM
+-- Generation Time: Feb 07, 2025 at 05:33 PM
 -- Server version: 9.1.0
 -- PHP Version: 8.2.12
 
@@ -319,12 +319,13 @@ CREATE TABLE `django_session` (
 --
 
 INSERT INTO `django_session` (`session_key`, `session_data`, `expire_date`) VALUES
+('0sqw8o0o8mhayjchrhtl2w6v0aj2l3kv', 'eyJjbGFzc19oZWFkX2lkIjoxM30:1teAY3:dJ_S_q8GBRIV6iObczDcnUlK_UUyEYQSl1M_imqWfVs', '2025-02-15 10:16:23.547677'),
 ('1gpyt7qf0zwgjv0ks3phj8kgky7sujui', 'e30:1tbIQB:POyn-rEoj-sxlUT5I0fZxGB8HipITsS_lEUf11In7UQ', '2025-02-07 12:04:23.929518'),
-('elth4mal72ravobnfawep77tc9x88m6x', 'eyJzdHVkZW50X2lkIjo4LCJ0ZWFjaGVyX2lkIjoxfQ:1tdkqG:iv8cKQAk9-3xEKSC0dNLehfzPmIuI1JPP_4VRDZ0X-g', '2025-02-14 06:49:28.539075'),
 ('h5pc1p9nec27wdykh2qt4mk3x722na02', 'e30:1tbZMT:FdwmYlisd-l-pxW7jS1z9YUv536sEY52rWlm1KIRT8c', '2025-02-08 06:09:41.949257'),
 ('p9rbo3jfob45shgippf65xqmxcwm2px5', 'e30:1tbIQa:t8noblKYAHTQaK-nODwDQhiLUyUu8hZWLBGdoUAPH0Y', '2025-02-07 12:04:48.695025'),
 ('q2ry82ujy4xq0ubcekh7gjv27mmg3dkm', 'e30:1tbITs:iCq2XiI3lYkOS59VwFcfcfL3j2lOhn_KcFnK5fUGh6c', '2025-02-07 12:08:12.871277'),
 ('q663wz1plma1getb4y9gh3cxg8sa74yl', 'eyJ0ZWFjaGVyX2lkIjozfQ:1tbAhP:jrYiLIlKpvJjC8qWeaYEh0TyA7l_dr6t_ct2L3D6syg', '2025-02-07 03:49:39.794741'),
+('s8bg8ppi7ld6bqexoeg4padni4qucqo6', 'eyJjbGFzc19oZWFkX2lkIjoxM30:1teAX7:4BgPYk55nnCIw1fMWIP3kj9QzQ7b9Ll-UfJUSznFPxg', '2025-02-15 10:15:25.661351'),
 ('xuiiy8d7orowqcmqn7wm0xlov7tttahu', 'e30:1tbZMi:Alo1mi87tOh2qUhsmwP8J5rkP9E8ZaqbzrNyep7wJrg', '2025-02-08 06:09:56.751798');
 
 -- --------------------------------------------------------
@@ -355,6 +356,19 @@ CREATE TABLE `main_chat` (
   `created_at` datetime(6) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+--
+-- Dumping data for table `main_chat`
+--
+
+INSERT INTO `main_chat` (`id`, `message`, `receiver_id`, `sender_id`, `created_at`) VALUES
+(48, 'Hii Arun Sir!', 49, 40, '2025-02-04 18:57:35.000000'),
+(64, 'Hii Arun', 49, 32, '2025-02-07 11:39:31.000000'),
+(69, 'Hii Arun, its me ben', 49, 43, '2025-02-07 17:23:35.000000'),
+(70, 'Hii Albert', 40, 49, '2025-02-07 13:51:35.157618'),
+(71, 'Hello', 40, 49, '2025-02-07 13:51:45.698774'),
+(72, 'Hello', 41, 49, '2025-02-07 13:52:06.964392'),
+(73, 'Hii BOB', 42, 49, '2025-02-07 13:54:44.992713');
+
 -- --------------------------------------------------------
 
 --
@@ -370,6 +384,15 @@ CREATE TABLE `main_classes` (
   `password` varchar(255) NOT NULL,
   `user_id` int NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `main_classes`
+--
+
+INSERT INTO `main_classes` (`id`, `institution_id`, `class_head`, `class_name`, `email`, `password`, `user_id`) VALUES
+(13, 9, 'Jack', 'MCA', 'jack@example.com', 'jjjj', 32),
+(14, 9, 'John', 'BCA', 'john@example.com', 'john', 33),
+(15, 9, 'Jasmine', 'B. Com', 'jasmine@example.com', 'jjjj', 34);
 
 -- --------------------------------------------------------
 
@@ -389,7 +412,7 @@ CREATE TABLE `main_institution` (
 --
 
 INSERT INTO `main_institution` (`institution_id`, `email`, `institution_name`, `password`) VALUES
-(9, 'sainsaburaj@depaul.edu.in', 'De Paul Institute of Science and Technology (DiST)', 'dist'),
+(9, 'sainsaburaj@depaul.edu.in', 'De Paul Institute of Science and Technology', 'dddd'),
 (10, 'stc@example.com', 'STC THRISSUR', 'ssss');
 
 -- --------------------------------------------------------
@@ -418,6 +441,15 @@ CREATE TABLE `main_parents` (
   `student_id` varchar(20) NOT NULL,
   `user_id` int NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `main_parents`
+--
+
+INSERT INTO `main_parents` (`id`, `password`, `name`, `student_id`, `user_id`) VALUES
+(11, '1001', 'Joseph', '1001', 41),
+(12, '1002', 'Ben', '1002', 43),
+(13, '1303', NULL, '1303', 52);
 
 -- --------------------------------------------------------
 
@@ -474,6 +506,15 @@ CREATE TABLE `main_students` (
   `user_id` int NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+--
+-- Dumping data for table `main_students`
+--
+
+INSERT INTO `main_students` (`id`, `roll_no`, `password`, `class_obj_id`, `name`, `user_id`) VALUES
+(14, '1001', '1001', 13, 'Albert', 40),
+(15, '1002', '1002', 13, 'Bob', 42),
+(16, '1303', '1303', 14, 'Vaseem', 51);
+
 -- --------------------------------------------------------
 
 --
@@ -490,6 +531,16 @@ CREATE TABLE `main_subjects` (
   `user_id` int NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+--
+-- Dumping data for table `main_subjects`
+--
+
+INSERT INTO `main_subjects` (`id`, `class_obj_id`, `email`, `password`, `subject_head`, `subject_name`, `user_id`) VALUES
+(1, 13, 'arun@example.com', 'aaaa', 'Arun', 'Machine Learning', 49),
+(2, 13, 'rose@example.com', 'rrrr', 'Rosemary', 'Computer Organization', 50),
+(3, 13, 'reena@example.com', 'rrrr', 'Reena', 'Operating System', 53),
+(4, 14, 'sophia@example.com', 'ssss', 'Sophia', 'Software Engineering', 54);
+
 -- --------------------------------------------------------
 
 --
@@ -500,6 +551,25 @@ CREATE TABLE `main_users` (
   `id` int NOT NULL,
   `role` varchar(20) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `main_users`
+--
+
+INSERT INTO `main_users` (`id`, `role`) VALUES
+(32, 'class_head'),
+(33, 'class_head'),
+(34, 'class_head'),
+(40, 'student'),
+(41, 'parent'),
+(42, 'student'),
+(43, 'parent'),
+(49, 'subject_head'),
+(50, 'subject_head'),
+(51, 'student'),
+(52, 'parent'),
+(53, 'subject_head'),
+(54, 'subject_head');
 
 --
 -- Indexes for dumped tables
@@ -684,7 +754,7 @@ ALTER TABLE `auth_permission`
 -- AUTO_INCREMENT for table `auth_user`
 --
 ALTER TABLE `auth_user`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `auth_user_groups`
@@ -720,13 +790,13 @@ ALTER TABLE `main_attendance`
 -- AUTO_INCREMENT for table `main_chat`
 --
 ALTER TABLE `main_chat`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=34;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=76;
 
 --
 -- AUTO_INCREMENT for table `main_classes`
 --
 ALTER TABLE `main_classes`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- AUTO_INCREMENT for table `main_institution`
@@ -744,7 +814,7 @@ ALTER TABLE `main_marks`
 -- AUTO_INCREMENT for table `main_parents`
 --
 ALTER TABLE `main_parents`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- AUTO_INCREMENT for table `main_quizzes`
@@ -762,19 +832,19 @@ ALTER TABLE `main_studentevaluations`
 -- AUTO_INCREMENT for table `main_students`
 --
 ALTER TABLE `main_students`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
 
 --
 -- AUTO_INCREMENT for table `main_subjects`
 --
 ALTER TABLE `main_subjects`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `main_users`
 --
 ALTER TABLE `main_users`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=32;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=55;
 
 --
 -- Constraints for dumped tables
