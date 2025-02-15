@@ -7,6 +7,7 @@
   <title>Eduke Subject Head</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="{% static 'main/css/style.css' %}">
   <link rel="icon" href="{% static 'main/images/logobase_white.png' %}">
 </head>
 <body class="bg-gray-100 text-gray-900">
@@ -100,23 +101,21 @@
                 {% endfor %}
                 <p class="text-gray-600">Here you can manage the syllabus, assignments, and announcements for this subject.</p>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4 mt-4">
                     <div class="bg-gray-100 p-4 rounded-md shadow">
                         <h4 class="font-bold text-purple-700">Eduke Quiz</h4>
                         <p class="text-gray-600 text-sm">Create a Quiz here!</p>
-                        <button class="text-white bg-purple-700 px-4 py-1 rounded-md mt-2">Create</button>
+                        <a href="{% url 'subject_head_quiz' %}">
+                          <button class="text-white bg-purple-700 px-4 py-1 rounded-md mt-2">Create</button>
+                        </a>
                     </div>
 
                     <div class="bg-gray-100 p-4 rounded-md shadow">
-                        <h4 class="font-bold text-purple-700">Study Materials</h4>
-                        <p class="text-gray-600 text-sm">Upload study materials and documents here.</p>
-                        <button class="text-white bg-purple-700 px-4 py-1 rounded-md mt-2">Create</button>
-                    </div>
-
-                    <div class="bg-gray-100 p-4 rounded-md shadow">
-                        <h4 class="font-bold text-purple-700">Announcements</h4>
-                        <p class="text-gray-600 text-sm">Post important updates for students.</p>
-                        <button class="text-white bg-purple-700 px-4 py-1 rounded-md mt-2">Create</button>
+                        <h4 class="font-bold text-purple-700">Study Materials and Announcements</h4>
+                        <p class="text-gray-600 text-sm">Upload study materials and make announcements here.</p>
+                        <a href="{% url 'subject_head_studys' %}">
+                          <button class="text-white bg-purple-700 px-4 py-1 rounded-md mt-2">Create</button>
+                        </a>
                     </div>
                 </div>
             </div>

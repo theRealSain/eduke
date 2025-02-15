@@ -1,0 +1,156 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eduke Class Head</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="{% static 'main/css/style.css' %}">
+  <link rel="icon" href="{% static 'main/images/logobase_white.png' %}">
+</head>
+<body class="bg-gray-100 text-gray-900">
+
+  <!-- Dashboard Wrapper -->
+  <div class="flex h-screen">
+    <!-- Main Content -->
+    <main id="main-content" class="flex-1 overflow-y-auto w-full transition-all">
+      
+      <!-- Top Navbar -->
+      <header class="bg-white shadow p-1 pr-4 flex justify-between items-center">
+        <div class="flex items-center space-x-4">
+          <!-- Hamburger Button outside Sidebar -->
+          <button id="hamburger-button" class="sm:hidden text-gray-800 ml-5 focus:outline-none">
+            <i class="fas fa-bars text-2xl"></i>
+          </button>
+          <div class="py-0">
+            <img src="{% static 'main/images/logo_text_long.png' %}" alt="Eduke Logo" class="w-full h-[80px] mx-auto">
+          </div>
+        </div>
+        <div class="flex items-center space-x-4">
+          <!-- Logout Button, visible on large screens and hidden on small screens -->
+          <a href="{% url 'logout' %}" class="hidden lg:block">
+            <button class="bg-[#4f0074] hover:bg-violet-700 text-white px-4 py-2 rounded-md">
+              <i class="fa-solid fa-power-off"></i> &nbsp; Logout
+            </button>
+          </a>
+        </div>
+      </header>
+
+      <!-- Wrapper for Sidebar and Main Content -->
+      <div class="flex h-screen relative">
+
+        <!-- Sidebar -->
+        <aside id="sidebar" class="w-64 bg-[#e5e5e5] text-black flex flex-col py-6 transform transition-transform -translate-x-full sm:translate-x-0 sm:relative absolute top-0 left-0 h-full z-10">
+          <nav class="flex-1">
+            <ul class="space-y-4 px-4">
+              <li>
+                <a href="{% url 'class_head_dashboard' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-table-columns"></i> &nbsp;
+                  Dashboard
+                </a>
+              </li>
+              <li>
+                <a href="{% url 'class_head_class' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-chalkboard"></i> &nbsp;
+                  Your Class
+                </a>
+              </li>
+              <li class="bg-gray-300 rounded-md">
+                <a href="{% url 'class_head_students' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-user-group"></i> &nbsp;
+                  Students
+                </a>
+              </li>
+              <li>
+                <a href="{% url 'class_head_subjects' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-book"></i> &nbsp;
+                  Subjects
+                </a>
+              </li>
+              <li>
+                <a href="{% url 'class_head_chat' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-comments"></i> &nbsp;
+                  Eduke Chat
+                </a>
+              </li>
+              <li>
+                <a href="{% url 'class_head_profile' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-circle-user"></i> &nbsp;
+                  Profile
+                </a>
+              </li>
+              <li>
+                <a href="{% url 'logout' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-power-off"></i> &nbsp;
+                  Log Out
+                </a>
+              </li>
+            </ul>
+          </nav>
+        </aside>
+        
+        <!-- Dashboard Content -->
+        <div id="content-wrapper" class="p-6 space-y-6 w-full">
+          <div class="container mx-auto p-8">
+            <div class="bg-white p-6 rounded-lg shadow-md px-[120px]">
+              <h1 class="text-2xl text-center text-[#4f0074] font-bold mb-5">Student Profile</h1>
+              
+              <!-- Add a large image after the heading -->
+              <div class="text-center mb-5">
+                <img src="{% static 'main/images/student_profile.png' %}" alt="Student Profile Image" class="w-1/4 max-w-3xl mx-auto">
+              </div>
+
+              <!-- Section 2: Child Details -->
+              <div class="mb-[20px]">
+                <!-- Row 1 -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label class="text-sm font-semibold ml-2 text-gray-700">Student Name</label>
+                    <p class="text-md bg-[#f2d7ff] px-4 py-2 rounded-[30px] text-purple-700 font-bold mt-2">{{ name }}</p>                      
+                  </div>
+                  <div>
+                    <label class="text-sm font-semibold ml-2 text-gray-700">Roll Number</label>
+                    <p class="text-md bg-[#f2d7ff] px-4 py-2 rounded-[30px] text-purple-700 font-bold mt-2">
+                      {{ roll_no }}
+                    </p>
+                  </div>
+                </div>                
+
+                <!-- Row 2 -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                  <div>
+                    <label class="text-sm font-semibold ml-2 text-gray-700">Class</label>
+                    <p class="text-md bg-[#f2d7ff] px-4 py-2 rounded-[30px] text-purple-700 font-bold mt-2">{{ class_name }}</p>                      
+                  </div>
+                  <div>
+                    <label class="text-sm font-semibold ml-2 text-gray-700">Institution</label>
+                    <p class="text-md bg-[#f2d7ff] px-4 py-2 rounded-[30px] text-purple-700 font-bold mt-2">{{ institution_name }}</p>                      
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+      </div>
+    </main>
+
+  </div>
+
+  <!-- JavaScript to toggle sidebar visibility -->
+  <script>
+    const hamburgerButton = document.getElementById('hamburger-button');
+    const sidebar = document.getElementById('sidebar');
+    const mainContent = document.getElementById('main-content');
+
+    hamburgerButton.addEventListener('click', () => {
+      sidebar.classList.toggle('-translate-x-full');
+      // Adjust main content width when the sidebar is hidden
+      mainContent.classList.toggle('lg:w-full');
+    });
+  </script>
+
+</body>
+</html>

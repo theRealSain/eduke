@@ -1,0 +1,215 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eduke Subject Head</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="{% static 'main/css/style.css' %}">
+  <link rel="icon" href="{% static 'main/images/logobase_white.png' %}">
+</head>
+<body class="bg-gray-100 text-gray-900">
+
+  <!-- Dashboard Wrapper -->
+  <div class="flex h-screen">
+    <!-- Main Content -->
+    <main id="main-content" class="flex-1 overflow-y-auto w-full transition-all">
+      
+      <!-- Top Navbar -->
+      <header class="bg-white shadow p-1 pr-4 flex justify-between items-center">
+        <div class="flex items-center space-x-4">
+          <!-- Hamburger Button outside Sidebar -->
+          <button id="hamburger-button" class="sm:hidden text-gray-800 ml-5 focus:outline-none">
+            <i class="fas fa-bars text-2xl"></i>
+          </button>
+          <div class="py-0">
+            <img src="{% static 'main/images/logo_text_long.png' %}" alt="Eduke Logo" class="w-full h-[80px] mx-auto">
+          </div>
+        </div>
+        <div class="flex items-center space-x-4">
+          <!-- Logout Button, visible on large screens and hidden on small screens -->
+          <a href="{% url 'logout' %}" class="hidden lg:block">
+            <button class="bg-[#4f0074] hover:bg-violet-700 text-white px-4 py-2 rounded-md">
+              <i class="fa-solid fa-power-off"></i> &nbsp; Logout
+            </button>
+          </a>
+        </div>
+      </header>
+
+      <!-- Wrapper for Sidebar and Main Content -->
+      <div class="flex h-screen relative">
+
+        <!-- Sidebar -->
+        <aside id="sidebar" class="w-64 bg-[#e5e5e5] text-black flex flex-col py-6 transform transition-transform -translate-x-full sm:translate-x-0 sm:relative absolute top-0 left-0 h-full z-10">
+          <nav class="flex-1">
+            <ul class="space-y-4 px-4">
+              <li>
+                <a href="{% url 'subject_head_dashboard' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-table-columns"></i> &nbsp;
+                  Dashboard
+                </a>
+              </li>
+              <li class="bg-gray-300 rounded-md">
+                <a href="{% url 'subject_head_subjects' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-book"></i> &nbsp;
+                  Your Subject
+                </a>
+              </li>
+              <li>
+                <a href="{% url 'subject_head_class' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-chalkboard"></i> &nbsp;
+                  Your Class
+                </a>
+              </li>
+              <li>
+                <a href="{% url 'subject_head_chat' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-comments"></i> &nbsp;
+                  Eduke Chat
+                </a>
+              </li>
+              <li>
+                <a href="{% url 'subject_head_profile' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-circle-user"></i> &nbsp;
+                  Profile
+                </a>
+              </li>
+              <li>
+                <a href="{% url 'logout' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-power-off"></i> &nbsp;
+                  Log Out
+                </a>
+              </li>
+            </ul>
+          </nav>
+        </aside>
+        
+        <!-- Dashboard Content -->
+        <div id="content-wrapper" class="p-6 space-y-6 w-full bg-gray-100">
+            <!-- Upload Documents Section -->
+            <div class="bg-purple-100 border-l-4 border-purple-600 p-4 rounded-lg shadow-md">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-xl font-extrabold text-purple-800">Upload Study materials here</h3>
+                    <button onclick="toggleDocForm()" 
+                            class="bg-purple-600 text-white text-md font-semibold px-3 py-1 rounded-full hover:bg-purple-700">
+                        + Add New
+                    </button>
+                </div>
+                <p class="text-gray-800 text-sm mb-3">
+                    You can upload study materials such as PDFs, Word documents, and PowerPoint presentations. Make sure the files are relevant to the subject and properly named for easy identification.
+                </p>
+
+                <div id="docForm" class="hidden bg-white p-6 rounded-lg shadow-lg">
+                    <form method="post" enctype="multipart/form-data" class="space-y-4">
+                        {% csrf_token %}
+
+                        <!-- Announcement (Optional) -->
+                        <div>
+                            <label for="announcement" class="block text-sm font-medium text-gray-700 mb-3">Announcement</label>
+                            <textarea name="announcement" id="announcement" rows="3" placeholder="Announce something..."
+                                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none 
+                                focus:ring-purple-500 focus:border-purple-500 sm:text-sm"></textarea>
+                        </div>
+                        
+                        
+                        <div>
+                            <label for="announcement" class="block text-sm font-medium text-gray-700 mb-3">Upload Documents</label>
+                            <div class="flex items-center justify-center w-full">
+                                <label for="dropzone-file" class="flex flex-col items-center justify-center w-full h-64 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer">
+                                    <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                        <i class="fa-solid fa-cloud-arrow-up text-[30px] text-gray-700"></i>
+                                        <p class="mb-2 text-sm text-gray-500 "><span class="font-semibold">Click to upload</span> or drag and drop</p>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400">PDF, PPT, DOCX, PNG, JPG, SVG</p>
+                                        <p id="file-name" class="mt-2 text-sm text-gray-500"></p>
+                                    </div>
+                                    <input id="dropzone-file" type="file" name="file_url" id="documents" class="hidden" />
+                                </label>
+                            </div>
+                        </div>
+
+                        <script>
+                            // Add an event listener to the input field
+                            document.getElementById('dropzone-file').addEventListener('change', function (e) {
+                                var fileName = e.target.files[0] ? e.target.files[0].name : ''; // Get the file name
+                                document.getElementById('file-name').textContent = fileName ? `${fileName}` : ''; // Update the file name display
+                            });
+                        </script>
+
+
+                        <!-- Submit Button -->
+                        <div>
+                            <button type="submit" class="bg-purple-600 w-full text-white text-md font-semibold px-4 py-2 rounded-md hover:bg-purple-700">
+                                Upload
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+            </div>
+
+            <!-- Docs List Section -->
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">📄📢 Uploaded Documents or Announcements</h2>
+
+                <div id="docList" class="space-y-3">
+                    {% for doc in docs %}
+                    <div class="p-4 bg-purple-50 border-l-4 border-purple-600 shadow-md rounded-lg flex justify-between items-center">
+                        <div>
+                            {% if doc.1 and doc.2 %}  <!-- Both file and announcement exist -->
+                                <a href="/{{ doc.1 }}" class="text-lg font-semibold text-gray-800 hover:underline" target="_blank">
+                                    📄 {{ doc.1|cut:"media/uploads/" }}
+                                </a>
+                                <p class="text-md text-gray-800 mt-1">📢 {{ doc.2 }}</p>
+
+                            {% elif doc.1 %}  <!-- Only file exists -->
+                                <a href="/{{ doc.1 }}" class="text-lg font-semibold text-gray-800 hover:underline" target="_blank">
+                                    📄 {{ doc.1|cut:"media/uploads/" }}
+                                </a>
+
+                            {% elif doc.2 %}  <!-- Only announcement exists -->
+                                <p class="text-lg font-semibold text-gray-800">📢 {{ doc.2 }}</p>
+                            {% endif %}
+                            
+                            <p class="text-sm text-gray-600">Uploaded on: {{ doc.3 }}</p>
+                        </div>
+                        <button onclick="deleteDoc({{ doc.0 }})" class="text-[30px] text-red-600">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </div>
+                    {% empty %}
+                    <p class="text-gray-600">No Documents or Announcements uploaded yet.</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+
+        </div>
+
+        <script>
+            function toggleDocForm() {
+                document.getElementById("docForm").classList.toggle("hidden");
+            }
+        </script>
+
+        
+      </div>
+    </main>
+
+  </div>
+
+  <!-- JavaScript to toggle sidebar visibility -->
+  <script>
+    const hamburgerButton = document.getElementById('hamburger-button');
+    const sidebar = document.getElementById('sidebar');
+    const mainContent = document.getElementById('main-content');
+
+    hamburgerButton.addEventListener('click', () => {
+      sidebar.classList.toggle('-translate-x-full');
+      // Adjust main content width when the sidebar is hidden
+      mainContent.classList.toggle('lg:w-full');
+    });
+  </script>
+
+</body>
+</html>

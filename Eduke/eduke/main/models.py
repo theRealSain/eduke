@@ -32,7 +32,7 @@ class Subjects(models.Model):
     email = models.EmailField(unique=True)
     password = models.CharField(max_length=255)
     user = models.ForeignKey(Users, on_delete=models.CASCADE)
-    class_obj = models.ForeignKey(Classes, on_delete=models.CASCADE)  # Renamed to avoid conflicts with Python `class`
+    class_obj = models.ForeignKey(Classes, on_delete=models.CASCADE)
 
 class Students(models.Model):
     id = models.AutoField(primary_key=True)
@@ -66,17 +66,17 @@ class Attendance(models.Model):
     attendance_date = models.DateField()
     status = models.CharField(max_length=10, choices=STATUS_CHOICES)
 
-class StudentEvaluations(models.Model):
+class StudentEvaluation(models.Model):
     id = models.AutoField(primary_key=True)
     student = models.ForeignKey(Students, on_delete=models.CASCADE)
-    study_time_rating = models.IntegerField()
-    sleep_time_rating = models.IntegerField()
-    homework_completion_rating = models.IntegerField()
-    class_participation_rating = models.IntegerField()
-    test_preparation_rating = models.IntegerField()
-    class_difficulty_rating = models.IntegerField()
-    parent_rating = models.IntegerField()
-    teacher_rating = models.IntegerField()
+    subject = models.ForeignKey(Subjects, on_delete=models.CASCADE)
+    study_time_rating = models.FloatField()
+    sleep_time_rating = models.FloatField()
+    homework_completion_rating = models.FloatField()
+    assignment_rating = models.FloatField()
+    attendance_percentage = models.FloatField()
+    marks_percentage = models.FloatField()
+    quiz_percentage = models.FloatField()
 
 class Chat(models.Model):
     id = models.AutoField(primary_key=True)
@@ -90,11 +90,33 @@ class Quizzes(models.Model):
     name = models.CharField(max_length=255)
     class_obj = models.ForeignKey(Classes, on_delete=models.SET_NULL, null=True, blank=True)
     subject = models.ForeignKey(Subjects, on_delete=models.CASCADE)
+
+class QuizQuestions(models.Model):
+    id = models.AutoField(primary_key=True)
+    quiz = models.ForeignKey(Quizzes, on_delete=models.CASCADE)  # This should be enforced in the DB
     question = models.TextField()
     option_a = models.CharField(max_length=255)
     option_b = models.CharField(max_length=255)
     option_c = models.CharField(max_length=255)
     option_d = models.CharField(max_length=255)
     correct_option = models.CharField(max_length=1, choices=[('A', 'A'), ('B', 'B'), ('C', 'C'), ('D', 'D')])
-    student = models.ForeignKey(Students, on_delete=models.SET_NULL, null=True, blank=True)
+
+class QuizResponse(models.Model):
+    id = models.AutoField(primary_key=True)
+    question = models.ForeignKey(QuizQuestions, on_delete=models.CASCADE)  # Ensure this is included
+    student = models.ForeignKey(Students, on_delete=models.CASCADE)
     student_response = models.CharField(max_length=1, choices=[('A', 'A'), ('B', 'B'), ('C', 'C'), ('D', 'D')], null=True, blank=True)
+
+class Announcements(models.Model):
+    id = models.AutoField(primary_key=True)
+    message = models.TextField()
+    class_obj = models.ForeignKey(Classes, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+class StudyMaterials(models.Model):
+    id = models.AutoField(primary_key=True)
+    file_url = models.TextField(null=True, blank=True)
+    announcement = models.TextField(null=True, blank=True)
+    class_obj = models.ForeignKey(Classes, on_delete=models.CASCADE)
+    subject = models.ForeignKey(Subjects, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)

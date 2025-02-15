@@ -1,0 +1,241 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eduke Student</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="{% static 'main/css/style.css' %}">
+  <link rel="icon" href="{% static 'main/images/logobase_white.png' %}">
+</head>
+<body class="bg-gray-100 text-gray-900">
+
+  <!-- Dashboard Wrapper -->
+  <div class="flex h-screen">
+    <!-- Main Content -->
+    <main id="main-content" class="flex-1 overflow-y-auto w-full transition-all">
+      
+      <!-- Top Navbar -->
+      <header class="bg-white shadow p-1 pr-4 flex justify-between items-center">
+        <div class="flex items-center space-x-4">
+          <!-- Hamburger Button outside Sidebar -->
+          <button id="hamburger-button" class="sm:hidden text-gray-800 ml-5 focus:outline-none">
+            <i class="fas fa-bars text-2xl"></i>
+          </button>
+          <div class="py-0">
+            <img src="{% static 'main/images/logo_text_long.png' %}" alt="Eduke Logo" class="w-full h-[80px] mx-auto">
+          </div>
+        </div>
+        <div class="flex items-center space-x-4">
+          <!-- Logout Button, visible on large screens and hidden on small screens -->
+          <a href="{% url 'logout' %}" class="hidden lg:block">
+            <button class="bg-[#4f0074] hover:bg-violet-700 text-white px-4 py-2 rounded-md">
+              <i class="fa-solid fa-power-off"></i> &nbsp; Logout
+            </button>
+          </a>
+        </div>
+      </header>
+
+      <!-- Wrapper for Sidebar and Main Content -->
+      <div class="flex h-screen relative">
+
+        <!-- Sidebar -->
+        <aside id="sidebar" class="w-64 bg-[#e5e5e5] text-black flex flex-col py-6 transform transition-transform -translate-x-full sm:translate-x-0 sm:relative absolute top-0 left-0 h-full z-10">
+          <nav class="flex-1">
+            <ul class="space-y-4 px-4">
+              <li>
+                <a href="{% url 'student_dashboard' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-table-columns"></i> &nbsp;
+                  Dashboard
+                </a>
+              </li>
+              <li class="bg-gray-300 rounded-md">
+                <a href="{% url 'student_class' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-chalkboard"></i> &nbsp;
+                  Your Class
+                </a>
+              </li>
+              <li>
+                <a href="{% url 'student_chat' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-comments"></i> &nbsp;
+                  Eduke Chat
+                </a>
+              </li>
+              <li>
+                <a href="{% url 'student_profile' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-circle-user"></i> &nbsp;
+                  Profile
+                </a>
+              </li>
+              <li>
+                <a href="{% url 'logout' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-power-off"></i> &nbsp;
+                  Log Out
+                </a>
+              </li>
+            </ul>
+          </nav>
+        </aside>
+        
+        <!-- Dashboard Content -->
+        <div id="content-wrapper" class="p-6 space-y-6 w-full">
+
+          <section class="bg-gray-200 py-6 px-6">
+            <h1 class="text-2xl font-bold text-gray-800">Welcome to <span class="font-bold text-purple-700 uppercase">{{ subject.subject_name }}</span> </h1>
+            <p class="mt-2 text-lg text-gray-600 font-semibold">
+              LOGGED IN AS: <span class="font-bold text-purple-700 uppercase">{{ student_name }}</span>
+            </p>
+            <p class="mt-2 text-lg text-gray-600 font-semibold">
+              CLASS: <span class="font-bold text-purple-700 uppercase">{{ subject.class_name }}</span>
+            </p>
+          </section>
+
+          <!-- Subject Overview -->
+          <div class="bg-white p-4 rounded-md shadow">
+              <h3 class="text-lg font-bold">Assigned Subject - <span class="font-bold text-purple-700 uppercase">{{ subject.subject_name }}</span></h3>
+            <p class="text-gray-600">Here you can attend quizzes, view study materials and announcements for this subject.</p>
+            
+            <!--Quiz Area-->
+            <div class="bg-gray-100 border-l-4 border-purple-600 p-4 rounded-lg shadow-md my-[25px]">
+              
+              <div class="flex items-center justify-between mb-2">
+                  <h3 class="text-xl font-extrabold text-purple-800">🧑‍🏫🎯 Eduke Quiz</h3>
+                  <div>
+                      <a href="javascript:void(0);">
+                          <button onclick="toggleForm()" class="bg-gray-900 text-white text-md font-semibold px-3 py-1 rounded-full hover:bg-gray-700">
+                              View
+                          </button>
+                      </a>
+                  </div>
+              </div>
+              <p class="text-gray-800 mb-3">
+                  <p class="text-gray-600 text-[15px]"><b>Quiz master:</b> {{ subject.subject_head }} <br>
+                      Participate in the quiz now and test your knowledge on this subject!
+                  </p>
+              </p>
+              <!-- View Quizzes (Initially hidden) -->
+              <div id="quizzesList" class="bg-white p-4 rounded-md shadow-md border border-gray-300 mt-4 hidden">
+                <h4 class="text-lg font-semibold text-gray-800 mb-5">📋 Quizzes by {{ subject.subject_head }}:</h4>
+                <div id="quizzes" class="space-y-6">
+                    {% for quiz in quizzes %}
+                    <div class="bg-gray-100 shadow-md rounded-lg p-3">
+                        <a href="{% url 'student_quiz' subject.id quiz.id %}" class="text-gray-600 text-md font-semibold hover:underline">
+                            {{ forloop.counter }}. {{ quiz.name }}
+                        </a>
+                    </div>
+                    {% empty %}
+                    <p class="text-gray-600 text-sm italic">No Quizzes exist!</p>
+                    {% endfor %}
+                </div>
+                <button type="button" onclick="toggleViewQuizzes()" class="text-gray-900 border border-purple-600 rounded-md px-3 py-1 mt-4">Close</button>
+              </div>
+            </div>
+            <!-- End of View Quizzes -->
+
+            <script>
+                // Function to toggle the visibility of the quiz list
+                function toggleViewQuizzes() {
+                    const quizzesList = document.getElementById('quizzesList');
+                    quizzesList.classList.toggle('hidden');
+                }
+                // Function to toggle the visibility of the form (or button in this case)
+                function toggleForm() {
+                    const form = document.getElementById('quizzesList');
+                    form.classList.toggle('hidden');
+                }
+            </script>
+
+            <!--Study Materials Area-->
+            <div class="bg-gray-100 border-l-4 border-purple-600 p-4 rounded-lg shadow-md my-[25px]">
+              <div class="flex items-center justify-between mb-2">
+                  <h3 class="text-xl font-extrabold text-purple-800">📢📄 Study Materials and Announcements</h3>
+                  <div>
+                      <button onclick="toggleStudyMaterialsList()" class="bg-gray-900 text-white text-md font-semibold px-3 py-1 rounded-full hover:bg-gray-700">
+                          View
+                      </button>
+                  </div>
+              </div>
+              <p class="text-gray-800 mb-3">
+                  <p class="text-gray-600 text-[15px]"><b>Uploaded by:</b> {{ subject.subject_head }} <br>
+                      View the important study materials and announcements for this subject here.
+                  </p>
+              </p>
+
+              <!-- Study Materials Section -->
+              <div id="StudyMaterialsList" class="bg-white p-6 rounded-lg shadow-md border border-gray-300 mt-4 hidden">
+                  <h2 class="text-2xl font-bold text-gray-800 mb-4">📄📢 Study Materials or Announcements</h2>
+
+                  <div id="studys" class="space-y-3">
+                      {% for study in studys %}
+                      <div class="p-4 bg-purple-50 border-l-4 border-purple-600 shadow-md rounded-lg flex justify-between items-center">
+                        <div>
+                            {% if study.file_url and study.announcement %}  
+                                <!-- Both file and announcement exist -->
+                                <a href="/{{ study.file_url }}" class="text-lg font-semibold text-gray-800 hover:underline" target="_blank">
+                                    📄 {{ study.file_url|cut:"media/uploads/" }}
+                                </a>
+                                <p class="text-md text-gray-800 mt-1">📢 {{ study.announcement }}</p>
+
+                            {% elif study.file_url %}  
+                                <!-- Only file exists -->
+                                <a href="/{{ study.file_url }}" class="text-lg font-semibold text-gray-800 hover:underline" target="_blank">
+                                    📄 {{ study.file_url|cut:"media/uploads/" }}
+                                </a>
+
+                            {% elif study.announcement %}  
+                                <!-- Only announcement exists -->
+                                <p class="text-lg font-semibold text-gray-800">📢 {{ study.announcement }}</p>
+                            {% endif %}
+                            
+                            <p class="text-sm text-gray-600">Uploaded on: {{ study.created_at }}</p>
+                        </div>
+                      </div>
+                      {% empty %}
+                      <p class="text-gray-600">No Study Materials or Announcements uploaded yet.</p>
+                      {% endfor %}
+                  </div>
+
+                  <button type="button" onclick="toggleViewStudys()" class="text-gray-900 border border-purple-600 rounded-md px-3 py-1 mt-4">Close</button>
+              </div>
+              
+            </div>
+            <!-- End of View Study Materials -->
+
+            <script>
+                // Function to toggle the visibility of the quiz list
+                function toggleViewStudys() {
+                    const quizzesList = document.getElementById('StudyMaterialsList');
+                    StudyMaterialsList.classList.toggle('hidden');
+                }
+                // Function to toggle the visibility of the form (or button in this case)
+                function toggleStudyMaterialsList() {
+                    const form = document.getElementById('StudyMaterialsList');
+                    form.classList.toggle('hidden');
+                }
+            </script>
+
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+  </div>
+
+  <!-- JavaScript to toggle sidebar visibility -->
+  <script>
+    const hamburgerButton = document.getElementById('hamburger-button');
+    const sidebar = document.getElementById('sidebar');
+    const mainContent = document.getElementById('main-content');
+
+    hamburgerButton.addEventListener('click', () => {
+      sidebar.classList.toggle('-translate-x-full');
+      // Adjust main content width when the sidebar is hidden
+      mainContent.classList.toggle('lg:w-full');
+    });
+  </script>
+
+</body>
+</html>

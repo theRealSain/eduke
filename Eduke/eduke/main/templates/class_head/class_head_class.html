@@ -7,6 +7,7 @@
   <title>Eduke Class Head</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="{% static 'main/css/style.css' %}">
   <link rel="icon" href="{% static 'main/images/logobase_white.png' %}">
 </head>
 <body class="bg-gray-100 text-gray-900">
@@ -101,6 +102,106 @@
                 </p>
             </section>
 
+            <div class="bg-purple-100 border-l-4 border-purple-600 p-4 rounded-lg shadow-md">
+              <div class="flex items-center justify-between mb-2">
+                  <h3 class="text-xl font-extrabold text-purple-800 animate-pulse">📢 Announce Something to your class</h3>
+                  <div>
+                      <button onclick="toggleForm()" class="bg-purple-600 text-white text-xs font-semibold px-3 py-1 rounded-full hover:bg-purple-700">
+                          + Add Announcement
+                      </button>
+                      <button onclick="toggleViewAnnouncements()" class="bg-gray-800 text-white text-xs font-semibold px-3 py-1 rounded-full hover:bg-gray-700">
+                          View Announcements
+                      </button>
+                  </div>
+              </div>
+              <p class="text-gray-800 text-sm mb-3">
+                  Have something important to share? Post an announcement to your class now!
+              </p>
+
+              <!-- Upload Announcement Form (Initially Hidden) -->
+              <div id="announcementForm" class="hidden bg-white p-4 rounded-md shadow-md border border-purple-300">
+                  <form id="announcementFormElement" method="POST">
+                      {% csrf_token %}
+                      <label for="announcementText" class="block text-gray-700 font-medium mb-2">Write Announcement:</label>
+                      <textarea id="announcementText" class="w-full p-2 border rounded-md focus:ring-2 focus:ring-purple-400" rows="3" placeholder="Type your announcement..." required></textarea>
+
+                      <div class="flex justify-between items-center mt-3">
+                          <button type="button" onclick="toggleForm()" class="text-gray-900 border border-purple-600 rounded-md px-3 py-1">Cancel</button>
+                          <button type="button" id="postAnnouncementBtn" class="bg-purple-600 text-white px-3 py-1 rounded-md hover:bg-purple-700">Post</button>
+                      </div>
+                  </form>
+              </div>
+
+              <!-- View Announcements -->
+              <div id="announcementList" class="hidden bg-white p-4 rounded-md shadow-md border border-gray-300">
+                  <h4 class="text-lg font-semibold text-gray-800 mb-5">📋 Important Announcements by {{ class_head_name }}:</h4>
+                  <div id="announcements" class="space-y-6">
+                      {% for announcement in announcements %}
+                      <div class="bg-white shadow-md rounded-lg p-4 border-l-4 border-purple-700">
+                          <p class="text-gray-600 text-md font-semibold">{{ announcement.1 }}</p>
+                          <p class="text-sm text-gray-500 mt-2">📅 Posted on: {{ announcement.2|date:"F j, Y, g:i A" }}</p>
+                      </div>
+                      {% empty %}
+                      <p class="text-gray-600 text-sm italic">No announcements yet.</p>
+                      {% endfor %}
+                  </div>
+                  <button type="button" onclick="toggleViewAnnouncements()" class="text-gray-900 border border-purple-600 rounded-md px-3 py-1 mt-4">Close</button>
+              </div>
+            </div>
+
+            <script>
+                function toggleForm() {
+                    document.getElementById('announcementForm').classList.toggle('hidden');
+                    document.getElementById('announcementList').classList.add('hidden'); // Hide list when form is opened
+                }
+
+                function toggleViewAnnouncements() {
+                    document.getElementById('announcementList').classList.toggle('hidden');
+                    document.getElementById('announcementForm').classList.add('hidden'); // Hide form when list is opened
+                }
+
+                document.getElementById("postAnnouncementBtn").addEventListener("click", function () {
+                    let announcementText = document.getElementById("announcementText").value.trim();
+                    
+                    if (announcementText === "") {
+                        alert("Announcement cannot be empty!");
+                        return;
+                    }
+
+                    fetch("{% url 'class_head_class' %}", {  // Make sure this is the correct Django URL name
+                        method: "POST",
+                        headers: {
+                            "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]").value,
+                            "Content-Type": "application/x-www-form-urlencoded",
+                        },
+                        body: new URLSearchParams({ "announcementText": announcementText })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Add new announcement without refreshing
+                            let announcementsDiv = document.getElementById("announcements");
+                            let newAnnouncement = document.createElement("div");
+                            newAnnouncement.classList.add("bg-white", "shadow-md", "rounded-lg", "p-4", "border-l-4", "border-purple-700");
+                            newAnnouncement.innerHTML = `
+                                <p class="text-gray-600 text-md font-semibold">${announcementText}</p>
+                                <p class="text-sm text-gray-500 mt-2">📅 Just now</p>
+                            `;
+                            announcementsDiv.prepend(newAnnouncement);  // Add new announcement at the top
+                            
+                            document.getElementById("announcementText").value = "";  // Clear input field
+                            toggleForm();  // Hide form
+                        } else {
+                            alert(data.message);
+                        }
+                    })
+                    .catch(error => console.error("Error:", error));
+                });
+            </script>
+
+
+
+
             <div class="bg-white p-4 rounded-md shadow">
               <div class="flex items-center justify-between mb-4">
                   <h3 class="text-lg font-bold">Subjects of {{ class_name }}</h3>
@@ -147,7 +248,14 @@
                       <td class="px-4 py-2 text-center border-b-2 border-b-gray-300 bg-gray-200">{{ student.roll_no }}</td>
                       <td class="px-4 py-2 text-center border-b-2 border-b-gray-300 bg-gray-200">{{ student.name }}</td>
                       <td class="px-4 py-2 text-center border-b-2 border-b-gray-300 bg-gray-200">{{ class_name }}</td>
-                      <td class="px-4 py-2 text-center border-b-2 border-b-gray-300 bg-gray-200">Details</td>
+
+                      <td class="px-4 py-2 text-center border-b-2 border-b-gray-300 bg-gray-200">
+                        <a href="{% url 'class_head_student_profile' student.roll_no %}" 
+                          class="text-purple-600 hover:underline">
+                          Profile
+                        </a>
+                      </td>
+
                     </tr>
                     {% empty %}
                     <tr>

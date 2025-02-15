@@ -3,7 +3,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from .forms import InstitutionRegisterForm, LoginForm, ClassHeadLoginForm, SubjectHeadLoginForm, StudentLoginForm, ParentLoginForm, AddClassForm, AddSubjectForm
-from .models import Institution, Classes, Subjects, Students, Users, Parents, Chat
+from .models import Institution, Classes, Subjects, Students, Users, Parents, Chat, Announcements
 from django.db import IntegrityError, transaction
 from django.db import connection
 from django.core.exceptions import ObjectDoesNotExist
@@ -12,6 +12,8 @@ from django.db.models import Q
 from django.views.decorators.csrf import csrf_exempt
 import json
 from django.utils.timezone import now
+from django.http import HttpResponse
+
 
 
 # Index page
@@ -198,6 +200,28 @@ def admin_classes(request):
     # Render the template
     return render(request, 'admin/admin_classes.html', context)
 
+def admin_subjects(request):
+    # Check if the user is logged in
+    if 'institution_id' not in request.session:
+        messages.error(request, 'Please log in to access this page.')
+        return redirect('login')
+    
+    # Get the institution_id from the session
+    institution_id = request.session['institution_id']
+
+    try:
+        # Fetch the institution based on the institution_id from the session
+        institution = Institution.objects.get(institution_id=institution_id)
+    except Institution.DoesNotExist:
+        messages.error(request, "Institution not found.")
+        return redirect('login')
+    
+    context = {
+        'institution_name': institution.institution_name,
+    }
+
+    return render(request, 'admin/admin_subjects.html', context)
+
 
 def admin_students(request):
     # Ensure the user is an admin
@@ -207,42 +231,20 @@ def admin_students(request):
     
     # Get the institution_id from the session
     institution_id = request.session['institution_id']
-    
+
     try:
         # Fetch the institution based on the institution_id from the session
         institution = Institution.objects.get(institution_id=institution_id)
-
-        # Current institution details
-        institution_name = institution.institution_name
     except Institution.DoesNotExist:
         messages.error(request, "Institution not found.")
         return redirect('login')
+    
+    context = {
+        'institution_name': institution.institution_name,
+    }
 
-    with connection.cursor() as cursor:
-        # Fetch all student details with class and teacher data
-        cursor.execute("""
-            SELECT s.id, s.name AS student_name, c.name AS class_name, t.name AS teacher_name
-            FROM main_students s
-            LEFT JOIN main_classes c ON s.class_id_id = c.id
-            LEFT JOIN main_teachers t ON c.id = t.class_id_id
-            WHERE c.institution_id_id = %s
-        """, [institution_id])
 
-        students = cursor.fetchall()
-
-    # Create a list of students
-    students_list = [{
-        'id': row[0],
-        'name': row[1],
-        'class_name': row[2] if row[2] else "Not Assigned",
-        'teacher_name': row[3] if row[3] else "Not Assigned",
-    } for row in students] if students else []
-
-    return render(request, 'admin/admin_students.html', {
-        'institution_name': institution_name,
-        'students': students_list,
-        'student_count': len(students_list),
-    })
+    return render(request, 'admin/admin_students.html', context)
 
 
 def admin_profile(request):
@@ -385,34 +387,64 @@ def class_head_class(request):
     if not class_id:
         return redirect('class_head_login')  # Redirect to login if not logged in
     
-    # Fetch the class details for the logged-in class head
+    print(f"Current Class ID: {class_id}")
+
     try:
         class_details = Classes.objects.get(id=class_id)  # Retrieve class using the class_id
     except Classes.DoesNotExist:
         messages.error(request, 'Class not found.')
         return redirect('class_head_login')
+    
+    # Fetch the actual user_id from main_users table based on the session user_id (class_head_id)
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT user_id FROM main_classes WHERE id = %s", [class_id])
+        logged_in_user = cursor.fetchone()
+        if logged_in_user:
+            logged_in_user_id = logged_in_user[0]  # Corrected user ID
+            print(f"Logged-in User ID: {logged_in_user_id}")
+
 
     # Ensure the class head is assigned
-    class_head_name = class_details.class_head  # The class head's name is stored in the class_head field
-    class_name = class_details.class_name  # The class name
+    class_head_name = class_details.class_head  
+    class_name = class_details.class_name  
 
     # Fetch subjects linked to the class
-    subjects = Subjects.objects.filter(class_obj=class_details)  # Fetch all subjects for the class
-    subject_count = subjects.count()  # Count the number of subjects
+    subjects = Subjects.objects.filter(class_obj=class_details)  
+    subject_count = subjects.count()  
 
-    # Fetch students for the class (assuming 'class_obj' is a foreign key in the Students model)
-    students = Students.objects.filter(class_obj=class_details)  # Adjust if necessary
-
-    # Get the count of students
+    # Fetch students for the class
+    students = Students.objects.filter(class_obj=class_details)  
     student_count = students.count()
 
-    # Pass the class head-specific data, subjects, and students to the template
+    # Fetch announcements using raw SQL
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT id, message, created_at FROM main_announcements WHERE class_obj_id = %s ORDER BY created_at DESC", [class_id])
+        announcements = cursor.fetchall()
+
+    print("Fetched Announcements:", announcements)  # Debugging output
+
+    # Handle new announcement submission (AJAX request)
+    if request.method == "POST" and request.POST.get("announcementText"):
+        announcement_text = request.POST.get("announcementText", "").strip()
+        if announcement_text:
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    "INSERT INTO main_announcements (message, created_at, class_obj_id) VALUES (%s, NOW(), %s)",
+                    [announcement_text, class_id]
+                )
+                print(f"Inserted Announcement: {announcement_text}")  # Debugging output
+            
+            return JsonResponse({"success": True, "message": "Announcement added successfully!"})
+        else:
+            return JsonResponse({"success": False, "message": "Announcement cannot be empty!"})
+
     return render(request, 'class_head/class_head_class.html', {
-        'class_head_name': class_head_name,  # Pass the class head's name
-        'class_name': class_name,  # Pass the class name
-        'students': students,  # Pass the students of the class
-        'student_count': student_count,  # Pass the count of students
-        'subjects': subjects,  # Pass the subjects of the class
+        'class_head_name': class_head_name,  
+        'class_name': class_name,  
+        'students': students,  
+        'student_count': student_count,  
+        'subjects': subjects,  
+        'announcements': announcements,  # Pass announcements to the template
     })
 
 
@@ -729,6 +761,35 @@ def class_head_chat_user(request, user_id):
     }
     return render(request, 'class_head/class_head_chat_user.html', context)
 
+
+
+def class_head_student_profile(request, roll_no):
+    # Retrieve the class_id from session
+    class_id = request.session.get('class_id')
+
+    if not class_id:
+        return redirect('class_head_login')
+
+    # Fetch student details using class_obj_id
+    student = Students.objects.filter(roll_no=roll_no, class_obj_id=class_id).first()
+
+    if not student:
+        return HttpResponse("Student not found", status=404)
+
+    # Fetch class details
+    student_class = Classes.objects.filter(id=student.class_obj_id).first()
+
+    # Fetch institution details
+    institution = Institution.objects.filter(institution_id=student_class.institution_id).first() if student_class else None
+
+    context = {
+        'name': student.name,
+        'roll_no': student.roll_no,
+        'class_name': student_class.class_name if student_class else "N/A",
+        'institution_name': institution.institution_name if institution else "N/A",
+    }
+
+    return render(request, 'class_head/class_head_student_profile.html', context)
 
 
 
@@ -1163,6 +1224,193 @@ def subject_head_chat_user(request, user_id):
     })
 
 
+@csrf_exempt
+def subject_head_quiz(request):
+    subject_id = request.session.get('subject_id')
+    if not subject_id:
+        return redirect('subject_head_login')
+
+    # Fetch subject details
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT user_id, subject_name FROM main_subjects WHERE id = %s", [subject_id])
+        logged_in_user = cursor.fetchone()
+        logged_in_user_id = logged_in_user[0] if logged_in_user else None
+        subject_name = logged_in_user[1] if logged_in_user else "Unknown Subject"
+
+    # Fetch assigned classes
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT c.id, c.class_name 
+            FROM main_classes c
+            JOIN main_subjects s ON c.id = s.class_obj_id
+            WHERE s.id = %s
+        """, [subject_id])
+        classes = cursor.fetchall()
+
+    # Fetch quizzes created by this subject head
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT q.id, q.name, c.class_name 
+            FROM main_quizzes q
+            JOIN main_classes c ON q.class_obj_id = c.id
+            WHERE q.subject_id = %s
+        """, [subject_id])
+        quizzes = cursor.fetchall()
+
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            action = data.get('action')
+
+            if action == "create_quiz":
+                quiz_name = data.get('quiz_name')
+                class_id = data.get('class_id')
+
+                if not (quiz_name and class_id):
+                    return JsonResponse({'error': 'Missing required fields'}, status=400)
+
+                with connection.cursor() as cursor:
+                    cursor.execute(
+                        "INSERT INTO main_quizzes (name, subject_id, class_obj_id) VALUES (%s, %s, %s)",
+                        [quiz_name, subject_id, class_id]
+                    )
+                    cursor.execute("SELECT LAST_INSERT_ID()")
+                    quiz_id = cursor.fetchone()[0]
+
+                return JsonResponse({'quiz_id': quiz_id, 'message': 'Quiz created successfully'})
+
+            elif action == "add_questions":
+                questions = data.get('questions')
+
+                if not questions or not isinstance(questions, list):
+                    return JsonResponse({'error': 'Invalid questions data'}, status=400)
+
+                with connection.cursor() as cursor:
+                    for question in questions:
+                        cursor.execute("""
+                            INSERT INTO main_quizquestions (quiz_id, question, option_a, option_b, option_c, option_d, correct_option) 
+                            VALUES (%s, %s, %s, %s, %s, %s, %s)
+                        """, [
+                            question['quiz_id'],
+                            question['question'],
+                            question['option_a'],
+                            question['option_b'],
+                            question['option_c'],
+                            question['option_d'],
+                            question['correct_option']
+                        ])
+
+                return JsonResponse({'message': 'Questions added successfully'})
+
+            else:
+                return JsonResponse({'error': 'Invalid action'}, status=400)
+
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON data'}, status=400)
+        except Exception as e:
+            print(f"ERROR: {e}")
+            return JsonResponse({'error': str(e)}, status=500)
+        
+    # Fetch quizzes with the number of questions
+    quizzes = []
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT mq.id, mq.name, c.class_name, COUNT(mqq.id) 
+            FROM main_quizzes mq
+            JOIN main_classes c ON mq.class_obj_id = c.id
+            LEFT JOIN main_quizquestions mqq ON mq.id = mqq.quiz_id
+            WHERE mq.subject_id = %s
+            GROUP BY mq.id, mq.name, c.class_name
+        """, [subject_id])
+        quizzes = cursor.fetchall()
+
+    return render(request, 'subject_head/subject_head_quiz.html', {
+        'classes': classes,
+        'quizzes': quizzes,
+        'subject_name': subject_name,
+        'subject_id': subject_id,
+        "quizzes": quizzes,
+    })
+
+
+import os
+import datetime
+from django.shortcuts import render, redirect
+from django.db import connection
+from django.contrib import messages
+
+def subject_head_studys(request):
+    # Ensure the user is a subject head
+    subject_id = request.session.get('subject_id')
+    if not subject_id:
+        print("Redirecting: No subject_id found in session.")
+        return redirect('subject_head_login')
+
+    print(f"Session subject_id: {subject_id}")
+
+    # Fetch class_obj_id for the logged-in subject head
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT class_obj_id FROM main_subjects WHERE id = %s", [subject_id])
+        class_obj = cursor.fetchone()
+    
+    class_obj_id = class_obj[0] if class_obj else None
+    print(f"Fetched class_obj_id: {class_obj_id}")
+
+    # Fetch uploaded documents for this subject and class
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT id, file_url, announcement, created_at 
+            FROM main_studymaterials 
+            WHERE subject_id = %s AND class_obj_id = %s
+            ORDER BY created_at DESC
+        """, [subject_id, class_obj_id])
+        docs = cursor.fetchall()
+    
+    print(f"Fetched {len(docs)} documents for subject_id: {subject_id}, class_obj_id: {class_obj_id}")
+
+    if request.method == "POST":
+        print("POST request received.")
+
+        announcement = request.POST.get('announcement', '')
+        file = request.FILES.get('file_url')  # Corrected file field name
+
+        print(f"Announcement: {announcement}")
+        print(f"Received FILES: {request.FILES}")  # Debugging file upload
+        print(f"File received: {file.name if file else 'No file uploaded'}")
+
+        file_url = None  # Default to None
+
+        # Handle file upload
+        if file and class_obj_id and subject_id:
+            upload_dir = "media/uploads/"
+            if not os.path.exists(upload_dir):
+                os.makedirs(upload_dir)
+                print(f"Created directory: {upload_dir}")
+
+            file_path = os.path.join(upload_dir, file.name)
+
+            with open(file_path, 'wb+') as destination:
+                for chunk in file.chunks():
+                    destination.write(chunk)
+
+            print(f"File saved successfully at: {file_path}")
+            file_url = file_path  # Store the file path in the database
+
+        # Insert data into the database
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                INSERT INTO main_studymaterials (file_url, created_at, class_obj_id, subject_id, announcement) 
+                VALUES (%s, %s, %s, %s, %s)
+            """, [file_url, datetime.datetime.now(), class_obj_id, subject_id, announcement if announcement else None])
+
+        print("Database entry created for study material.")
+        messages.success(request, "Study material uploaded successfully!")
+        return redirect('subject_head_studys')
+
+    print("Rendering template with uploaded documents.")
+    return render(request, 'subject_head/subject_head_study.html', {'docs': docs})
+
+
 ######################################################################################################################
 
 def student_login(request):
@@ -1314,7 +1562,7 @@ def student_class(request):
     with connection.cursor() as cursor:
         # Fetch student details and class head
         cursor.execute("""
-            SELECT s.name AS student_name, c.class_name, c.class_head
+            SELECT s.name AS student_name, c.class_name, c.class_head, c.id AS class_id
             FROM main_students s
             LEFT JOIN main_classes c ON s.class_obj_id = c.id
             WHERE s.id = %s
@@ -1335,7 +1583,7 @@ def student_class(request):
 
         # Fetch subjects assigned to this class
         cursor.execute("""
-            SELECT subject_name, subject_head, email
+            SELECT id, subject_name, subject_head, email
             FROM main_subjects
             WHERE class_obj_id = (
                 SELECT class_obj_id
@@ -1345,14 +1593,28 @@ def student_class(request):
         """, [student_id])
         subjects = cursor.fetchall()
 
-    # Handle edge cases where student or class data is missing
+        # Fetch announcements for this class
+        cursor.execute("""
+            SELECT id, message, created_at
+            FROM main_announcements
+            WHERE class_obj_id = (
+                SELECT class_obj_id
+                FROM main_students
+                WHERE id = %s
+            )
+            ORDER BY created_at DESC
+        """, [student_id])
+        announcements = cursor.fetchall()
+
+    # Handle missing student or class data
     if not student_details:
-        student_name, class_name, class_head = "Unknown", "Not Assigned", "Not Assigned"
+        student_name, class_name, class_head, class_id = "Unknown", "Not Assigned", "Not Assigned", None
     else:
-        student_name, class_name, class_head = student_details
+        student_name, class_name, class_head, class_id = student_details
 
     students_list = [{'roll_no': row[0], 'name': row[1]} for row in students] if students else []
-    subjects_list = [{'subject_name': row[0], 'subject_head': row[1], 'email': row[2]} for row in subjects] if subjects else []
+    subjects_list = [{'id': row[0], 'subject_name': row[1], 'subject_head': row[2], 'email': row[3]} for row in subjects] if subjects else []
+    announcements_list = [{'id': row[0], 'message': row[1], 'created_at': row[2]} for row in announcements] if announcements else []
 
     return render(request, 'students/student_class.html', {
         'student_name': student_name,
@@ -1360,8 +1622,10 @@ def student_class(request):
         'class_head': class_head,
         'students': students_list,
         'student_count': len(students_list),
-        'subjects': subjects_list,  # Pass subjects to the template
+        'subjects': subjects_list,
+        'announcements': announcements_list,  # Pass announcements to the template
     })
+
 
 
 def student_chat(request):
@@ -1491,6 +1755,202 @@ def student_chat_user(request, user_id):
         'selected_user_role': selected_user_role,
     })
 
+
+def student_subject_detail(request, subject_id):
+    if 'student_id' not in request.session:
+        return redirect('student_login')
+
+    student_id = request.session['student_id']
+
+    with connection.cursor() as cursor:
+        # Fetch subject details along with class information
+        cursor.execute("""
+            SELECT s.id, s.subject_name, s.subject_head, s.email, c.class_name, c.class_head
+            FROM main_subjects s
+            JOIN main_classes c ON s.class_obj_id = c.id
+            WHERE s.id = %s
+        """, [subject_id])
+        subject_data = cursor.fetchone()
+
+        if not subject_data:
+            return render(request, 'students/student_subject_detail.html', {'error': 'Subject not found'})
+
+        # Fetch student name
+        cursor.execute("SELECT name FROM main_students WHERE id = %s", [student_id])
+        student_name_data = cursor.fetchone()
+        student_name = student_name_data[0] if student_name_data else "Unknown"
+
+        # Fetch all quizzes for this subject
+        cursor.execute("SELECT id, name FROM main_quizzes WHERE subject_id = %s", [subject_id])
+        quizzes = [{'id': row[0], 'name': row[1]} for row in cursor.fetchall()]
+
+        # Fetch study materials for this subject
+        cursor.execute("""
+            SELECT id, file_url, created_at, announcement 
+            FROM main_studymaterials 
+            WHERE subject_id = %s
+        """, [subject_id])
+        studys = [
+            {'id': row[0], 'file_url': row[1], 'created_at': row[2], 'announcement': row[3]}
+            for row in cursor.fetchall()
+        ]
+
+    # Prepare subject dictionary
+    subject = {
+        'id': subject_data[0],
+        'subject_name': subject_data[1],
+        'subject_head': subject_data[2],
+        'email': subject_data[3],
+        'class_name': subject_data[4],
+        'class_head': subject_data[5]
+    }
+
+    return render(request, 'students/student_subject_detail.html', {
+        'subject': subject,
+        'student_name': student_name,
+        'quizzes': quizzes,  # Pass quizzes to the template
+        'studys': studys  # Pass study materials to the template
+    })
+
+
+
+def student_quiz(request, subject_id, quiz_id):
+    if 'student_id' not in request.session:
+        return redirect('student_login')
+
+    student_id = request.session['student_id']
+    print(f"Student ID from session: {student_id}")
+
+    # Fetch student name
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT name FROM main_students WHERE id = %s", [student_id])
+        student = cursor.fetchone()
+        student_name = student[0] if student else "Unknown"
+
+    print(f"Fetched Student Name: {student_name}")
+
+    # Fetch subject details
+    subject = get_object_or_404(Subjects, id=subject_id)
+    print(f"Fetched Subject: {subject.subject_name}, Subject Head: {subject.subject_head}")
+
+    # Fetch quiz name
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT name FROM main_quizzes WHERE id = %s AND subject_id = %s", [quiz_id, subject_id])
+        quiz = cursor.fetchone()
+
+        if not quiz:
+            print("Quiz not found!")
+            return render(request, 'students/student_quiz.html', {'error': 'Quiz not found'})
+
+        quiz_name = quiz[0]
+        print(f"Fetched Quiz Name: {quiz_name}")
+
+    # Check if the student has already attempted the quiz
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT COUNT(*) FROM main_quizresponse 
+            WHERE student_id = %s AND question_id IN 
+            (SELECT id FROM main_quizquestions WHERE quiz_id = %s)
+        """, [student_id, quiz_id])
+        quiz_attempted = cursor.fetchone()[0] > 0
+
+    print(f"Quiz Attempted: {quiz_attempted}")
+
+    if quiz_attempted:
+        # Fetch quiz questions and student's responses
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT q.id, q.question, q.option_a, q.option_b, q.option_c, q.option_d, 
+                       q.correct_option, r.student_response 
+                FROM main_quizquestions q
+                LEFT JOIN main_quizresponse r ON q.id = r.question_id AND r.student_id = %s
+                WHERE q.quiz_id = %s
+            """, [student_id, quiz_id])
+
+            quiz_results = [
+                {
+                    'id': row[0],
+                    'question': row[1],
+                    'option_a': row[2],
+                    'option_b': row[3],
+                    'option_c': row[4],
+                    'option_d': row[5],
+                    'correct_option': row[6],
+                    'student_response': row[7],
+                    'is_correct': row[6] == row[7]  # Check if the answer is correct
+                }
+                for row in cursor.fetchall()
+            ]
+
+        print(f"Fetched Quiz Results (Responses): {quiz_results}")
+
+        # Calculate score & percentage
+        score = sum(1 for q in quiz_results if q['is_correct'])
+        total_questions = len(quiz_results)
+        percentage = (score / total_questions) * 100 if total_questions > 0 else 0
+
+        return render(request, 'students/student_quiz.html', {
+            'student_name': student_name,
+            'subject': subject,
+            'quiz_id': quiz_id,
+            'quiz_name': quiz_name,  # Include quiz name
+            'quiz_results': quiz_results,
+            'quiz_attempted': True,
+            'score': score,
+            'total_questions': total_questions,
+            'percentage': round(percentage, 2)  # Round to 2 decimal places
+        })
+
+    # Fetch quiz questions (only if quiz is not attempted)
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT id, question, option_a, option_b, option_c, option_d 
+            FROM main_quizquestions WHERE quiz_id = %s
+        """, [quiz_id])
+        quiz_questions = [
+            {
+                'id': row[0],
+                'question': row[1],
+                'option_a': row[2],
+                'option_b': row[3],
+                'option_c': row[4],
+                'option_d': row[5]
+            }
+            for row in cursor.fetchall()
+        ]
+
+    print(f"Fetched Quiz Questions: {quiz_questions}")
+
+    if request.method == "POST":
+        print("Processing Quiz Submission...")
+
+        with connection.cursor() as cursor:
+            for key in request.POST:
+                if key.startswith("question_"):  # Ensures only quiz responses are processed
+                    q_id = key.split("_")[1]  # Extract question ID
+                    response = request.POST.get(key)  # Get student's answer
+
+                    print(f"Processing Response -> Question ID: {q_id}, Answer: {response}")
+
+                    if response:  # Insert only if an option is selected
+                        cursor.execute("""
+                            INSERT INTO main_quizresponse (student_response, question_id, student_id)
+                            VALUES (%s, %s, %s)
+                        """, [response, q_id, student_id])
+
+                        print(f"Inserted Response -> Question ID: {q_id}, Answer: {response}")
+
+        print("Quiz Submission Completed.")
+        return redirect('student_quiz', subject_id=subject_id, quiz_id=quiz_id)  # Reload page to show results
+
+    return render(request, 'students/student_quiz.html', {
+        'student_name': student_name,
+        'subject': subject,
+        'quiz_id': quiz_id,
+        'quiz_name': quiz_name,  # Include quiz name
+        'quiz_questions': quiz_questions,
+        'quiz_attempted': False
+    })
 
 
 

@@ -42,24 +42,30 @@
         <!-- Sidebar -->
         <aside id="sidebar" class="w-64 bg-[#e5e5e5] text-black flex flex-col py-6 transform transition-transform -translate-x-full sm:translate-x-0 sm:relative absolute top-0 left-0 h-full z-10">
           <nav class="flex-1">
-            <ul class="space-y-4 px-4">
+              <ul class="space-y-4 px-4">
               <li>
-                <a href="{% url 'admin_dashboard' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
-                  <i class="fa-solid fa-table-columns"></i> &nbsp;
-                  Dashboard
-                </a>
+                  <a href="{% url 'admin_dashboard' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                      <i class="fa-solid fa-table-columns"></i> &nbsp;
+                      Dashboard
+                  </a>
               </li>
               <li>
-                <a href="{% url 'admin_classes' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <a href="{% url 'admin_classes' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
                   <i class="fa-solid fa-chalkboard"></i> &nbsp;
-                  Classes
-                </a>
+                  Manage Classes
+                  </a>
+              </li>
+              <li>
+                  <a href="{% url 'admin_subjects' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-book"></i> &nbsp;
+                  Manage Subjects
+                  </a>
               </li>
               <li class="bg-gray-300 rounded-md">
-                <a href="#" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <a href="{% url 'admin_students' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
                   <i class="fa-solid fa-user-group"></i> &nbsp;
-                  Students
-                </a>
+                  Manage Students
+                  </a>
               </li>
               <li>
                   <a href="{% url 'admin_profile' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
@@ -68,64 +74,92 @@
                   </a>
               </li>
               <li>
-                <a href="{% url 'logout' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <a href="{% url 'logout' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
                   <i class="fa-solid fa-power-off"></i> &nbsp;
                   Log Out
-                </a>
+                  </a>
               </li>
-            </ul>
+              </ul>
           </nav>
         </aside>
         
         <!-- Dashboard Content -->
         <div id="content-wrapper" class="p-6 space-y-6 w-full">
-
-            <!-- Welcome Text -->
-            <section class="bg-gray-200 py-6 px-6">
-                <h1 class="text-2xl font-bold text-gray-800">Manage Students</h1>
-                <p class="text-lg font-bold text-purple-700">{{ institution_name }}</p>
-            </section>
+          <!-- Welcome Text -->
+          <section class="bg-gray-200 py-6 px-6">
+              <h1 class="text-2xl font-bold text-gray-800">Manage Students</h1>
+              <p class="text-lg font-bold text-purple-700">{{ institution_name }}</p>
+          </section>
           
-          <!-- Students Section -->
-            <div class="bg-white p-4 rounded-md shadow">
-                <h3 class="text-lg font-bold mb-4">Students</h3>
-                <p class="text-gray-600 font-sm">The students are added by the teachers!</p>
-
-                <!-- Students Table -->
-                <table class="min-w-full table-auto border-collapse mt-[30px]">
+          <!-- Classes Section -->
+          <div class="bg-white p-4 rounded-md shadow">
+              <h3 class="text-lg font-bold mb-4">Student</h3>
+              
+              <!-- Add New Class Form -->
+              <div class="mb-4 flex items-center space-x-4">
+                  <form method="post">
+                      {% csrf_token %}
+                      
+                      <!-- Render the class name field -->
+                      {{ form.class_name }}
+                      <!-- Render the class head (dropdown for selecting a teacher) -->
+                      {{ form.class_head }}
+                      <!-- Render the email field -->
+                      {{ form.email }}
+                      <!-- Render the password field -->
+                      {{ form.password }}
+                      <!-- Hidden input for institution ID -->
+                      <input type="hidden" name="institution_id" value="{{ request.session.institution_id }}">
+                      <button type="submit" class="bg-[#4f0074] hover:bg-violet-700 text-white px-4 py-2 rounded-md ml-2">
+                          <i class="fa-solid fa-plus"></i> Add New Student
+                      </button>
+                  </form>
+              </div>
+              
+              <!-- Classes Table -->
+              <table class="min-w-full table-auto border-collapse mt-[30px]">
                   <thead>
                       <tr class="bg-[#4f0074] text-white">
-                          <th class="p-3 border-b text-left">ID</th>
-                          <th class="p-3 border-b text-left">Name</th>
-                          <th class="p-3 border-b text-left">Class</th>
-                          <th class="p-3 border-b text-left">Teacher</th>
-                          <th class="p-3 border-b text-left">Actions</th>
+                          <th class="p-3 border-b text-center mx-auto">Student Name</th>
+                          <th class="p-3 border-b text-center mx-auto">Class Head</th>
+                          <th class="p-3 border-b text-center mx-auto">Roll No</th>
+                          <th class="p-3 border-b text-center mx-auto">Class</th>
+                          <th class="p-3 border-b text-center mx-auto">Details</th>
+                          <th class="p-3 border-b text-center mx-auto">Actions</th>
                       </tr>
                   </thead>
                   <tbody>
-                      {% for student in students %}
-                      <tr>
-                          <td class="px-4 py-3 bg-gray-200 border-b">{{ student.id }}</td>
-                          <td class="px-4 py-3 bg-gray-200 border-b">{{ student.name }}</td>
-                          <td class="px-4 py-3 bg-gray-200 border-b">{{ student.class_name }}</td>
-                          <td class="px-4 py-3 bg-gray-200 border-b">{{ student.teacher_name }}</td>
-                          <td class="px-4 py-3 bg-gray-200 border-b">
-                              <button type="button" class="text-red-700 hover:text-white border border-red-700 hover:bg-red-600 rounded-md px-2 py-1">
-                                  <i class="fa-solid fa-trash"></i> Delete
-                              </button>
-                          </td>
-                      </tr>
+                      {% for class in classes %}
+                          <tr>
+                              <td class="px-4 py-2 text-center border-b-2 border-b-gray-300 bg-gray-200">{{ class.class_name }}</td>
+                              <td class="px-4 py-2 text-center border-b-2 border-b-gray-300 bg-gray-200">{{ class.class_head }}</td>
+                              <td class="px-4 py-2 text-center border-b-2 border-b-gray-300 bg-gray-200">{{ class.email }}</td>
+                              <td class="px-4 py-2 text-center border-b-2 border-b-gray-300 bg-gray-200">{{ class.email }}</td>
+                              <td class="px-4 py-2 text-center border-b-2 border-b-gray-300 bg-gray-200">
+                                  <a href="" class="text-gray-900 hover:underline">
+                                      View
+                                  </a>
+                              </td>
+                              <td class="px-4 py-2 text-center border-b-2 border-b-gray-300 bg-gray-200">
+                                  <button type="button" class="text-gray-900 hover:text-white border border-purple-600 hover:bg-purple-600 rounded-md px-2 py-1">
+                                      <i class="fa-solid fa-pen-to-square"></i> &nbsp;Edit
+                                  </button>
+                                  <button type="button" class="text-red-700 hover:text-white border border-red-700 hover:bg-red-600 rounded-md px-2 py-1">
+                                      <i class="fa-solid fa-trash-can"></i> &nbsp;Delete
+                                  </button>
+                              </td>
+                          </tr>
                       {% empty %}
-                      <tr>
-                          <td colspan="5" class="px-4 py-2 border-b text-center text-gray-600">No students available</td>
-                      </tr>
+                          <tr>
+                              <td colspan="6" class="px-4 py-2 border-b text-center text-gray-600">No classes available</td>
+                          </tr>
                       {% endfor %}
                   </tbody>
-                </table>
-
-            </div>
-
+              </table>
+          </div>
         </div>
+
+
       </div>
     </main>
   </div>

@@ -1,0 +1,218 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eduke Student</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="{% static 'main/css/style.css' %}">
+  <link rel="icon" href="{% static 'main/images/logobase_white.png' %}">
+</head>
+<body class="bg-gray-100 text-gray-900">
+
+  <!-- Dashboard Wrapper -->
+  <div class="flex h-screen">
+    <!-- Main Content -->
+    <main id="main-content" class="flex-1 overflow-y-auto w-full transition-all">
+      
+      <!-- Top Navbar -->
+      <header class="bg-white shadow p-1 pr-4 flex justify-between items-center">
+        <div class="flex items-center space-x-4">
+          <!-- Hamburger Button outside Sidebar -->
+          <button id="hamburger-button" class="sm:hidden text-gray-800 ml-5 focus:outline-none">
+            <i class="fas fa-bars text-2xl"></i>
+          </button>
+          <div class="py-0">
+            <img src="{% static 'main/images/logo_text_long.png' %}" alt="Eduke Logo" class="w-full h-[80px] mx-auto">
+          </div>
+        </div>
+        <div class="flex items-center space-x-4">
+          <!-- Logout Button, visible on large screens and hidden on small screens -->
+          <a href="{% url 'logout' %}" class="hidden lg:block">
+            <button class="bg-[#4f0074] hover:bg-violet-700 text-white px-4 py-2 rounded-md">
+              <i class="fa-solid fa-power-off"></i> &nbsp; Logout
+            </button>
+          </a>
+        </div>
+      </header>
+
+      <!-- Wrapper for Sidebar and Main Content -->
+      <div class="flex h-screen relative">
+
+        <!-- Sidebar -->
+        <aside id="sidebar" class="w-64 bg-[#e5e5e5] text-black flex flex-col py-6 transform transition-transform -translate-x-full sm:translate-x-0 sm:relative absolute top-0 left-0 h-full z-10">
+          <nav class="flex-1">
+            <ul class="space-y-4 px-4">
+              <li>
+                <a href="{% url 'student_dashboard' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-table-columns"></i> &nbsp;
+                  Dashboard
+                </a>
+              </li>
+              <li class="bg-gray-300 rounded-md">
+                <a href="{% url 'student_class' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-chalkboard"></i> &nbsp;
+                  Your Class
+                </a>
+              </li>
+              <li>
+                <a href="{% url 'student_chat' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-comments"></i> &nbsp;
+                  Eduke Chat
+                </a>
+              </li>
+              <li>
+                <a href="{% url 'student_chat' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-circle-user"></i> &nbsp;
+                  Profile
+                </a>
+              </li>
+              <li>
+                <a href="{% url 'logout' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-power-off"></i> &nbsp;
+                  Log Out
+                </a>
+              </li>
+            </ul>
+          </nav>
+        </aside>
+        
+
+        
+
+
+        <!-- Dashboard Content -->
+          <div id="content-wrapper" class="p-8 space-y-8 w-full">
+
+              {% if quiz_attempted %}
+                <!-- Quiz Results Section -->
+                <div class="bg-gradient-to-r from-purple-50 to-indigo-100 border-l-4 border-purple-600 p-8 rounded-lg shadow-xl">
+                    <h2 class="text-3xl font-bold text-center text-purple-800">{{ quiz_name }}</h2>
+                    <h3 class="text-2xl font-semibold text-center text-purple-700 mt-4">Quiz Results</h3>
+                    <p class="text-center text-lg text-gray-700 mt-3">
+                        Your Quiz Percentage: <b class="text-purple-700">{{ percentage }}%</b>
+                    </p>
+
+                    <div class="mt-8 space-y-6">
+                      {% for question in quiz_results %}
+                        <div class="bg-purple-50 p-6 rounded-lg shadow-md border border-purple-200">
+                            <p class="text-xl font-semibold text-purple-700">
+                                {{ forloop.counter }}. {{ question.question }}
+                            </p>
+                            <div class="mt-4 space-y-3">
+                                <ul class="space-y-2">
+                                    <li class="text-gray-700 font-bold p-3 shadow-md rounded-md 
+                                        {% if question.correct_option == 'A' %} bg-green-100 border-green-500 {% endif %}
+                                        {% if question.student_response == 'A' and question.student_response != question.correct_option %} bg-red-200 border-red-500 {% endif %}
+                                    ">
+                                        A) {{ question.option_a }}
+                                    </li>
+
+                                    <li class="text-gray-700 font-bold p-3 shadow-md rounded-md 
+                                        {% if question.correct_option == 'B' %} bg-green-100 border-green-500 {% endif %}
+                                        {% if question.student_response == 'B' and question.student_response != question.correct_option %} bg-red-200 border-red-500 {% endif %}
+                                    ">
+                                        B) {{ question.option_b }}
+                                    </li>
+
+                                    <li class="text-gray-700 font-bold p-3 shadow-md rounded-md 
+                                        {% if question.correct_option == 'C' %} bg-green-100 border-green-500 {% endif %}
+                                        {% if question.student_response == 'C' and question.student_response != question.correct_option %} bg-red-200 border-red-500 {% endif %}
+                                    ">
+                                        C) {{ question.option_c }}
+                                    </li>
+
+                                    <li class="text-gray-700 font-bold p-3 shadow-md rounded-md 
+                                        {% if question.correct_option == 'D' %} bg-green-100 border-green-500 {% endif %}
+                                        {% if question.student_response == 'D' and question.student_response != question.correct_option %} bg-red-200 border-red-500 {% endif %}
+                                    ">
+                                        D) {{ question.option_d }}
+                                    </li>
+                                </ul>
+                            </div>
+
+                            <div class="mt-4">
+                                {% if question.is_correct %}
+                                    <p class="text-green-600 font-semibold">✅ Correct</p>
+                                {% else %}
+                                    <p class="text-red-600 font-semibold">❌ Incorrect</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                      {% endfor %}
+
+                    </div>
+                </div>
+
+
+              {% else %}
+                  <!-- Quiz Form Section (Only if the student hasn't attempted) -->
+                  <form method="post" action="" class="mt-6 space-y-8">
+                      {% csrf_token %}
+                      <div class="space-y-6 w-full bg-gradient-to-r from-purple-50 to-indigo-50 border-l-4 border-purple-600 p-8 rounded-lg shadow-xl">
+
+                        <h2 class="text-3xl font-bold text-center text-purple-800">{{ quiz_name }}</h2>
+                        <div class="flex justify-between">
+                          <p class="text-gray-700 text-lg font-medium">Quiz Master: <b class="text-purple-700">{{ subject.subject_head }}</b></p>
+                          <p class="text-gray-700 text-lg font-medium">Subject: <b class="text-purple-700">{{ subject.subject_name }}</b></p>
+                        </div>
+
+                          {% for question in quiz_questions %}
+                              <div class="bg-indigo-100 p-[20px] rounded-lg">
+                                  <p class="text-xl font-semibold text-purple-700">{{ forloop.counter }}. {{ question.question }}</p>
+                                  <div class="mt-4 space-y-4">
+                                      <label class="block bg-white p-3 rounded-lg shadow-md border border-gray-300 hover:bg-gray-100">
+                                          <input type="radio" name="question_{{ question.id }}" value="A" class="mr-3 form-radio w-5 text-purple-600" required>
+                                          <span class="text-gray-800">{{ question.option_a }}</span>
+                                      </label>
+                                      <label class="block bg-white p-3 rounded-lg shadow-md border border-gray-300 hover:bg-gray-100">
+                                          <input type="radio" name="question_{{ question.id }}" value="B" class="mr-3 form-radio w-5 text-purple-600" required>
+                                          <span class="text-gray-800">{{ question.option_b }}</span>
+                                      </label>
+                                      <label class="block bg-white p-3 rounded-lg shadow-md border border-gray-300 hover:bg-gray-100">
+                                          <input type="radio" name="question_{{ question.id }}" value="C" class="mr-3 form-radio w-5 text-purple-600" required>
+                                          <span class="text-gray-800">{{ question.option_c }}</span>
+                                      </label>
+                                      <label class="block bg-white p-3 rounded-lg shadow-md border border-gray-300 hover:bg-gray-100">
+                                          <input type="radio" name="question_{{ question.id }}" value="D" class="mr-3 form-radio w-5 text-purple-600" required>
+                                          <span class="text-gray-800">{{ question.option_d }}</span>
+                                      </label>
+                                  </div>
+                              </div>
+                          {% endfor %}
+                      </div>
+
+                      <div class="text-center mt-8">
+                          <button type="submit" class="bg-purple-600 text-white px-8 py-3 rounded-lg text-xl font-semibold hover:bg-purple-800 transition-all duration-300 ease-in-out transform hover:scale-105">
+                              Submit Quiz
+                          </button>
+                      </div>
+                  </form>
+              {% endif %}
+            </div>
+
+          </div>
+
+
+      </div>
+    </main>
+
+  </div>
+
+  <!-- JavaScript to toggle sidebar visibility -->
+  <script>
+    const hamburgerButton = document.getElementById('hamburger-button');
+    const sidebar = document.getElementById('sidebar');
+    const mainContent = document.getElementById('main-content');
+
+    hamburgerButton.addEventListener('click', () => {
+      sidebar.classList.toggle('-translate-x-full');
+      // Adjust main content width when the sidebar is hidden
+      mainContent.classList.toggle('lg:w-full');
+    });
+  </script>
+
+</body>
+</html>

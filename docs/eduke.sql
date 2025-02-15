@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3307
--- Generation Time: Feb 07, 2025 at 05:33 PM
+-- Generation Time: Feb 15, 2025 at 08:20 AM
 -- Server version: 9.1.0
 -- PHP Version: 8.2.12
 
@@ -169,7 +169,23 @@ INSERT INTO `auth_permission` (`id`, `name`, `content_type_id`, `codename`) VALU
 (105, 'Can add session', 26, 'add_session'),
 (106, 'Can change session', 26, 'change_session'),
 (107, 'Can delete session', 26, 'delete_session'),
-(108, 'Can view session', 26, 'view_session');
+(108, 'Can view session', 26, 'view_session'),
+(109, 'Can add study materials', 27, 'add_studymaterials'),
+(110, 'Can change study materials', 27, 'change_studymaterials'),
+(111, 'Can delete study materials', 27, 'delete_studymaterials'),
+(112, 'Can view study materials', 27, 'view_studymaterials'),
+(113, 'Can add announcements', 28, 'add_announcements'),
+(114, 'Can change announcements', 28, 'change_announcements'),
+(115, 'Can delete announcements', 28, 'delete_announcements'),
+(116, 'Can view announcements', 28, 'view_announcements'),
+(117, 'Can add quiz response', 29, 'add_quizresponse'),
+(118, 'Can change quiz response', 29, 'change_quizresponse'),
+(119, 'Can delete quiz response', 29, 'delete_quizresponse'),
+(120, 'Can view quiz response', 29, 'view_quizresponse'),
+(121, 'Can add quiz questions', 30, 'add_quizquestions'),
+(122, 'Can change quiz questions', 30, 'change_quizquestions'),
+(123, 'Can delete quiz questions', 30, 'delete_quizquestions'),
+(124, 'Can view quiz questions', 30, 'view_quizquestions');
 
 -- --------------------------------------------------------
 
@@ -236,6 +252,7 @@ INSERT INTO `django_content_type` (`id`, `app_label`, `model`) VALUES
 (12, 'auth', 'permission'),
 (14, 'auth', 'user'),
 (1, 'contenttypes', 'contenttype'),
+(28, 'main', 'announcements'),
 (8, 'main', 'attendance'),
 (11, 'main', 'chat'),
 (2, 'main', 'class'),
@@ -246,11 +263,14 @@ INSERT INTO `django_content_type` (`id`, `app_label`, `model`) VALUES
 (10, 'main', 'parent'),
 (25, 'main', 'parents'),
 (22, 'main', 'questionsresponses'),
+(30, 'main', 'quizquestions'),
+(29, 'main', 'quizresponse'),
 (19, 'main', 'quizzes'),
 (5, 'main', 'student'),
 (6, 'main', 'studentevaluation'),
 (21, 'main', 'studentevaluations'),
 (20, 'main', 'students'),
+(27, 'main', 'studymaterials'),
 (3, 'main', 'subject'),
 (23, 'main', 'subjects'),
 (9, 'main', 'teacher'),
@@ -300,7 +320,24 @@ INSERT INTO `django_migrations` (`id`, `app`, `name`, `applied`) VALUES
 (21, 'sessions', '0001_initial', '2025-01-21 03:34:36.914637'),
 (22, 'main', '0007_rename_student_attendance_student_id_and_more', '2025-01-22 03:10:03.619950'),
 (23, 'main', '0008_chat_created_at', '2025-01-27 17:07:53.237571'),
-(24, 'main', '0009_rename_student_id_attendance_student_and_more', '2025-02-01 05:53:48.700534');
+(24, 'main', '0009_rename_student_id_attendance_student_and_more', '2025-02-01 05:53:48.700534'),
+(25, 'main', '0010_announcements_studymaterials', '2025-02-08 04:27:31.931904'),
+(26, 'main', '0011_studymaterials_announcement_and_more', '2025-02-08 04:32:12.142481'),
+(27, 'main', '0012_alter_studymaterials_announcement', '2025-02-08 04:33:59.927843'),
+(28, 'main', '0013_remove_announcements_subject', '2025-02-08 06:35:34.189131'),
+(29, 'main', '0014_remove_quizzes_student_and_more', '2025-02-09 05:31:30.807981'),
+(30, 'main', '0015_remove_quizresponse_quiz_and_more', '2025-02-09 06:32:06.586564'),
+(31, 'main', '0016_alter_quizresponse_student_response', '2025-02-09 06:32:06.606555'),
+(32, 'main', '0017_alter_quizquestions_quiz_and_more', '2025-02-09 06:32:06.611057'),
+(33, 'main', '0018_remove_quizresponse_question_and_more', '2025-02-09 06:32:06.615599'),
+(34, 'main', '0019_quizquestions_quizresponse_quizzes_and_more', '2025-02-09 06:32:06.621791'),
+(35, 'main', '0020_studentevaluation_delete_studentevaluations', '2025-02-11 03:03:42.624433'),
+(36, 'main', '0021_remove_quizresponse_question', '2025-02-11 03:43:41.189869'),
+(37, 'main', '0022_quizresponse_question', '2025-02-11 03:43:51.454901'),
+(38, 'main', '0023_delete_quizresponse', '2025-02-11 03:43:51.488624'),
+(39, 'main', '0024_quizresponse', '2025-02-11 03:45:05.407688'),
+(40, 'main', '0025_remove_quizresponse_question_and_more', '2025-02-11 03:58:59.597132'),
+(41, 'main', '0026_quizquestions_quizresponse_quizzes_and_more', '2025-02-11 03:59:39.849940');
 
 -- --------------------------------------------------------
 
@@ -321,12 +358,34 @@ CREATE TABLE `django_session` (
 INSERT INTO `django_session` (`session_key`, `session_data`, `expire_date`) VALUES
 ('0sqw8o0o8mhayjchrhtl2w6v0aj2l3kv', 'eyJjbGFzc19oZWFkX2lkIjoxM30:1teAY3:dJ_S_q8GBRIV6iObczDcnUlK_UUyEYQSl1M_imqWfVs', '2025-02-15 10:16:23.547677'),
 ('1gpyt7qf0zwgjv0ks3phj8kgky7sujui', 'e30:1tbIQB:POyn-rEoj-sxlUT5I0fZxGB8HipITsS_lEUf11In7UQ', '2025-02-07 12:04:23.929518'),
+('4kvudqxodml53u0qxyz2yhp7xdedypv8', '.eJyrVkrOSSwujs9MUbIyNNZRyswrLsksKS3JzM8Di1miCuUl5qYqWSm5pCoEJJbmKHhCpVIV8tMUgpMzU_OSUxUS81IUQlKTM_Lyc_LTK5VqAdJvI1A:1tjBoE:1IoIzkD3AgWg6KqcRCuN85YG2hKaARr0zQScZNASCWE', '2025-03-01 06:37:50.799780'),
 ('h5pc1p9nec27wdykh2qt4mk3x722na02', 'e30:1tbZMT:FdwmYlisd-l-pxW7jS1z9YUv536sEY52rWlm1KIRT8c', '2025-02-08 06:09:41.949257'),
 ('p9rbo3jfob45shgippf65xqmxcwm2px5', 'e30:1tbIQa:t8noblKYAHTQaK-nODwDQhiLUyUu8hZWLBGdoUAPH0Y', '2025-02-07 12:04:48.695025'),
 ('q2ry82ujy4xq0ubcekh7gjv27mmg3dkm', 'e30:1tbITs:iCq2XiI3lYkOS59VwFcfcfL3j2lOhn_KcFnK5fUGh6c', '2025-02-07 12:08:12.871277'),
 ('q663wz1plma1getb4y9gh3cxg8sa74yl', 'eyJ0ZWFjaGVyX2lkIjozfQ:1tbAhP:jrYiLIlKpvJjC8qWeaYEh0TyA7l_dr6t_ct2L3D6syg', '2025-02-07 03:49:39.794741'),
 ('s8bg8ppi7ld6bqexoeg4padni4qucqo6', 'eyJjbGFzc19oZWFkX2lkIjoxM30:1teAX7:4BgPYk55nnCIw1fMWIP3kj9QzQ7b9Ll-UfJUSznFPxg', '2025-02-15 10:15:25.661351'),
 ('xuiiy8d7orowqcmqn7wm0xlov7tttahu', 'e30:1tbZMi:Alo1mi87tOh2qUhsmwP8J5rkP9E8ZaqbzrNyep7wJrg', '2025-02-08 06:09:56.751798');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `main_announcements`
+--
+
+CREATE TABLE `main_announcements` (
+  `id` int NOT NULL,
+  `message` longtext NOT NULL,
+  `created_at` datetime(6) NOT NULL,
+  `class_obj_id` int NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `main_announcements`
+--
+
+INSERT INTO `main_announcements` (`id`, `message`, `created_at`, `class_obj_id`) VALUES
+(2, 'Hii This is Jasmine', '2025-02-08 12:29:00.000000', 15),
+(5, 'Hii this is Jack', '2025-02-08 07:12:10.688400', 13);
 
 -- --------------------------------------------------------
 
@@ -454,41 +513,89 @@ INSERT INTO `main_parents` (`id`, `password`, `name`, `student_id`, `user_id`) V
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `main_quizquestions`
+--
+
+CREATE TABLE `main_quizquestions` (
+  `id` int NOT NULL,
+  `question` longtext NOT NULL,
+  `option_a` varchar(255) NOT NULL,
+  `option_b` varchar(255) NOT NULL,
+  `option_c` varchar(255) NOT NULL,
+  `option_d` varchar(255) NOT NULL,
+  `correct_option` varchar(1) NOT NULL,
+  `quiz_id` int NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `main_quizquestions`
+--
+
+INSERT INTO `main_quizquestions` (`id`, `question`, `option_a`, `option_b`, `option_c`, `option_d`, `correct_option`, `quiz_id`) VALUES
+(1, 'Which of the following is an example of supervised learning?', 'K-means clustering', 'Linear regression', 'Principal Component Analysis (PCA)', 'DBSCAN', 'B', 1),
+(2, 'Which of the following algorithms is used for classification tasks?', 'K-means', 'Support Vector Machine (SVM)', 'Apriori', 'PCA', 'B', 1),
+(3, 'Sample Question', 'A', 'B', 'C', 'D', 'C', 2);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `main_quizresponse`
+--
+
+CREATE TABLE `main_quizresponse` (
+  `id` int NOT NULL,
+  `student_response` varchar(1) DEFAULT NULL,
+  `question_id` int NOT NULL,
+  `student_id` int NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `main_quizresponse`
+--
+
+INSERT INTO `main_quizresponse` (`id`, `student_response`, `question_id`, `student_id`) VALUES
+(1, 'B', 1, 14),
+(2, 'C', 2, 14),
+(4, 'D', 3, 14);
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `main_quizzes`
 --
 
 CREATE TABLE `main_quizzes` (
   `id` int NOT NULL,
   `name` varchar(255) NOT NULL,
-  `subject_id` int NOT NULL,
   `class_obj_id` int DEFAULT NULL,
-  `correct_option` varchar(1) NOT NULL,
-  `option_a` varchar(255) NOT NULL,
-  `option_b` varchar(255) NOT NULL,
-  `option_c` varchar(255) NOT NULL,
-  `option_d` varchar(255) NOT NULL,
-  `question` longtext NOT NULL DEFAULT (_utf8mb3'Default Question'),
-  `student_response` varchar(1) DEFAULT NULL,
-  `student_id` int DEFAULT NULL
+  `subject_id` int NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `main_quizzes`
+--
+
+INSERT INTO `main_quizzes` (`id`, `name`, `class_obj_id`, `subject_id`) VALUES
+(1, 'Machine Learning Test', 13, 1),
+(2, 'Sample Quiz', 13, 1);
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `main_studentevaluations`
+-- Table structure for table `main_studentevaluation`
 --
 
-CREATE TABLE `main_studentevaluations` (
+CREATE TABLE `main_studentevaluation` (
   `id` int NOT NULL,
-  `study_time_rating` int NOT NULL,
-  `sleep_time_rating` int NOT NULL,
-  `homework_completion_rating` int NOT NULL,
-  `class_participation_rating` int NOT NULL,
-  `test_preparation_rating` int NOT NULL,
-  `class_difficulty_rating` int NOT NULL,
-  `parent_rating` int NOT NULL,
-  `teacher_rating` int NOT NULL,
-  `student_id` int NOT NULL
+  `study_time_rating` double NOT NULL,
+  `sleep_time_rating` double NOT NULL,
+  `homework_completion_rating` double NOT NULL,
+  `assignment_rating` double NOT NULL,
+  `attendance_percentage` double NOT NULL,
+  `marks_percentage` double NOT NULL,
+  `quiz_percentage` double NOT NULL,
+  `student_id` int NOT NULL,
+  `subject_id` int NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
@@ -514,6 +621,31 @@ INSERT INTO `main_students` (`id`, `roll_no`, `password`, `class_obj_id`, `name`
 (14, '1001', '1001', 13, 'Albert', 40),
 (15, '1002', '1002', 13, 'Bob', 42),
 (16, '1303', '1303', 14, 'Vaseem', 51);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `main_studymaterials`
+--
+
+CREATE TABLE `main_studymaterials` (
+  `id` int NOT NULL,
+  `file_url` longtext,
+  `created_at` datetime(6) NOT NULL,
+  `class_obj_id` int NOT NULL,
+  `subject_id` int NOT NULL,
+  `announcement` longtext
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `main_studymaterials`
+--
+
+INSERT INTO `main_studymaterials` (`id`, `file_url`, `created_at`, `class_obj_id`, `subject_id`, `announcement`) VALUES
+(3, 'media/uploads/Eduke Use Case Diagram.pdf', '2025-02-13 11:59:03.710922', 13, 1, 'Hello Students...'),
+(4, 'media/uploads/Eduke Class Diagram.pdf', '2025-02-13 12:00:22.802291', 13, 1, 'Hello'),
+(5, NULL, '2025-02-13 12:24:28.483110', 13, 1, 'Hello all...'),
+(6, 'media/uploads/Eduke Use Case.png', '2025-02-13 12:24:40.713200', 13, 1, NULL);
 
 -- --------------------------------------------------------
 
@@ -641,6 +773,13 @@ ALTER TABLE `django_session`
   ADD KEY `django_session_expire_date_a5c62663` (`expire_date`);
 
 --
+-- Indexes for table `main_announcements`
+--
+ALTER TABLE `main_announcements`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `main_announcements_class_obj_id_0d0d9d96_fk_main_classes_id` (`class_obj_id`);
+
+--
 -- Indexes for table `main_attendance`
 --
 ALTER TABLE `main_attendance`
@@ -689,20 +828,35 @@ ALTER TABLE `main_parents`
   ADD KEY `main_parents_student_id_eb1d3ba3_fk` (`student_id`);
 
 --
+-- Indexes for table `main_quizquestions`
+--
+ALTER TABLE `main_quizquestions`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `main_quizquestions_quiz_id_bddb7bdd_fk_main_quizzes_id` (`quiz_id`);
+
+--
+-- Indexes for table `main_quizresponse`
+--
+ALTER TABLE `main_quizresponse`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `main_quizresponse_question_id_b2fe2eec_fk_main_quizquestions_id` (`question_id`),
+  ADD KEY `main_quizresponse_student_id_c1a777b9_fk_main_students_id` (`student_id`);
+
+--
 -- Indexes for table `main_quizzes`
 --
 ALTER TABLE `main_quizzes`
   ADD PRIMARY KEY (`id`),
   ADD KEY `main_quizzes_class_obj_id_10b981c4_fk_main_classes_id` (`class_obj_id`),
-  ADD KEY `main_quizzes_subject_id_025453ee_fk_main_subjects_id` (`subject_id`),
-  ADD KEY `main_quizzes_student_id_3537662e_fk_main_students_id` (`student_id`);
+  ADD KEY `main_quizzes_subject_id_025453ee_fk_main_subjects_id` (`subject_id`);
 
 --
--- Indexes for table `main_studentevaluations`
+-- Indexes for table `main_studentevaluation`
 --
-ALTER TABLE `main_studentevaluations`
+ALTER TABLE `main_studentevaluation`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `main_studentevaluations_student_id_7838dbe4_fk_main_students_id` (`student_id`);
+  ADD KEY `main_studentevaluation_student_id_a595bb53_fk_main_students_id` (`student_id`),
+  ADD KEY `main_studentevaluation_subject_id_58110765_fk_main_subjects_id` (`subject_id`);
 
 --
 -- Indexes for table `main_students`
@@ -712,6 +866,14 @@ ALTER TABLE `main_students`
   ADD UNIQUE KEY `roll_no` (`roll_no`),
   ADD KEY `main_students_class_obj_id_fe626842_fk_main_classes_id` (`class_obj_id`),
   ADD KEY `main_students_user_id_8b7ccf0c_fk_main_users_id` (`user_id`);
+
+--
+-- Indexes for table `main_studymaterials`
+--
+ALTER TABLE `main_studymaterials`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `main_studymaterials_class_obj_id_fa6c87bb_fk_main_classes_id` (`class_obj_id`),
+  ADD KEY `main_studymaterials_subject_id_4af51e55_fk_main_subjects_id` (`subject_id`);
 
 --
 -- Indexes for table `main_subjects`
@@ -748,7 +910,7 @@ ALTER TABLE `auth_group_permissions`
 -- AUTO_INCREMENT for table `auth_permission`
 --
 ALTER TABLE `auth_permission`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=109;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=125;
 
 --
 -- AUTO_INCREMENT for table `auth_user`
@@ -772,13 +934,19 @@ ALTER TABLE `auth_user_user_permissions`
 -- AUTO_INCREMENT for table `django_content_type`
 --
 ALTER TABLE `django_content_type`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
 
 --
 -- AUTO_INCREMENT for table `django_migrations`
 --
 ALTER TABLE `django_migrations`
-  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=42;
+
+--
+-- AUTO_INCREMENT for table `main_announcements`
+--
+ALTER TABLE `main_announcements`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `main_attendance`
@@ -817,15 +985,27 @@ ALTER TABLE `main_parents`
   MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
+-- AUTO_INCREMENT for table `main_quizquestions`
+--
+ALTER TABLE `main_quizquestions`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- AUTO_INCREMENT for table `main_quizresponse`
+--
+ALTER TABLE `main_quizresponse`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
 -- AUTO_INCREMENT for table `main_quizzes`
 --
 ALTER TABLE `main_quizzes`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
--- AUTO_INCREMENT for table `main_studentevaluations`
+-- AUTO_INCREMENT for table `main_studentevaluation`
 --
-ALTER TABLE `main_studentevaluations`
+ALTER TABLE `main_studentevaluation`
   MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
@@ -833,6 +1013,12 @@ ALTER TABLE `main_studentevaluations`
 --
 ALTER TABLE `main_students`
   MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
+
+--
+-- AUTO_INCREMENT for table `main_studymaterials`
+--
+ALTER TABLE `main_studymaterials`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `main_subjects`
@@ -878,6 +1064,12 @@ ALTER TABLE `auth_user_user_permissions`
   ADD CONSTRAINT `auth_user_user_permissions_user_id_a95ead1b_fk_auth_user_id` FOREIGN KEY (`user_id`) REFERENCES `auth_user` (`id`);
 
 --
+-- Constraints for table `main_announcements`
+--
+ALTER TABLE `main_announcements`
+  ADD CONSTRAINT `main_announcements_class_obj_id_0d0d9d96_fk_main_classes_id` FOREIGN KEY (`class_obj_id`) REFERENCES `main_classes` (`id`);
+
+--
 -- Constraints for table `main_attendance`
 --
 ALTER TABLE `main_attendance`
@@ -913,18 +1105,31 @@ ALTER TABLE `main_parents`
   ADD CONSTRAINT `main_parents_user_id_faa417c1_fk_main_users_id` FOREIGN KEY (`user_id`) REFERENCES `main_users` (`id`);
 
 --
+-- Constraints for table `main_quizquestions`
+--
+ALTER TABLE `main_quizquestions`
+  ADD CONSTRAINT `main_quizquestions_quiz_id_bddb7bdd_fk_main_quizzes_id` FOREIGN KEY (`quiz_id`) REFERENCES `main_quizzes` (`id`);
+
+--
+-- Constraints for table `main_quizresponse`
+--
+ALTER TABLE `main_quizresponse`
+  ADD CONSTRAINT `main_quizresponse_question_id_b2fe2eec_fk_main_quizquestions_id` FOREIGN KEY (`question_id`) REFERENCES `main_quizquestions` (`id`),
+  ADD CONSTRAINT `main_quizresponse_student_id_c1a777b9_fk_main_students_id` FOREIGN KEY (`student_id`) REFERENCES `main_students` (`id`);
+
+--
 -- Constraints for table `main_quizzes`
 --
 ALTER TABLE `main_quizzes`
   ADD CONSTRAINT `main_quizzes_class_obj_id_10b981c4_fk_main_classes_id` FOREIGN KEY (`class_obj_id`) REFERENCES `main_classes` (`id`),
-  ADD CONSTRAINT `main_quizzes_student_id_3537662e_fk_main_students_id` FOREIGN KEY (`student_id`) REFERENCES `main_students` (`id`),
   ADD CONSTRAINT `main_quizzes_subject_id_025453ee_fk_main_subjects_id` FOREIGN KEY (`subject_id`) REFERENCES `main_subjects` (`id`);
 
 --
--- Constraints for table `main_studentevaluations`
+-- Constraints for table `main_studentevaluation`
 --
-ALTER TABLE `main_studentevaluations`
-  ADD CONSTRAINT `main_studentevaluations_student_id_7838dbe4_fk_main_students_id` FOREIGN KEY (`student_id`) REFERENCES `main_students` (`id`);
+ALTER TABLE `main_studentevaluation`
+  ADD CONSTRAINT `main_studentevaluation_student_id_a595bb53_fk_main_students_id` FOREIGN KEY (`student_id`) REFERENCES `main_students` (`id`),
+  ADD CONSTRAINT `main_studentevaluation_subject_id_58110765_fk_main_subjects_id` FOREIGN KEY (`subject_id`) REFERENCES `main_subjects` (`id`);
 
 --
 -- Constraints for table `main_students`
@@ -932,6 +1137,13 @@ ALTER TABLE `main_studentevaluations`
 ALTER TABLE `main_students`
   ADD CONSTRAINT `main_students_class_obj_id_fe626842_fk_main_classes_id` FOREIGN KEY (`class_obj_id`) REFERENCES `main_classes` (`id`),
   ADD CONSTRAINT `main_students_user_id_8b7ccf0c_fk_main_users_id` FOREIGN KEY (`user_id`) REFERENCES `main_users` (`id`);
+
+--
+-- Constraints for table `main_studymaterials`
+--
+ALTER TABLE `main_studymaterials`
+  ADD CONSTRAINT `main_studymaterials_class_obj_id_fa6c87bb_fk_main_classes_id` FOREIGN KEY (`class_obj_id`) REFERENCES `main_classes` (`id`),
+  ADD CONSTRAINT `main_studymaterials_subject_id_4af51e55_fk_main_subjects_id` FOREIGN KEY (`subject_id`) REFERENCES `main_subjects` (`id`);
 
 --
 -- Constraints for table `main_subjects`
