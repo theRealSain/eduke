@@ -34,17 +34,19 @@ class Subjects(models.Model):
     user = models.ForeignKey(Users, on_delete=models.CASCADE)
     class_obj = models.ForeignKey(Classes, on_delete=models.CASCADE)
 
+
 class Students(models.Model):
     id = models.AutoField(primary_key=True)
-    roll_no = models.CharField(max_length=20, unique=True)
-    password = models.CharField(max_length=255)
+    roll_no = models.IntegerField(unique=True)  # Changed to IntegerField
     name = models.CharField(max_length=255)
+    email = models.CharField(max_length=255, unique=True, null=True, blank=True)
+    password = models.CharField(max_length=255)
     class_obj = models.ForeignKey(Classes, on_delete=models.SET_NULL, null=True, blank=True)
     user = models.ForeignKey(Users, on_delete=models.CASCADE)
 
 class Parents(models.Model):
     id = models.AutoField(primary_key=True)
-    student = models.ForeignKey(Students, to_field='roll_no', on_delete=models.CASCADE)
+    student = models.ForeignKey(Students, on_delete=models.CASCADE)  # Fixed: Referencing student ID instead of roll_no
     password = models.CharField(max_length=255)
     name = models.CharField(max_length=255, null=True, blank=True)
     user = models.ForeignKey(Users, on_delete=models.CASCADE)
@@ -93,7 +95,7 @@ class Quizzes(models.Model):
 
 class QuizQuestions(models.Model):
     id = models.AutoField(primary_key=True)
-    quiz = models.ForeignKey(Quizzes, on_delete=models.CASCADE)  # This should be enforced in the DB
+    quiz = models.ForeignKey(Quizzes, on_delete=models.CASCADE)
     question = models.TextField()
     option_a = models.CharField(max_length=255)
     option_b = models.CharField(max_length=255)
@@ -103,7 +105,7 @@ class QuizQuestions(models.Model):
 
 class QuizResponse(models.Model):
     id = models.AutoField(primary_key=True)
-    question = models.ForeignKey(QuizQuestions, on_delete=models.CASCADE)  # Ensure this is included
+    question = models.ForeignKey(QuizQuestions, on_delete=models.CASCADE)
     student = models.ForeignKey(Students, on_delete=models.CASCADE)
     student_response = models.CharField(max_length=1, choices=[('A', 'A'), ('B', 'B'), ('C', 'C'), ('D', 'D')], null=True, blank=True)
 

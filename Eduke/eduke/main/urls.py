@@ -7,10 +7,21 @@ urlpatterns = [
     path('register/', views.register_institution, name='institution_register'),  # Registration page
     path('admin/dashboard/', views.admin_dashboard, name='admin_dashboard'),  # Admin dashboard
     path('admin/classes/', views.admin_classes, name='admin_classes'), # Admin classes
+    path('class/edit/<int:class_id>/', views.admin_class_edit, name='admin_class_edit'), # Admin class edit
+    path('admin/class/<int:class_id>/', views.admin_class_detail, name='admin_class_detail') , # Admin class detail
     path('admin/subjects/', views.admin_subjects, name='admin_subjects'), # Admin subjects
+    path('subject/edit/<int:subject_id>/', views.admin_subject_edit, name='admin_subject_edit'), # Admin subject edit
+    path('admin/subject/<int:subject_id>/', views.admin_subject_detail, name='admin_subject_detail'), # Admin subject detail
     path('admin/students/', views.admin_students, name='admin_students'), # Admin students
+    path('student/edit/<int:student_id>/', views.admin_student_edit, name='admin_student_edit'), # Admin student edit
+    path('admin/student/<int:student_id>/', views.admin_student_detail, name='admin_student_detail'), # Admin student detail
     path('admin/profile/', views.admin_profile, name='admin_profile'),
     path('admin/logout/', views.logout, name='logout'),  # Admin logout
+
+    
+    path('upload_classes/', views.upload_classes, name='upload_classes'),
+    path('upload_subjects/', views.upload_subjects, name='upload_subjects'),
+    path('upload_students/', views.upload_students, name='upload_students'),
 
     path('class_head/login/', views.class_head_login, name='class_head_login'), # Class Head login
     path('class_head/dashboard/', views.class_head_dashboard, name='class_head_dashboard'), # Class Head dashboard

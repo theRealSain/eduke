@@ -7,177 +7,413 @@
   <title>Eduke Admin</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="{% static 'main/css/style.css' %}">
   <link rel="icon" href="{% static 'main/images/logobase_white.png' %}">
 </head>
 <body class="bg-gray-100 text-gray-900">
 
   <!-- Dashboard Wrapper -->
-  <div class="flex h-screen">
+    <div class="flex h-screen">
     <!-- Main Content -->
     <main id="main-content" class="flex-1 overflow-y-auto w-full transition-all">
       
       <!-- Top Navbar -->
-      <header class="bg-white shadow p-1 pr-4 flex justify-between items-center">
-        <div class="flex items-center space-x-4">
-          <!-- Hamburger Button -->
-          <button id="hamburger-button" class="sm:hidden text-gray-800 ml-5 focus:outline-none">
-            <i class="fas fa-bars text-2xl"></i>
-          </button>
-          <div class="py-0">
-            <img src="{% static 'main/images/logo_text_long.png' %}" alt="Eduke Logo" class="w-full h-[80px] mx-auto">
-          </div>
-        </div>
-        <div class="flex items-center space-x-4">
-          <a href="{% url 'logout' %}" class="hidden lg:block">
-            <button class="bg-[#4f0074] hover:bg-violet-700 text-white px-4 py-2 rounded-md">
-              <i class="fa-solid fa-power-off"></i> &nbsp; Logout
+        <header class="bg-white shadow p-1 pr-4 flex justify-between items-center">
+            <div class="flex items-center space-x-4">
+            <!-- Hamburger Button -->
+            <button id="hamburger-button" class="sm:hidden text-gray-800 ml-5 focus:outline-none">
+                <i class="fas fa-bars text-2xl"></i>
             </button>
-          </a>
-        </div>
-      </header>
+            <div class="py-0">
+                <img src="{% static 'main/images/logo_text_long.png' %}" alt="Eduke Logo" class="w-full h-[80px] mx-auto">
+            </div>
+            </div>
+            <div class="flex items-center space-x-4">
+            <a href="{% url 'logout' %}" class="hidden lg:block">
+                <button class="bg-[#4f0074] hover:bg-violet-700 text-white px-4 py-2 rounded-md">
+                <i class="fa-solid fa-power-off"></i> &nbsp; Logout
+                </button>
+            </a>
+            </div>
+        </header>
 
       <!-- Wrapper for Sidebar and Main Content -->
-      <div class="flex h-screen relative">
+        <div class="flex h-screen relative main-screen">
 
-        <!-- Sidebar -->
-        <aside id="sidebar" class="w-64 bg-[#e5e5e5] text-black flex flex-col py-6 transform transition-transform -translate-x-full sm:translate-x-0 sm:relative absolute top-0 left-0 h-full z-10">
-          <nav class="flex-1">
-              <ul class="space-y-4 px-4">
-              <li>
-                  <a href="{% url 'admin_dashboard' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
-                      <i class="fa-solid fa-table-columns"></i> &nbsp;
-                      Dashboard
-                  </a>
-              </li>
-              <li>
-                  <a href="{% url 'admin_classes' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
-                  <i class="fa-solid fa-chalkboard"></i> &nbsp;
-                  Manage Classes
-                  </a>
-              </li>
-              <li>
-                  <a href="{% url 'admin_subjects' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
-                  <i class="fa-solid fa-book"></i> &nbsp;
-                  Manage Subjects
-                  </a>
-              </li>
-              <li class="bg-gray-300 rounded-md">
-                  <a href="{% url 'admin_students' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
-                  <i class="fa-solid fa-user-group"></i> &nbsp;
-                  Manage Students
-                  </a>
-              </li>
-              <li>
-                  <a href="{% url 'admin_profile' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
-                  <i class="fa-solid fa-circle-user"></i> &nbsp;
-                  Profile
-                  </a>
-              </li>
-              <li>
-                  <a href="{% url 'logout' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
-                  <i class="fa-solid fa-power-off"></i> &nbsp;
-                  Log Out
-                  </a>
-              </li>
-              </ul>
-          </nav>
-        </aside>
+            <!-- Sidebar -->
+            <aside id="sidebar" class="w-64 bg-[#e5e5e5] text-black flex flex-col py-6 transform transition-transform -translate-x-full sm:translate-x-0 sm:relative absolute top-0 left-0 h-full z-10">
+            <nav class="flex-1">
+                <ul class="space-y-4 px-4">
+                <li>
+                    <a href="{% url 'admin_dashboard' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                        <i class="fa-solid fa-table-columns"></i> &nbsp;
+                        Dashboard
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'admin_classes' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                    <i class="fa-solid fa-chalkboard"></i> &nbsp;
+                    Manage Classes
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'admin_subjects' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                    <i class="fa-solid fa-book"></i> &nbsp;
+                    Manage Subjects
+                    </a>
+                </li>
+                <li class="bg-gray-300 rounded-md">
+                    <a href="{% url 'admin_students' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                    <i class="fa-solid fa-user-group"></i> &nbsp;
+                    Manage Students
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'admin_profile' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                    <i class="fa-solid fa-circle-user"></i> &nbsp;
+                    Profile
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'logout' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                    <i class="fa-solid fa-power-off"></i> &nbsp;
+                    Log Out
+                    </a>
+                </li>
+                </ul>
+            </nav>
+            </aside>
         
-        <!-- Dashboard Content -->
-        <div id="content-wrapper" class="p-6 space-y-6 w-full">
-          <!-- Welcome Text -->
-          <section class="bg-gray-200 py-6 px-6">
-              <h1 class="text-2xl font-bold text-gray-800">Manage Students</h1>
-              <p class="text-lg font-bold text-purple-700">{{ institution_name }}</p>
-          </section>
-          
-          <!-- Classes Section -->
-          <div class="bg-white p-4 rounded-md shadow">
-              <h3 class="text-lg font-bold mb-4">Student</h3>
-              
-              <!-- Add New Class Form -->
-              <div class="mb-4 flex items-center space-x-4">
-                  <form method="post">
-                      {% csrf_token %}
-                      
-                      <!-- Render the class name field -->
-                      {{ form.class_name }}
-                      <!-- Render the class head (dropdown for selecting a teacher) -->
-                      {{ form.class_head }}
-                      <!-- Render the email field -->
-                      {{ form.email }}
-                      <!-- Render the password field -->
-                      {{ form.password }}
-                      <!-- Hidden input for institution ID -->
-                      <input type="hidden" name="institution_id" value="{{ request.session.institution_id }}">
-                      <button type="submit" class="bg-[#4f0074] hover:bg-violet-700 text-white px-4 py-2 rounded-md ml-2">
-                          <i class="fa-solid fa-plus"></i> Add New Student
-                      </button>
-                  </form>
-              </div>
-              
-              <!-- Classes Table -->
-              <table class="min-w-full table-auto border-collapse mt-[30px]">
-                  <thead>
-                      <tr class="bg-[#4f0074] text-white">
-                          <th class="p-3 border-b text-center mx-auto">Student Name</th>
-                          <th class="p-3 border-b text-center mx-auto">Class Head</th>
-                          <th class="p-3 border-b text-center mx-auto">Roll No</th>
-                          <th class="p-3 border-b text-center mx-auto">Class</th>
-                          <th class="p-3 border-b text-center mx-auto">Details</th>
-                          <th class="p-3 border-b text-center mx-auto">Actions</th>
-                      </tr>
-                  </thead>
-                  <tbody>
-                      {% for class in classes %}
-                          <tr>
-                              <td class="px-4 py-2 text-center border-b-2 border-b-gray-300 bg-gray-200">{{ class.class_name }}</td>
-                              <td class="px-4 py-2 text-center border-b-2 border-b-gray-300 bg-gray-200">{{ class.class_head }}</td>
-                              <td class="px-4 py-2 text-center border-b-2 border-b-gray-300 bg-gray-200">{{ class.email }}</td>
-                              <td class="px-4 py-2 text-center border-b-2 border-b-gray-300 bg-gray-200">{{ class.email }}</td>
-                              <td class="px-4 py-2 text-center border-b-2 border-b-gray-300 bg-gray-200">
-                                  <a href="" class="text-gray-900 hover:underline">
-                                      View
-                                  </a>
-                              </td>
-                              <td class="px-4 py-2 text-center border-b-2 border-b-gray-300 bg-gray-200">
-                                  <button type="button" class="text-gray-900 hover:text-white border border-purple-600 hover:bg-purple-600 rounded-md px-2 py-1">
-                                      <i class="fa-solid fa-pen-to-square"></i> &nbsp;Edit
-                                  </button>
-                                  <button type="button" class="text-red-700 hover:text-white border border-red-700 hover:bg-red-600 rounded-md px-2 py-1">
-                                      <i class="fa-solid fa-trash-can"></i> &nbsp;Delete
-                                  </button>
-                              </td>
-                          </tr>
-                      {% empty %}
-                          <tr>
-                              <td colspan="6" class="px-4 py-2 border-b text-center text-gray-600">No classes available</td>
-                          </tr>
-                      {% endfor %}
-                  </tbody>
-              </table>
-          </div>
+            <!-- Dashboard Content -->
+            <div id="content-wrapper" class="p-6 space-y-6 w-full">
+                <!-- Welcome Text -->
+                <section class="bg-gray-200 py-6 px-6">
+                    <h1 class="text-2xl font-bold text-gray-800">Manage Students</h1>
+                    <p class="text-lg font-bold text-purple-700">{{ institution_name }}</p>
+                </section>
+
+                <div class="bg-purple-100 border-l-4 border-purple-600 p-4 rounded-lg shadow-md">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-xl font-extrabold text-purple-800">Manage your students efficiently</h3>
+                        <div>
+                            <button onclick="toggleStudentForm()" class="bg-purple-600 text-white text-md font-semibold px-3 py-1 rounded-full hover:bg-purple-700">
+                                + Add Students
+                            </button>
+                        </div>
+                    </div>
+                    <p class="text-gray-800 text-sm mb-3">
+                        Add students to manage them efficiently.
+                    </p>
+
+                    <!-- Add students (Initially Hidden) -->
+                    <div id="student-form" class="mb-4 p-6 bg-white shadow-lg rounded-lg w-full hidden">
+                        <form method="post" class="grid grid-cols-2 gap-6 w-full">
+                            {% csrf_token %}
+                            
+                            <!-- Student Name -->
+                            <div class="w-full">
+                                <label for="name" class="block text-sm font-medium text-gray-700 mb-2">Student Name</label>
+                                {{ form.name }}
+                            </div>
+
+                            <!-- Email -->
+                            <div class="w-full">
+                                <label for="email" class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                                {{ form.email }}
+                            </div>
+
+                            <!-- Roll Number -->
+                            <div class="w-full">
+                                <label for="roll_no" class="block text-sm font-medium text-gray-700 mb-2">Roll Number</label>
+                                {{ form.roll_no }}
+                            </div>
+
+                            <!-- Password -->
+                            <div class="w-full">
+                                <label for="password" class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                                {{ form.password }}
+                            </div>
+
+                            <!-- Class Selection (Dropdown) -->
+                            <div class="col-span-2 w-full">
+                                <label for="class_id" class="block text-sm font-medium text-gray-700 mb-2">Select Class</label>
+                                <select name="class_id" id="class_id" class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#4f0074] focus:outline-none" required>
+                                    <option selected hidden>Select Class</option>
+                                    {% for class in classes %}
+                                        <option value="{{ class.id }}">{{ class.class_name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <!-- Hidden input for institution ID -->
+                            <input type="hidden" name="institution_id" value="{{ request.session.institution_id }}">
+
+                            <!-- Excel File Upload -->
+                            <div class="col-span-2 w-full">
+                                <a href="#" id="excel-link" class="text-purple-600 w-full border-2 border-purple-600 p-2 rounded-md block text-center hover:border-purple-800">Use Excel for Bulk Creation of Records</a>
+                            </div>
+
+                            <!-- Submit Button -->
+                            <div class="col-span-2 w-full flex justify-end">
+                                <button type="submit" class="bg-purple-600 w-full hover:bg-purple-700 text-white px-6 py-2 rounded-md">
+                                    <i class="fa-solid fa-plus"></i> Add New Student
+                                </button>
+                            </div>
+                        </form>
+
+                    </div>
+                </div>
+
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert text-center mx-auto 
+                                    {% if 'student_success' in message.tags %} text-green-600 {% elif 'student_error' in message.tags %} text-red-600 {% endif %}">
+                            {{ message }} 
+                            <span class="text-gray-900">
+                                <a href="{% url 'admin_students' %}" class="hover:underline">View Students</a>
+                            </span>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+            
+                <!-- Classes Section -->
+                <div class="bg-white p-4 rounded-md shadow">
+                    <h3 class="text-lg font-bold mb-4">Student</h3>
+                    
+                    <!-- Classes Table -->
+                    <table class="min-w-full table-auto border-collapse mt-[30px]">
+                        <thead>
+                            <tr class="bg-purple-600 text-white">
+                                <th class="p-3 border-b text-center mx-auto">Student Name</th>
+                                <th class="p-3 border-b text-center mx-auto">Roll No</th>
+                                <th class="p-3 border-b text-center mx-auto">Email</th>
+                                <th class="p-3 border-b text-center mx-auto">Class</th>
+                                <th class="p-3 border-b text-center mx-auto">Details</th>
+                                <th class="p-3 border-b text-center mx-auto">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for student in students %}
+                            <tr data-student-id="{{ student.id }}">
+                                <form method="POST" action="{% url 'admin_student_edit' student.0 %}">
+                                    {% csrf_token %}
+                                    <td class="px-4 py-2 text-center border-b-2 border-b-gray-300 bg-gray-200 student-name">
+                                        <input type="text" name="name" value="{{ student.1 }}" class="hidden input-field p-2 rounded-md">
+                                        <span class="display-field">{{ student.1 }}</span>
+                                    </td>
+                                    <td class="px-4 py-2 text-center border-b-2 border-b-gray-300 bg-gray-200 email">
+                                        <input type="text" name="roll_no" value="{{ student.2 }}" class="hidden input-field p-2 rounded-md">
+                                        <span class="display-field">{{ student.2 }}</span>
+                                    </td>
+                                    <td class="px-4 py-2 text-center border-b-2 border-b-gray-300 bg-gray-200 roll-no">
+                                        <input type="email" name="email" value="{{ student.3 }}" class="hidden input-field p-2 rounded-md">  
+                                        <span class="display-field">{{ student.3 }}</span>
+                                    </td>
+                                    <td class="px-4 py-2 text-center border-b-2 border-b-gray-300 bg-gray-200">
+                                        <span class="display-field class-name">{{ student.4 }}</span>
+                                    </td>
+
+                                    <td class="px-4 py-2 text-center border-b-2 border-b-gray-300 bg-gray-200">
+                                        <a href="{% url 'admin_student_detail' student.0 %}" class="text-gray-900 hover:underline">View</a>
+                                    </td>
+                                    <td class="px-4 py-2 text-center border-b-2 border-b-gray-300 bg-gray-200">
+                                        <button type="button" class="edit-btn text-gray-900 hover:text-white border border-purple-600 hover:bg-purple-600 rounded-md px-2 py-1">
+                                            <i class="fa-solid fa-pen-to-square"></i> &nbsp;Edit
+                                        </button>
+                                        <button type="submit" name="edit_student" class="update-btn text-green-700 hover:text-white border border-green-700 hover:bg-green-600 rounded-md px-2 py-1 hidden">
+                                            <i class="fa-solid fa-check"></i> &nbsp;Update
+                                        </button>
+                                        <button type="button" class="cancel-btn text-gray-700 hover:text-white border border-gray-700 hover:bg-gray-600 rounded-md px-2 py-1 hidden">
+                                            <i class="fa-solid fa-xmark"></i> &nbsp;Cancel
+                                        </button>
+                                        <button type="button" class="delete-btn text-red-700 hover:text-white border border-red-700 hover:bg-red-600 rounded-md px-2 py-1">
+                                            <i class="fa-solid fa-trash-can"></i> &nbsp;Delete
+                                        </button>
+                                    </td>
+                                </form>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="px-4 py-2 border-b text-center text-gray-600">No students found</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+
+
+                    <script>
+                    document.querySelectorAll('.edit-btn').forEach((button) => {
+                        button.addEventListener('click', function() {
+                            const row = button.closest('tr');
+                            const inputs = row.querySelectorAll('.input-field');
+                            const spans = row.querySelectorAll('.display-field');
+                            const updateBtn = row.querySelector('.update-btn');
+                            const cancelBtn = row.querySelector('.cancel-btn');
+                            
+                            // Toggle edit mode for name, roll_no, email (not class)
+                            inputs.forEach(input => input.classList.remove('hidden'));
+                            spans.forEach(span => {
+                                // Only hide the span for name, roll_no, and email
+                                if (!span.classList.contains('class-name')) {
+                                    span.classList.add('hidden');
+                                }
+                            });
+                            updateBtn.classList.remove('hidden');
+                            cancelBtn.classList.remove('hidden');
+                            button.classList.add('hidden');
+                        });
+                    });
+
+                    document.querySelectorAll('.cancel-btn').forEach((button) => {
+                        button.addEventListener('click', function() {
+                            const row = button.closest('tr');
+                            const inputs = row.querySelectorAll('.input-field');
+                            const spans = row.querySelectorAll('.display-field');
+                            const updateBtn = row.querySelector('.update-btn');
+                            const editBtn = row.querySelector('.edit-btn');
+                            
+                            // Cancel editing
+                            inputs.forEach(input => input.classList.add('hidden'));
+                            spans.forEach(span => {
+                                // Only show the span for name, roll_no, and email
+                                if (!span.classList.contains('class-name')) {
+                                    span.classList.remove('hidden');
+                                }
+                            });
+                            updateBtn.classList.add('hidden');
+                            button.classList.add('hidden');
+                            editBtn.classList.remove('hidden');
+                        });
+                    });
+
+                    </script>
+
+
+                </div>
+            </div>
+
+
+            <script>
+                document.getElementById('excel-link').addEventListener('click', function(event) {
+                    event.preventDefault(); // Prevent default link behavior
+
+                    // Excel guidelines content
+                    let excelContent = `
+                        <div id="content-wrapper" class="p-6 space-y-6 w-full">
+
+                            <h2 class="text-2xl font-bold text-purple-700 mb-4">📋 Subject Bulk Import Guidelines</h2>
+
+                            <p class="text-gray-600 mb-6">
+                                Follow these guidelines to ensure a smooth and error-free bulk upload of subjects.
+                                Download the correct template, fill it out, and upload it back into the system.
+                            </p>
+
+                            <!-- Subjects Upload Guide -->
+                            <div class="mb-6">
+                                <p class="text-gray-600">Ensure that your Excel file contains the following columns:</p>
+                                <ul class="list-disc ml-6 text-gray-600">
+                                    <li><strong>Student Name</strong> - (Required, e.g., "Albert John")</li>
+                                    <li><strong>Email</strong> - (Required, Unique Email for the student)</li>
+                                    <li><strong>Roll No</strong> - (Required, Unique Roll No for the student)</li>
+                                    <li><strong>Password</strong> - (Required, Default password for student login)</li>
+                                    <li><strong>Class Name</strong> - (Required, Name of the class the student belongs to)</li>
+                                </ul>
+                                <a href="{% static 'main/files/Student_Upload.xlsx' %}" class="text-purple-600 border-2 border-purple-600 p-2 rounded-md block text-center hover:border-purple-800 mt-3">
+                                    📥 Download Subject Template
+                                </a>
+                            </div>
+
+                            <!-- File Upload Form -->
+                            <div class="mb-6 bg-gray-100 p-4 rounded-lg">
+                                <h3 class="text-xl font-bold text-green-600 mb-2">📤 Upload Your File</h3>
+                                <p class="text-gray-600 mb-3">Upload your completed Excel (.xlsx or .csv) file below:</p>
+                                <form action="{% url 'upload_students' %}" method="POST" enctype="multipart/form-data" class="space-y-4">
+                                    {% csrf_token %}
+                                    <div>
+                                        <label for="subject_file" class="block text-sm font-medium text-gray-700 mb-3">Upload Documents</label>
+                                        <div class="flex items-center justify-center w-full">
+                                            <label for="dropzone-file" class="flex flex-col items-center justify-center w-full h-64 border-2 border-purple-600 border-dashed rounded-lg cursor-pointer">
+                                                <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                                    <i class="fa-solid fa-cloud-arrow-up text-[30px] text-gray-700"></i>
+                                                    <p class="mb-2 text-sm text-gray-500 "><span class="font-semibold">Click to upload</span> or drag and drop</p>
+                                                    <p class="text-xs text-gray-500">.xlsx, .csv</p>
+                                                    <p id="file-name" class="mt-2 text-sm text-gray-500"></p>
+                                                </div>
+                                                <input id="dropzone-file" type="file" name="file" accept=".xlsx,.csv" required class="hidden" />
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <button type="submit" class="w-full mx-auto bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-800 transition duration-200">
+                                        Upload File
+                                    </button>
+                                </form>
+
+                            </div>
+
+                            <!-- Common Errors & Solutions -->
+                            <div class="mb-6">
+                                <h3 class="text-xl font-bold text-red-600 mb-2">⚠️ Common Upload Mistakes</h3>
+                                <ul class="list-disc ml-6 text-gray-600">
+                                    <li>❌ Missing required fields → Ensure all columns are filled.</li>
+                                    <li>❌ Incorrect email format → Use a valid email (e.g., example@domain.com).</li>
+                                    <li>❌ Duplicate entries → Ensure that emails are unique.</li>
+                                    <li>❌ Unsupported file format → Upload only .xlsx or .csv files.</li>
+                                </ul>
+                            </div>
+
+                            <!-- FAQs Section -->
+                            <div>
+                                <h3 class="text-xl font-bold text-purple-600 mb-2">❓ FAQs</h3>
+                                <details class="mb-3">
+                                    <summary class="cursor-pointer text-purple-600 font-medium">What happens if I upload a wrong file?</summary>
+                                    <p class="ml-6 text-gray-600">The system will reject it and display an error message. Make sure to use the correct template.</p>
+                                </details>
+                                <details class="mb-3">
+                                    <summary class="cursor-pointer text-purple-600 font-medium">Can I edit uploaded data?</summary>
+                                    <p class="ml-6 text-gray-600">Yes, you can manually update records in the system.</p>
+                                </details>
+                                <details class="mb-3">
+                                    <summary class="cursor-pointer text-purple-600 font-medium">Can I re-upload a corrected file?</summary>
+                                    <p class="ml-6 text-gray-600">Yes, but avoid duplicate entries by removing already existing records.</p>
+                                </details>
+                            </div>
+
+                        </div>`;
+
+                    // Replace the content inside #content-wrapper
+                    document.getElementById('content-wrapper').innerHTML = excelContent;
+
+                    // Add event listener to the file input to display the selected file name
+                    document.getElementById('dropzone-file').addEventListener('change', function(event) {
+                        const fileName = event.target.files.length > 0 ? event.target.files[0].name : "No file chosen";
+                        document.getElementById('file-name').textContent = `📄 ${fileName}`;
+                    });
+                });
+            </script>
+
         </div>
-
-
-      </div>
     </main>
   </div>
 
   <!-- JavaScript -->
+  <!-- JavaScript to toggle sidebar visibility -->
   <script>
-    function addTeacher() {
-      const name = document.getElementById('teacher_name').value;
-      const email = document.getElementById('teacher_email').value;
+    const hamburgerButton = document.getElementById('hamburger-button');
+    const sidebar = document.getElementById('sidebar');
+    const mainContent = document.getElementById('main-content');
 
-      if (!name || !email) {
-        alert('Please fill in all fields');
-        return;
-      }
+    hamburgerButton.addEventListener('click', () => {
+      sidebar.classList.toggle('-translate-x-full');
+      // Adjust main content width when the sidebar is hidden
+      mainContent.classList.toggle('lg:w-full');
+    });
 
-      alert(`Teacher added: ${name}, ${email}`);
-      // You can replace the alert with an AJAX request to add a teacher
+    function toggleStudentForm() {
+        const studentForm = document.getElementById('student-form');
+        studentForm.classList.toggle('hidden');
     }
   </script>
+
 </body>
 </html>

@@ -1,0 +1,146 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eduke Admin</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="{% static 'main/css/style.css' %}">
+  <link rel="icon" href="{% static 'main/images/logobase_white.png' %}">
+</head>
+<body class="bg-gray-100 text-gray-900">
+
+  <!-- Dashboard Wrapper -->
+  <div class="flex h-screen">
+    <!-- Main Content -->
+    <main id="main-content" class="flex-1 overflow-y-auto w-full transition-all">
+      
+      <!-- Top Navbar -->
+      <header class="bg-white shadow p-1 pr-4 flex justify-between items-center">
+        <div class="flex items-center space-x-4">
+          <!-- Hamburger Button -->
+          <button id="hamburger-button" class="sm:hidden text-gray-800 ml-5 focus:outline-none">
+            <i class="fas fa-bars text-2xl"></i>
+          </button>
+          <div class="py-0">
+            <img src="{% static 'main/images/logo_text_long.png' %}" alt="Eduke Logo" class="w-full h-[80px] mx-auto">
+          </div>
+        </div>
+        <div class="flex items-center space-x-4">
+          <a href="{% url 'logout' %}" class="hidden lg:block">
+            <button class="bg-[#4f0074] hover:bg-violet-700 text-white px-4 py-2 rounded-md">
+              <i class="fa-solid fa-power-off"></i> &nbsp; Logout
+            </button>
+          </a>
+        </div>
+      </header>
+
+      <!-- Wrapper for Sidebar and Main Content -->
+      <div class="flex h-screen relative main-screen">
+
+        <!-- Sidebar -->
+        <aside id="sidebar" class="w-64 bg-[#e5e5e5] text-black flex flex-col py-6 transform transition-transform -translate-x-full sm:translate-x-0 sm:relative absolute top-0 left-0 h-full z-10">
+          <nav class="flex-1">
+              <ul class="space-y-4 px-4">
+              <li>
+                  <a href="{% url 'admin_dashboard' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                      <i class="fa-solid fa-table-columns"></i> &nbsp;
+                      Dashboard
+                  </a>
+              </li>
+              <li>
+                  <a href="{% url 'admin_classes' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-chalkboard"></i> &nbsp;
+                  Manage Classes
+                  </a>
+              </li>
+              <li>
+                  <a href="{% url 'admin_subjects' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-book"></i> &nbsp;
+                  Manage Subjects
+                  </a>
+              </li>
+              <li class="bg-gray-300 rounded-md">
+                  <a href="{% url 'admin_students' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-user-group"></i> &nbsp;
+                  Manage Students
+                  </a>
+              </li>
+              <li>
+                  <a href="{% url 'admin_profile' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-circle-user"></i> &nbsp;
+                  Profile
+                  </a>
+              </li>
+              <li>
+                  <a href="{% url 'logout' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-power-off"></i> &nbsp;
+                  Log Out
+                  </a>
+              </li>
+              </ul>
+          </nav>
+        </aside>
+        
+        <!-- Dashboard Content -->
+        <div id="content-wrapper" class="p-6 space-y-6 w-full">
+                <!-- Welcome Text -->
+                <section class="bg-gray-200 py-6 px-6">
+                    <h1 class="text-2xl font-bold text-gray-800 uppercase">{{ student_obj.subject_name }}</h1>
+                    <p class="text-lg font-bold text-purple-700">{{ institution_name }}</p>
+                </section>
+
+                <div class="bg-white p-4 rounded-lg shadow-md flex flex-wrap">
+                    <!-- Left Side: Image -->
+                     <div class="w-full lg:w-1/3 hidden lg:block bg-gray-100 p-4 rounded-lg shadow-md">
+                        <img src="{% static 'main/images/profile.png' %}" alt="Teacher Profile Image" class="w-4/5 max-w-3xl mx-auto"> 
+                    </div>
+
+                    <!-- Right Side: Image -->
+                    <div class="w-full lg:w-2/3 p-5">
+                        <h1 class="text-lg mb-3 font-bold text-center">Student Details<h1>
+
+                        <p class="text-sm text-left font-semibold">Student Roll No:</p>
+                        <p class="text-md bg-[#f2d7ff] px-4 py-2 rounded-[30px] text-left text-purple-700 font-bold mt-2 mb-5">{{ student_obj.roll_no }}</p>
+
+                        <p class="text-sm text-left font-semibold">Student Name:</p>
+                        <p class="text-md bg-[#f2d7ff] px-4 py-2 rounded-[30px] text-left text-purple-700 font-bold mt-2 mb-5">{{ student_obj.name }}</p>
+                        
+                        <p class="text-sm text-left font-semibold">Email:</p>
+                        <p class="text-md bg-[#f2d7ff] px-4 py-2 rounded-[30px] text-left text-purple-700 font-bold mt-2 mb-5"><a href="mailto:{{ student_obj.email }}" class="hover:underline">{{ student_obj.email }}</a></p>
+                            
+                        <p class="text-sm text-left font-semibold">Class:</p>
+                        <p class="text-md bg-[#f2d7ff] px-4 py-2 rounded-[30px] text-left text-purple-700 font-bold mt-2 mb-5">{{ student_obj.class_name }}</p>
+                    </div>
+                </div>
+
+            </div>
+
+
+      </div>
+    </main>
+  </div>
+
+  <!-- JavaScript -->
+  <!-- JavaScript to toggle sidebar visibility -->
+  <script>
+    const hamburgerButton = document.getElementById('hamburger-button');
+    const sidebar = document.getElementById('sidebar');
+    const mainContent = document.getElementById('main-content');
+
+    hamburgerButton.addEventListener('click', () => {
+      sidebar.classList.toggle('-translate-x-full');
+      // Adjust main content width when the sidebar is hidden
+      mainContent.classList.toggle('lg:w-full');
+    });
+
+    function toggleStudentForm() {
+        const studentForm = document.getElementById('student-form');
+        studentForm.classList.toggle('hidden');
+    }
+  </script>
+
+</body>
+</html>

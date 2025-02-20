@@ -2,7 +2,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from .forms import InstitutionRegisterForm, LoginForm, ClassHeadLoginForm, SubjectHeadLoginForm, StudentLoginForm, ParentLoginForm, AddClassForm, AddSubjectForm
+from .forms import InstitutionRegisterForm, LoginForm, ClassHeadLoginForm, SubjectHeadLoginForm, StudentLoginForm, ParentLoginForm, AddClassForm, AddSubjectForm, AddStudentForm, ClassUploadForm, SubjectUploadForm, StudentUploadForm
 from .models import Institution, Classes, Subjects, Students, Users, Parents, Chat, Announcements
 from django.db import IntegrityError, transaction
 from django.db import connection
@@ -13,12 +13,47 @@ from django.views.decorators.csrf import csrf_exempt
 import json
 from django.utils.timezone import now
 from django.http import HttpResponse
+from django.core.mail import send_mail
+import pandas as pd
+from django.core.files.storage import FileSystemStorage
 
 
 
 # Index page
 def index(request):
     return render(request, 'index.html')
+
+
+def send_account_creation_email(email, password, role, name, institution_email):
+    subject = "Your Eduke Account is Ready"
+
+    role_messages = {
+        "class_head": "You have been assigned as a Class Head. You can manage students and subjects for your class.",
+        "subject_head": "You have been assigned as a Subject Head. You can manage subjects and interact with students.",
+        "student": "Your student account has been created. You can now access study materials and interact with teachers.",
+        "parent": "Your parent account has been created. You can track your child's academic progress and communicate with teachers."
+    }
+
+    message = f"""
+    Dear {name},
+
+    Your Eduke account has been successfully created.
+
+    Role: {role.replace('_', ' ').title()}
+    Email: {email}
+    Temporary Password: {password}
+
+    {role_messages.get(role, "You can now access the system.")}
+
+    Please log in and change your password.
+
+    Regards,  
+    Eduke Administration  
+    ({institution_email})
+    """
+
+    send_mail(subject, message, institution_email, [email])
+
 
 
 ######################################################################################################################
@@ -125,18 +160,125 @@ def admin_dashboard(request):
         class_obj__in=Classes.objects.filter(institution_id=institution_id).values('id')
     ).count()
 
+    # Count the subjects belonging to the logged-in institution (using class_obj field)
+    subject_count = Subjects.objects.filter(
+        class_obj__in=Classes.objects.filter(institution_id=institution_id).values('id')
+    ).count()
+
     # Pass the counts to the template
     context = {
         'institution_name': institution_name,
         'total_users': total_users,
         'student_count': student_count,
         'total_classes': total_classes,
+        'subject_count': subject_count,  # Add subject count to the context
     }
 
     return render(request, 'admin/admin_dashboard.html', context)
 
 
 def admin_classes(request):
+    print("🟢 View Loaded: admin_classes()")  
+
+    if 'institution_id' not in request.session:
+        messages.error(request, 'Please log in to access this page.')
+        print("🔴 User not logged in. Redirecting to login.")
+        return redirect('login')
+
+    institution_id = request.session['institution_id']
+    print(f"🟢 Institution ID: {institution_id}")
+
+    try:
+        institution = Institution.objects.get(institution_id=institution_id)
+        print(f"🟢 Institution Found: {institution.institution_name}")
+    except Institution.DoesNotExist:
+        messages.error(request, "Institution not found.")
+        print("🔴 Institution not found. Redirecting to login.")
+        return redirect('login')
+
+    classes = Classes.objects.filter(institution_id=institution.institution_id)
+    print(f"🟢 Retrieved {classes.count()} classes.")
+    for class_instance in classes:
+        print(f"   Class ID: {class_instance.id}, Name: {class_instance.class_name}, Head: {class_instance.class_head}, Email: {class_instance.email}")
+
+    if request.method == 'POST':
+        print("🟢 POST Request Received.")
+        print(f"🔍 Request Data: {request.POST}")
+
+        print("🟢 Handling New Class Addition")
+        form = AddClassForm(request.POST)
+
+        if form.is_valid():
+            with transaction.atomic():
+                class_name = form.cleaned_data['class_name']
+                class_head = form.cleaned_data['class_head']
+                email = form.cleaned_data['email']
+                password = form.cleaned_data['password']
+
+                print(f"🟢 New Class Data - Name: {class_name}, Head: {class_head}, Email: {email}")
+
+                user = Users.objects.create(role='class_head')
+                print("🟢 New User Created with ID:", user.id)
+
+                new_class = Classes(
+                    class_name=class_name,
+                    class_head=class_head,
+                    email=email,
+                    password=password,
+                    institution=institution,
+                    user=user
+                )
+                new_class.save()
+                print(f"🟢 New Class Added with ID: {new_class.id}. Data: Name: {class_name}, Head: {class_head}, Email: {email}")
+
+                send_account_creation_email(email, password, "class_head", class_head, institution.email)
+                print("🟢 Account creation email sent.")
+
+                messages.success(request, 'New class added successfully!')
+                return redirect('admin_classes')
+        else:
+            messages.error(request, 'Error adding class. Please try again.')
+            print("🔴 Error: Form validation failed.")
+
+    else:
+        print("🟢 Rendering Page with GET Request.")
+        form = AddClassForm()
+
+    context = {
+        'institution_name': institution.institution_name,
+        'classes': classes,
+        'form': form,
+    }
+
+    print(f"🟢 Sending context to template: {context}")
+    print("🟢 Rendering admin/admin_classes.html")
+    return render(request, 'admin/admin_classes.html', context)
+
+
+def admin_class_edit(request, class_id):
+    try:
+        # Fetch the class object to be edited
+        class_obj = Classes.objects.get(id=class_id)
+
+        if request.method == "POST":
+            # Update class details based on the form input
+            class_obj.class_name = request.POST.get('class_name')
+            class_obj.class_head = request.POST.get('class_head')
+            class_obj.email = request.POST.get('email')
+            class_obj.save()
+
+            # Redirect to the class list page after successful update
+            return redirect('admin_classes')  # Adjust to the correct URL pattern for the class list
+
+        # Render the edit page with the class details
+        return render(request, 'admin/class_edit.html', {'class': class_obj})
+    
+    except Classes.DoesNotExist:
+        # Handle the case when the class doesn't exist
+        return redirect('admin_classes')  # Redirect to the class list if class not found
+
+
+def admin_class_detail(request, class_id):
     # Check if the user is logged in
     if 'institution_id' not in request.session:
         messages.error(request, 'Please log in to access this page.')
@@ -145,60 +287,47 @@ def admin_classes(request):
     # Get the institution_id from the session
     institution_id = request.session['institution_id']
 
-    try:
-        # Fetch the institution based on the institution_id from the session
-        institution = Institution.objects.get(institution_id=institution_id)
-    except Institution.DoesNotExist:
-        messages.error(request, "Institution not found.")
-        return redirect('login')
+    with connection.cursor() as cursor:
+        # Fetch institution details
+        cursor.execute("SELECT institution_name FROM main_institution WHERE institution_id = %s", [institution_id])
+        institution_row = cursor.fetchone()
+        if not institution_row:
+            messages.error(request, "Institution not found.")
+            return redirect('login')
+        institution_name = institution_row[0]
 
-    # Fetch all classes associated with the institution
-    classes = Classes.objects.filter(institution_id=institution.institution_id)
+        # Fetch class details
+        cursor.execute("SELECT id, class_name, class_head, email, password, user_id FROM main_classes WHERE id = %s", [class_id])
+        class_row = cursor.fetchone()
+        if not class_row:
+            messages.error(request, "Class not found.")
+            return redirect('admin_students')
 
-    # Handle POST request to add a new class
-    if request.method == 'POST':
-        form = AddClassForm(request.POST)
-        if form.is_valid():
-            # Start a transaction to ensure atomicity
-            with transaction.atomic():
-                # Get the values from the form
-                class_name = form.cleaned_data['class_name']
-                class_head = form.cleaned_data['class_head']
-                email = form.cleaned_data['email']
-                password = form.cleaned_data['password']
+        class_obj = {
+            'id': class_row[0],
+            'class_name': class_row[1],
+            'class_head': class_row[2],
+            'email': class_row[3],
+            'password': class_row[4],
+            'user_id': class_row[5],
+        }
 
-                # Create a new user for the class head
-                user = Users.objects.create(
-                    role='class_head',  # Set the role as 'class_head'
-                )
-
-                # Create the new class and associate it with the institution and the created user
-                new_class = Classes(
-                    class_name=class_name,
-                    class_head=class_head,  # Class head's name
-                    email=email,
-                    password=password,
-                    institution=institution,  # Set institution from the session
-                    user=user  # Link the newly created user
-                )
-                new_class.save()  # Save the new class record
-
-                messages.success(request, 'New class added successfully!')
-                return redirect('admin_classes')  # Redirect to the same page to update the list
-        else:
-            messages.error(request, 'Error adding class. Please try again.')
-    else:
-        form = AddClassForm()
+        # Fetch students belonging to the class
+        cursor.execute("SELECT id, roll_no, email, name FROM main_students WHERE class_obj_id = %s", [class_id])
+        students = [{'id': row[0], 'roll_no': row[1], 'name': row[2], 'email': row[3]} for row in cursor.fetchall()]
 
     # Prepare context for the template
     context = {
-        'institution_name': institution.institution_name,
-        'classes': classes,
-        'form': form,
+        'institution_name': institution_name,
+        'class_obj': class_obj,
+        'students': students,
+        'class_head': class_obj['class_head'],  # Added class_head to the context
+        'class_email': class_obj['email'],     # Added class email to the context
     }
 
-    # Render the template
-    return render(request, 'admin/admin_classes.html', context)
+    return render(request, 'admin/admin_class_detail.html', context)
+
+
 
 def admin_subjects(request):
     # Check if the user is logged in
@@ -208,43 +337,360 @@ def admin_subjects(request):
     
     # Get the institution_id from the session
     institution_id = request.session['institution_id']
+    print(f"DEBUG: Institution ID from session - {institution_id}")
 
     try:
-        # Fetch the institution based on the institution_id from the session
+        # Fetch the institution based on the session institution_id
         institution = Institution.objects.get(institution_id=institution_id)
+        print(f"DEBUG: Institution found - {institution.institution_name}")
     except Institution.DoesNotExist:
         messages.error(request, "Institution not found.")
         return redirect('login')
-    
+
+    # Fetch all classes for the dropdown
+    classes = Classes.objects.filter(institution_id=institution_id).values('id', 'class_name')
+    print(f"DEBUG: Classes retrieved - {list(classes)}")
+
+    # Fetch subjects along with class names
+    subjects = []
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT 
+                ms.id, ms.subject_name, ms.subject_head, ms.email, 
+                c.class_name
+            FROM main_subjects ms
+            JOIN main_classes c ON ms.class_obj_id = c.id
+            WHERE c.institution_id = %s
+        """, [institution_id])
+        subjects = cursor.fetchall()
+
+    print(f"DEBUG: Retrieved subjects - {subjects}")
+
+    if request.method == "POST":
+        form = AddSubjectForm(request.POST)
+        if form.is_valid():
+            subject_name = form.cleaned_data['subject_name']
+            subject_head = form.cleaned_data['subject_head']
+            email = form.cleaned_data['email']
+            password = form.cleaned_data['password']
+            class_id = form.cleaned_data['class_id'].id  # Get class ID
+
+            print(f"DEBUG: Form Data - Subject: {subject_name}, Head: {subject_head}, Email: {email}, Class ID: {class_id}")
+
+            with connection.cursor() as cursor:
+                try:
+                    # Step 1: Insert into main_users table
+                    cursor.execute("INSERT INTO main_users (role) VALUES (%s)", ['subject_head'])
+                    user_id = cursor.lastrowid  # Get the last inserted user ID
+                    
+                    if not user_id:
+                        raise Exception("User ID not retrieved after insert!")
+
+                    print(f"DEBUG: Inserted into main_users - User ID: {user_id}")
+
+                    # Step 2: Insert into main_subjects table
+                    cursor.execute("""
+                        INSERT INTO main_subjects (subject_name, subject_head, email, password, user_id, class_obj_id) 
+                        VALUES (%s, %s, %s, %s, %s, %s)
+                    """, [subject_name, subject_head, email, password, user_id, class_id])
+
+                    print(f"DEBUG: Inserted into main_subjects - Subject: {subject_name}, Class ID: {class_id}")
+
+                    # **Step 3: Send Account Creation Email**
+                    send_account_creation_email(email, password, "subject_head", subject_head, institution.email)
+
+                    messages.success(request, "Subject added successfully!")
+                    return redirect('admin_subjects')
+
+                except Exception as e:
+                    print(f"ERROR: {e}")
+                    messages.error(request, f"An error occurred: {e}")
+        else:
+            print("DEBUG: Form is invalid")
+
+    else:
+        form = AddSubjectForm()
+
     context = {
         'institution_name': institution.institution_name,
+        'form': form,
+        'classes': classes,
+        'subjects': subjects  # Pass subjects data to template
     }
 
     return render(request, 'admin/admin_subjects.html', context)
 
 
-def admin_students(request):
-    # Ensure the user is an admin
-    if 'institution_id' not in request.session:
-        messages.error(request, "Please log in to access the admin profile.")
-        return redirect('login')
+
+def admin_subject_edit(request, subject_id):
+    try:
+        # Fetch the subject object to be edited
+        subject_obj = Subjects.objects.get(id=subject_id)
+
+        if request.method == "POST":
+            # Update subject details based on the form input
+            subject_obj.subject_name = request.POST.get('subject_name')
+            subject_obj.subject_head = request.POST.get('subject_head')
+            subject_obj.email = request.POST.get('email')
+            subject_obj.class_id = request.POST.get('class_id')
+            subject_obj.save()
+
+            # Redirect to the subject list page after successful update
+            return redirect('admin_subjects')  # Adjust to the correct URL pattern for the subject list
+
+        # Render the edit page with the subject details
+        return render(request, 'admin/subject_edit.html', {'subject': subject_obj})
     
+    except Subjects.DoesNotExist:
+        # Handle the case when the subject doesn't exist
+        return redirect('admin_subjects')  # Redirect to the subject list if subject not found
+
+
+
+def admin_subject_detail(request, subject_id):
+    print(f"Received subject_id: {subject_id}, Type: {type(subject_id)}")
+
+    # Validate subject_id
+    if not subject_id or not str(subject_id).isdigit():
+        print("Invalid subject_id, redirecting to admin_students.")
+        messages.error(request, "Invalid subject ID.")
+        return redirect('admin_students')
+
+    # Check if the user is logged in
+    if 'institution_id' not in request.session:
+        print("User not logged in, redirecting to login page.")
+        messages.error(request, 'Please log in to access this page.')
+        return redirect('login')
+
     # Get the institution_id from the session
     institution_id = request.session['institution_id']
+    print(f"Institution ID from session: {institution_id}")
+
+    with connection.cursor() as cursor:
+        # Fetch institution details
+        cursor.execute("SELECT institution_name FROM main_institution WHERE institution_id = %s", [institution_id])
+        institution_row = cursor.fetchone()
+        if not institution_row:
+            print("Institution not found, redirecting to login.")
+            messages.error(request, "Institution not found.")
+            return redirect('login')
+        institution_name = institution_row[0]
+        print(f"Institution Name: {institution_name}")
+
+        # Fetch subject details
+        cursor.execute("SELECT id, subject_name, subject_head, email FROM main_subjects WHERE id = %s", [subject_id])
+        subject_row = cursor.fetchone()
+        if not subject_row:
+            print("Subject not found, redirecting to admin_students.")
+            messages.error(request, "Subject not found.")
+            return redirect('admin_students')
+
+        subject_obj = {
+            'id': subject_row[0],
+            'subject_name': subject_row[1],
+            'subject_head': subject_row[2],
+            'email': subject_row[3],
+        }
+        print(f"Subject Name: {subject_obj['subject_name']}")
+
+    # Prepare context for the template
+    context = {
+        'institution_name': institution_name,
+        'subject_obj': subject_obj,
+    }
+
+    return render(request, 'admin/admin_subject_detail.html', context)
+
+
+
+def admin_students(request):
+    # Check if the user is logged in
+    if 'institution_id' not in request.session:
+        messages.error(request, 'Please log in to access this page.')
+        return redirect('login')
+
+    # Get the institution_id from the session
+    institution_id = request.session['institution_id']
+    print(f"DEBUG: Institution ID from session - {institution_id}")
 
     try:
-        # Fetch the institution based on the institution_id from the session
+        # Fetch the institution based on the session institution_id
         institution = Institution.objects.get(institution_id=institution_id)
+        print(f"DEBUG: Institution found - {institution.institution_name}")
     except Institution.DoesNotExist:
         messages.error(request, "Institution not found.")
         return redirect('login')
-    
+
+    # Fetch all classes for the dropdown
+    classes = Classes.objects.filter(institution_id=institution_id)
+    print(f"DEBUG: Classes retrieved - {list(classes.values('id', 'class_name'))}")
+
+    # Fetch students along with class name and class head name
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT 
+                s.id, s.name AS student_name, s.roll_no, s.email, c.class_name, 
+                c.class_head
+            FROM main_students s
+            LEFT JOIN main_classes c ON s.class_obj_id = c.id
+            WHERE c.institution_id = %s
+        """, [institution_id])
+        students = cursor.fetchall()
+
+    print(f"DEBUG: Students retrieved - {students}")
+
+    # Handle form submission
+    if request.method == "POST":
+        form = AddStudentForm(request.POST)
+
+        if form.is_valid():
+            name = form.cleaned_data['name']
+            roll_no = int(form.cleaned_data['roll_no'])  # Ensure integer conversion
+            email = form.cleaned_data['email']  # Extract email
+            password = form.cleaned_data['password']
+            class_obj_id = form.cleaned_data['class_id'].id  # Extracting the integer ID
+
+            print(f"DEBUG: Form Data - Name: {name}, Roll No: {roll_no}, Email: {email}, Password: {password}, Class ID: {class_obj_id}")
+
+            try:
+                with transaction.atomic():
+                    with connection.cursor() as cursor:
+                        # Insert into users table (Student)
+                        cursor.execute("INSERT INTO main_users (role) VALUES ('student')")
+                        student_user_id = cursor.lastrowid
+                        print(f"DEBUG: Inserted into users table (student), User ID: {student_user_id}")
+
+                        # Insert student record (Including Email)
+                        cursor.execute("""
+                            INSERT INTO main_students (name, roll_no, email, password, class_obj_id, user_id)
+                            VALUES (%s, %s, %s, %s, %s, %s)
+                        """, [name, roll_no, email, password, class_obj_id, student_user_id])
+                        student_id = cursor.lastrowid
+                        print(f"DEBUG: Inserted into students table, Student ID: {student_id}")
+
+                        # Insert into users table (Parent)
+                        cursor.execute("INSERT INTO main_users (role) VALUES ('parent')")
+                        parent_user_id = cursor.lastrowid
+                        print(f"DEBUG: Inserted into users table (parent), User ID: {parent_user_id}")
+
+                        # Insert parent record
+                        cursor.execute("""
+                            INSERT INTO main_parents (student_id, password, name, user_id)
+                            VALUES (%s, %s, NULL, %s)
+                        """, [student_id, password, parent_user_id])
+                        print(f"DEBUG: Inserted into parents table, Parent User ID: {parent_user_id}")
+
+                    # Send account creation email to student
+                    send_account_creation_email(email, password, "student", name, institution.email)
+
+                    messages.success(request, "Student and Parent added successfully!")
+                    return redirect('admin_students')
+
+            except Exception as e:
+                print(f"ERROR: {e}")
+                messages.error(request, f"Error: {str(e)}")
+        else:
+            print("DEBUG: Form validation failed")
+            messages.error(request, "Failed to add student. Please check the form.")
+    else:
+        form = AddStudentForm()
+
     context = {
         'institution_name': institution.institution_name,
+        'form': form,
+        'students': students,
+        'classes': classes,
     }
 
-
     return render(request, 'admin/admin_students.html', context)
+
+
+def admin_student_edit(request, student_id):
+    try:
+        # Fetch the student object to be edited
+        student_obj = Students.objects.get(id=student_id)
+
+        if request.method == "POST":
+            # Update student details based on the form input
+            student_obj.name = request.POST.get('name')
+            student_obj.email = request.POST.get('email')
+            student_obj.roll_no = request.POST.get('roll_no')
+            student_obj.class_name = request.POST.get('class')
+            student_obj.save()
+
+            # Redirect to the student list page after successful update
+            return redirect('admin_students')  # Adjust to the correct URL pattern for the student list
+
+        # Render the edit page with the student details
+        return render(request, 'admin/student_edit.html', {'student': student_obj})
+    
+    except Students.DoesNotExist:
+        # Handle the case when the student doesn't exist
+        return redirect('admin_students')  # Redirect to the student list if student not found
+
+
+def admin_student_detail(request, student_id):
+    print(f"Received student_id: {student_id}, Type: {type(student_id)}")
+
+    # Validate student_id
+    if not student_id or not str(student_id).isdigit():
+        print("Invalid student_id, redirecting to admin_students.")
+        messages.error(request, "Invalid student ID.")
+        return redirect('admin_students')
+
+    # Check if the user is logged in
+    if 'institution_id' not in request.session:
+        print("User not logged in, redirecting to login page.")
+        messages.error(request, 'Please log in to access this page.')
+        return redirect('login')
+
+    # Get the institution_id from the session
+    institution_id = request.session['institution_id']
+    print(f"Institution ID from session: {institution_id}")
+
+    with connection.cursor() as cursor:
+        # Fetch institution details
+        cursor.execute("SELECT institution_name FROM main_institution WHERE institution_id = %s", [institution_id])
+        institution_row = cursor.fetchone()
+        if not institution_row:
+            print("Institution not found, redirecting to login.")
+            messages.error(request, "Institution not found.")
+            return redirect('login')
+        institution_name = institution_row[0]
+        print(f"Institution Name: {institution_name}")
+
+        # Fetch student details (excluding parent details)
+        cursor.execute("""
+            SELECT 
+                s.id, s.roll_no, s.name, s.email, c.class_name
+            FROM main_students s
+            JOIN main_classes c ON s.class_obj_id = c.id
+            WHERE s.id = %s
+        """, [student_id])
+        student_row = cursor.fetchone()
+        if not student_row:
+            print("Student not found, redirecting to admin_students.")
+            messages.error(request, "Student not found.")
+            return redirect('admin_students')
+
+        student_obj = {
+            'id': student_row[0],
+            'roll_no': student_row[1],
+            'name': student_row[2],
+            'email': student_row[3],
+            'class_name': student_row[4],
+        }
+        print(f"Student Name: {student_obj['name']}")
+
+    # Prepare context for the template
+    context = {
+        'institution_name': institution_name,
+        'student_obj': student_obj,
+    }
+
+    return render(request, 'admin/admin_student_detail.html', context)
+
+
 
 
 def admin_profile(request):
@@ -293,6 +739,342 @@ def admin_profile(request):
     }
     
     return render(request, 'admin/admin_profile.html', context)
+
+
+######################################################################################################################
+
+
+from django.contrib import messages
+import pandas as pd
+from django.core.files.storage import FileSystemStorage
+from django.db import connection
+from django.shortcuts import render, redirect
+
+def upload_classes(request):
+    print("Request received. Method:", request.method)  # Debugging
+
+    if request.method == 'POST':
+        form = ClassUploadForm(request.POST, request.FILES)
+        if form.is_valid():
+            print("Form is valid.")  # Debugging
+        else:
+            print("Form errors:", form.errors)  # Debugging
+            messages.add_message(request, messages.ERROR, "❌ Invalid form submission.", extra_tags="classes_error")
+            return render(request, 'admin/admin_classes.html', {'form': form})
+
+        file = request.FILES['file']
+        print("File received:", file.name)  # Debugging
+
+        # Save file temporarily
+        fs = FileSystemStorage()
+        filename = fs.save(file.name, file)
+        file_path = fs.path(filename)
+        print("File saved at:", file_path)  # Debugging
+
+        try:
+            # Fetch the currently logged-in institution's ID
+            institution_id = request.session.get('institution_id')  # Assuming it's stored in session
+            if not institution_id:
+                messages.add_message(request, messages.ERROR, "❌ Institution not found. Please log in again.", extra_tags="classes_error")
+                print("Error: Institution ID not found.")  # Debugging
+                return redirect('admin_classes')
+
+            print("Logged-in Institution ID:", institution_id)  # Debugging
+
+            # Read Excel file
+            try:
+                df = pd.read_excel(file_path)
+                print("File read successfully.")  # Debugging
+                print("Columns in file:", df.columns.tolist())  # Debugging
+            except Exception as e:
+                messages.add_message(request, messages.ERROR, f"❌ Error reading the file: {e}", extra_tags="classes_error")
+                print("Error reading the file:", e)  # Debugging
+                return redirect('admin_classes')
+
+            # Validate required columns
+            required_columns = ['Class Name', 'Class Head', 'Email', 'Password']
+            if not all(col in df.columns for col in required_columns):
+                messages.add_message(request, messages.ERROR, "❌ Invalid file format! Ensure the correct columns are present.", extra_tags="classes_error")
+                print("Error: Missing required columns.")  # Debugging
+                return redirect('admin_classes')
+
+            with connection.cursor() as cursor:
+                for index, row in df.iterrows():
+                    class_name = row['Class Name']
+                    class_head = row['Class Head']
+                    email = row['Email']
+                    password = row['Password']
+
+                    print(f"Processing row {index}: {class_name}, {class_head}, {email}")  # Debugging
+
+                    try:
+                        # Insert into Users table
+                        cursor.execute("INSERT INTO main_users (role) VALUES (%s)", ['class_head'])
+                        user_id = cursor.lastrowid  # Get the last inserted ID
+                        print(f"Inserted user with ID: {user_id}")  # Debugging
+
+                        # Insert into Classes table using the logged-in institution_id
+                        cursor.execute("""
+                            INSERT INTO main_classes (institution_id, class_name, class_head, email, password, user_id)
+                            VALUES (%s, %s, %s, %s, %s, %s)
+                        """, [institution_id, class_name, class_head, email, password, user_id])
+                        print(f"Inserted class: {class_name}")  # Debugging
+
+                    except Exception as e:
+                        messages.add_message(request, messages.ERROR, f"❌ Error inserting class {class_name}: {e}", extra_tags="classes_error")
+                        print(f"Error inserting class {class_name}:", e)  # Debugging
+                        continue  # Skip this row
+
+            messages.add_message(request, messages.SUCCESS, "✅ Classes uploaded successfully!", extra_tags="classes_success")
+            print("Upload successful! Redirecting to admin_classes.")  # Debugging
+            return redirect('admin_classes')
+
+        except Exception as e:
+            messages.add_message(request, messages.ERROR, f"❌ Error processing file: {e}", extra_tags="classes_error")
+            print("Error occurred:", e)  # Debugging
+            return redirect('admin_classes')
+
+    else:
+        form = ClassUploadForm()
+        print("GET request received. Rendering form.")  # Debugging
+
+    return render(request, 'admin/admin_classes.html', {'form': form})
+
+
+
+def upload_subjects(request):
+    print("Request received. Method:", request.method)  # Debugging
+
+    if request.method == 'POST':
+        form = SubjectUploadForm(request.POST, request.FILES)
+        if form.is_valid():
+            print("Form is valid.")  # Debugging
+        else:
+            print("Form errors:", form.errors)  # Debugging
+            messages.add_message(request, messages.ERROR, "❌ Invalid form submission.", extra_tags="subject_error")
+            return render(request, 'admin/admin_subjects.html', {'form': form})
+
+        file = request.FILES['file']
+        print("File received:", file.name)  # Debugging
+
+        # Save file temporarily
+        fs = FileSystemStorage()
+        filename = fs.save(file.name, file)
+        file_path = fs.path(filename)
+        print("File saved at:", file_path)  # Debugging
+
+        try:
+            # Fetch the currently logged-in institution's ID
+            institution_id = request.session.get('institution_id')  # Assuming it's stored in session
+            if not institution_id:
+                messages.add_message(request, messages.ERROR, "❌ Institution not found. Please log in again.", extra_tags="subject_error")
+                print("Error: Institution ID not found.")  # Debugging
+                return redirect('admin_subjects')
+
+            print("Logged-in Institution ID:", institution_id)  # Debugging
+
+            # Read Excel file
+            try:
+                df = pd.read_excel(file_path)
+                print("File read successfully.")  # Debugging
+                print("Columns in file:", df.columns.tolist())  # Debugging
+            except Exception as e:
+                messages.add_message(request, messages.ERROR, f"❌ Error reading the file: {e}", extra_tags="subject_error")
+                print("Error reading the file:", e)  # Debugging
+                return redirect('admin_subjects')
+
+            # Validate required columns
+            required_columns = ['Subject Name', 'Subject Head', 'Email', 'Password', 'Class Name']
+            if not all(col in df.columns for col in required_columns):
+                messages.add_message(request, messages.ERROR, "❌ Invalid file format! Ensure the correct columns are present.", extra_tags="subject_error")
+                print("Error: Missing required columns.")  # Debugging
+                return redirect('admin_subjects')
+
+            with connection.cursor() as cursor:
+                for index, row in df.iterrows():
+                    subject_name = row['Subject Name']
+                    subject_head = row['Subject Head']
+                    email = row['Email']
+                    password = row['Password']
+                    class_name = row['Class Name']
+
+                    print(f"Processing row {index}: {subject_name}, {subject_head}, {email}, {class_name}")  # Debugging
+
+                    # Fetch the class_obj_id based on Class Name
+                    cursor.execute("SELECT id FROM main_classes WHERE class_name = %s AND institution_id = %s", [class_name, institution_id])
+                    class_row = cursor.fetchone()
+
+                    if class_row:
+                        class_obj_id = class_row[0]
+                        print(f"Class '{class_name}' found with ID: {class_obj_id}")  # Debugging
+                    else:
+                        messages.add_message(request, messages.ERROR, f"❌ Class '{class_name}' does not exist. Fix the Excel file.", extra_tags="subject_error")
+                        print(f"Error: Class '{class_name}' not found.")  # Debugging
+                        continue  # Skip this row
+
+                    try:
+                        # Insert into Users table
+                        cursor.execute("INSERT INTO main_users (role) VALUES (%s)", ['subject_head'])
+                        user_id = cursor.lastrowid  # Get the last inserted ID
+                        print(f"Inserted user with ID: {user_id}")  # Debugging
+
+                        # Insert into main_subjects table using class_obj_id
+                        cursor.execute("""
+                            INSERT INTO main_subjects (class_obj_id, subject_name, subject_head, email, password, user_id)
+                            VALUES (%s, %s, %s, %s, %s, %s)
+                        """, [class_obj_id, subject_name, subject_head, email, password, user_id])
+                        print(f"Inserted subject: {subject_name}")  # Debugging
+
+                    except Exception as e:
+                        messages.add_message(request, messages.ERROR, f"❌ Error inserting subject {subject_name}: {e}", extra_tags="subject_error")
+                        print(f"Error inserting subject {subject_name}:", e)  # Debugging
+                        continue  # Skip this row
+
+            messages.add_message(request, messages.SUCCESS, "✅ Subjects uploaded successfully!", extra_tags="subject_success")
+            print("Upload successful! Redirecting to admin_subjects.")  # Debugging
+            return redirect('admin_subjects')
+
+        except Exception as e:
+            messages.add_message(request, messages.ERROR, f"❌ Error processing file: {e}", extra_tags="subject_error")
+            print("Error occurred:", e)  # Debugging
+            return redirect('admin_subjects')
+
+    else:
+        form = SubjectUploadForm()
+        print("GET request received. Rendering form.")  # Debugging
+
+    return render(request, 'admin/admin_subjects.html', {'form': form})
+
+
+
+def upload_students(request):
+    print("Request received. Method:", request.method)  # Debugging
+    error_occurred = False  # Flag to track if errors occur
+
+    if request.method == 'POST':
+        form = StudentUploadForm(request.POST, request.FILES)
+        if form.is_valid():
+            print("Form is valid.")  # Debugging
+        else:
+            print("Form errors:", form.errors)  # Debugging
+            messages.add_message(request, messages.ERROR, "❌ Invalid form submission.", extra_tags="student_error")
+            return render(request, 'admin/admin_students.html', {'form': form})
+
+        if form.is_valid():
+            file = request.FILES['file']
+            print("File received:", file.name)  # Debugging
+
+            # Save file temporarily
+            fs = FileSystemStorage()
+            filename = fs.save(file.name, file)
+            file_path = fs.path(filename)
+            print("File saved at:", file_path)  # Debugging
+
+            try:
+                # Fetch the currently logged-in institution's ID
+                institution_id = request.session.get('institution_id')  # Assuming it's stored in session
+                if not institution_id:
+                    messages.add_message(request, messages.ERROR, "❌ Institution not found. Please log in again.", extra_tags="student_error")
+                    print("Error: Institution ID not found.")  # Debugging
+                    return render(request, 'admin/admin_students.html', {'form': form})
+
+                print("Logged-in Institution ID:", institution_id)  # Debugging
+
+                # Read Excel file
+                try:
+                    df = pd.read_excel(file_path)
+                    print("File read successfully.")  # Debugging
+                    print("Columns in file:", df.columns.tolist())  # Debugging
+                except Exception as e:
+                    messages.add_message(request, messages.ERROR, f"❌ Error reading the file: {e}", extra_tags="student_error")
+                    print("Error reading the file:", e)  # Debugging
+                    return render(request, 'admin/admin_students.html', {'form': form})
+
+                # Validate required columns
+                required_columns = ['Student Name', 'Email', 'Roll No', 'Password', 'Class Name']
+                if not all(col in df.columns for col in required_columns):
+                    messages.add_message(request, messages.ERROR, "❌ Invalid file format! Ensure the correct columns are present.", extra_tags="student_error")
+                    print("Error: Missing required columns.")  # Debugging
+                    return render(request, 'admin/admin_students.html', {'form': form})
+
+                with connection.cursor() as cursor:
+                    for index, row in df.iterrows():
+                        student_name = row['Student Name']
+                        email = row['Email']
+                        roll_no = row['Roll No']
+                        password = row['Password']
+                        class_name = row['Class Name']
+
+                        print(f"Processing row {index}: {student_name}, {email}, {roll_no}, {class_name}")  # Debugging
+
+                        # Fetch the class_obj_id based on Class Name
+                        cursor.execute("SELECT id FROM main_classes WHERE class_name = %s AND institution_id = %s", [class_name, institution_id])
+                        class_row = cursor.fetchone()
+
+                        if class_row:
+                            class_obj_id = class_row[0]
+                            print(f"Class '{class_name}' found with ID: {class_obj_id}")  # Debugging
+                        else:
+                            messages.add_message(request, messages.ERROR, f"❌ Class '{class_name}' does not exist. Fix the Excel file.", extra_tags="student_error")
+                            print(f"Error: Class '{class_name}' not found.")  # Debugging
+                            error_occurred = True
+                            continue  # Skip this row
+
+                        try:
+                            # Insert into Users table for student
+                            cursor.execute("INSERT INTO main_users (role) VALUES (%s)", ['student'])
+                            student_user_id = cursor.lastrowid  # Get last inserted ID
+                            print(f"Inserted student user with ID: {student_user_id}")  # Debugging
+
+                            # Insert into Students table
+                            cursor.execute("""
+                                INSERT INTO main_students (user_id, name, roll_no, password, class_obj_id, email)
+                                VALUES (%s, %s, %s, %s, %s, %s)
+                            """, [student_user_id, student_name, roll_no, password, class_obj_id, email])
+                            student_id = cursor.lastrowid  # Get last inserted student's ID
+                            print(f"Inserted student: {student_name} with ID: {student_id}")  # Debugging
+
+                            # Insert into Users table for parent
+                            cursor.execute("INSERT INTO main_users (role) VALUES (%s)", ['parent'])
+                            parent_user_id = cursor.lastrowid  # Get last inserted ID
+                            print(f"Inserted parent user with ID: {parent_user_id}")  # Debugging
+
+                            # Insert into Parents table using student_id
+                            cursor.execute("""
+                                INSERT INTO main_parents (user_id, student_id, password, name)
+                                VALUES (%s, %s, %s, NULL)
+                            """, [parent_user_id, student_id, roll_no])
+                            print(f"Inserted parent for student: {student_name}")  # Debugging
+
+                        except Exception as e:
+                            messages.add_message(request, messages.ERROR, f"❌ Error inserting student {student_name}: {e}", extra_tags="student_error")
+                            print(f"Error inserting student {student_name}:", e)  # Debugging
+                            error_occurred = True
+                            continue  # Skip this row
+
+                if error_occurred:
+                    messages.add_message(request, messages.WARNING, "⚠️ Some students could not be uploaded due to errors.", extra_tags="student_error")
+                else:
+                    messages.add_message(request, messages.SUCCESS, "✅ Students uploaded successfully!", extra_tags="student_success")
+
+                print("Upload complete. Redirecting to admin_students.")  # Debugging
+                return redirect('admin_students')
+
+            except Exception as e:
+                messages.add_message(request, messages.ERROR, f"❌ Error processing file: {e}", extra_tags="student_error")
+                print("Error occurred:", e)  # Debugging
+                return render(request, 'admin/admin_students.html', {'form': form})
+
+    else:
+        form = StudentUploadForm()
+        print("GET request received. Rendering form.")  # Debugging
+
+    return render(request, 'admin/admin_students.html', {'form': form})
+
+
+
+
+
 
 
 ######################################################################################################################

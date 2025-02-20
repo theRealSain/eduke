@@ -32,6 +32,8 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+APPEND_SLASH = False
+
 
 # Application definition
 
@@ -145,3 +147,13 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")  # Directory for uploaded media fil
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+# Email Configuration (SMTP)
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'  # Gmail SMTP server
+EMAIL_PORT = 587  # Port for sending emails
+EMAIL_USE_TLS = True  # Use TLS for security
+EMAIL_HOST_USER = 'sainsaburaj38@gmail.com'  # Your email (sender)
+EMAIL_HOST_PASSWORD = 'xsxu qycp ulne qtck'
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER  # Default sender email
