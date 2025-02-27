@@ -1,0 +1,285 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eduke Subject Head</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="{% static 'main/css/style.css' %}">
+  <link rel="icon" href="{% static 'main/images/logobase_white.png' %}">
+</head>
+<body class="bg-gray-100 text-gray-900">
+
+  <!-- Dashboard Wrapper -->
+  <div class="flex h-screen">
+    <!-- Main Content -->
+    <main id="main-content" class="flex-1 overflow-y-auto w-full transition-all">
+      
+      <!-- Top Navbar -->
+      <header class="bg-white shadow p-1 pr-4 flex justify-between items-center">
+        <div class="flex items-center space-x-4">
+          <!-- Hamburger Button outside Sidebar -->
+          <button id="hamburger-button" class="sm:hidden text-gray-800 ml-5 focus:outline-none">
+            <i class="fas fa-bars text-2xl"></i>
+          </button>
+          <div class="py-0">
+            <img src="{% static 'main/images/logo_text_long.png' %}" alt="Eduke Logo" class="w-full h-[80px] mx-auto">
+          </div>
+        </div>
+        <div class="flex items-center space-x-4">
+          <!-- Logout Button, visible on large screens and hidden on small screens -->
+          <a href="{% url 'logout' %}" class="hidden lg:block">
+            <button class="bg-[#4f0074] hover:bg-violet-700 text-white px-4 py-2 rounded-md">
+              <i class="fa-solid fa-power-off"></i> &nbsp; Logout
+            </button>
+          </a>
+        </div>
+      </header>
+
+      <!-- Wrapper for Sidebar and Main Content -->
+      <div class="flex h-screen relative main-screen">
+
+        <!-- Sidebar -->
+        <aside id="sidebar" class="w-64 bg-[#e5e5e5] text-black flex flex-col py-6 transform transition-transform -translate-x-full sm:translate-x-0 sm:relative absolute top-0 left-0 h-full z-10">
+          <nav class="flex-1">
+            <ul class="space-y-4 px-4">
+              <li>
+                <a href="{% url 'subject_head_dashboard' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-table-columns"></i> &nbsp;
+                  Dashboard
+                </a>
+              </li>
+              <li>
+                <a href="{% url 'subject_head_subjects' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-book"></i> &nbsp;
+                  Your Subject
+                </a>
+              </li>
+              <li>
+                <a href="{% url 'subject_head_class' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-chalkboard"></i> &nbsp;
+                  Your Class
+                </a>
+              </li>
+              <li>
+                <a href="{% url 'subject_head_attendance' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-hand-point-up"></i> &nbsp;
+                  Student Attendance
+                </a>
+              </li>
+              <li class="bg-gray-300 rounded-md">
+                <a href="{% url 'subject_head_marks' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-user-pen"></i> &nbsp;
+                  Student Marks
+                </a>
+              </li>
+              <li>
+                <a href="{% url 'subject_head_evaluation' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-square-poll-vertical"></i> &nbsp;
+                  Student Evaluation
+                </a>
+              </li>
+              <li>
+                <a href="{% url 'subject_head_chat' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-comments"></i> &nbsp;
+                  Eduke Chat
+                </a>
+              </li>
+              <li>
+                <a href="#" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-circle-user"></i> &nbsp;
+                  Profile
+                </a>
+              </li>
+              <li>
+                <a href="{% url 'logout' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-power-off"></i> &nbsp;
+                  Log Out
+                </a>
+              </li>
+            </ul>
+          </nav>
+        </aside>
+        
+        <!-- Dashboard Content -->
+        <div id="content-wrapper" class="p-6 space-y-6 w-full">
+          <h2 class="text-2xl text-gray-800 uppercase font-bold">📊 Upload Student Marks</h2>
+
+          <div class="bg-white p-6 rounded-xl shadow-lg">
+            <div class="overflow-x-auto">
+              <div class="flex justify-between items-center mb-4">
+                  <h2>Class: <span class="text-gray-800 font-bold">{{ subject.class_obj_name }}</span></h2>
+                  <h2>Subject: <span class="text-gray-800 font-bold">{{ subject.subject_name }}</span></h2>
+              </div>
+
+              <form method="POST" action="">
+                  {% csrf_token %}
+
+                  {% if messages %}
+                      {% for message in messages %}
+                          <div class="alert text-center mx-auto mt-3 
+                                      {% if 'marks_success' in message.tags %} text-green-600 {% elif 'marks_error' in message.tags %} text-red-600 {% endif %}"> 
+                              {{ message }}
+                          </div>
+                      {% endfor %}
+                  {% endif %}
+
+                  <table class="w-full border-collapse rounded-xl overflow-hidden mt-[20px]">
+                      <thead>
+                          <tr class="bg-gray-800 text-white text-left">
+                              <th class="p-3 text-center">Roll No</th>
+                              <th class="p-3 text-center">Student Name</th>
+                              <th class="p-3 text-center">Mark Percentage</th>
+                          </tr>
+                      </thead>
+                      <tbody class="divide-y divide-gray-300">
+                          {% for student in students %}
+                          <tr class="bg-gray-50 hover:bg-gray-100 transition">
+                              <td class="p-3 text-center">{{ student.roll_no }}</td>
+                              <td class="p-3 text-center">{{ student.name }}</td>
+                              <td class="p-3 text-center">
+                                  <input type="number" name="marks_{{ student.id }}" 
+                                      class="w-full p-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-600 outline-none"
+                                      value="{{ student.mark_percentage|default_if_none:'' }}" 
+                                      placeholder="Enter marks" min="0" max="100" step="0.01">
+                              </td>
+                          </tr>
+                          {% empty %}
+                          <tr>
+                              <td colspan="3" class="p-3 text-center text-gray-600">No students found for this subject.</td>
+                          </tr>
+                          {% endfor %}
+                      </tbody>
+                  </table>
+
+                  <button type="submit" class="bg-gray-800 w-full mt-3 text-white px-6 py-2 rounded-lg shadow-lg hover:bg-gray-900 transition-all">
+                      Upload Marks
+                  </button>
+                  <button id="toggle-guidelines" type="button" class="mt-3 text-gray-800 w-full border-2 border-gray-800 p-2 rounded-md block text-center hover:border-gray-600">
+                      Use Excel for Bulk Creation of Records
+                  </button>
+              </form>
+
+            </div>
+          </div>
+        </div>
+
+        <!-- File upload guidelines -->
+        <div id="file-guidelines" class="p-6 space-y-6 w-full hidden">
+          <h2 class="text-2xl font-bold text-gray-800 mb-4 uppercase">📋 Marks Upload Guidelines</h2>
+
+          <p class="text-gray-600 mb-6">
+              Follow these guidelines to ensure a smooth and error-free bulk upload of student marks.
+              Download the correct template, fill it out, and upload it back into the system.
+          </p>
+
+            <!-- Marks Upload Guide -->
+          <div class="mb-6">
+              <p class="text-gray-600">Ensure that your Excel file contains the following columns:</p>
+              <ul class="list-disc ml-6 text-gray-600">
+                  <li><strong>Roll No</strong> - (Required, Must match the student's roll number in the system)</li>
+                  <li><strong>Marks Percentage</strong> - (Required, Numeric value between 0 and 100)</li>
+                  <li><strong>Subject</strong> - (Required, {{ subject.subject_name }})</li>
+              </ul>
+              <p class="text-red-600 font-bold mb-3">⚠️ Important: You must download and use this template for uploading marks. Any other format will be rejected.</p>
+              <a href="{% url 'download_marks_template' subject.id %}" class="text-gray-800 border-2 border-gray-800 p-2 rounded-md block text-center hover:border-gray-800 mt-3">
+                  📥 Download Marks Template
+              </a>
+          </div>
+
+          <!-- File Upload Form -->
+          <div class="mb-6 bg-gray-100 p-4 rounded-lg">
+            <h3 class="text-xl font-bold text-gray-800 mb-2">📤 Upload Your File</h3>
+            <p class="text-gray-600 mb-3">Upload your completed Excel (.xlsx or .csv) file below:</p>
+            <form action="{% url 'upload_marks' %}" method="POST" enctype="multipart/form-data" class="space-y-4">
+              {% csrf_token %}
+              <div>
+                  <label for="marks_file" class="block text-sm font-medium text-gray-700 mb-3">Upload File</label>
+                  <div class="flex items-center justify-center w-full">
+                      <label for="dropzone-file" class="flex flex-col items-center justify-center w-full h-64 border-2 border-gray-800 border-dashed rounded-lg cursor-pointer">
+                          <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                              <i class="fa-solid fa-cloud-arrow-up text-[30px] text-gray-700"></i>
+                              <p class="mb-2 text-sm text-gray-500"><span class="font-semibold">Click to upload</span> or drag and drop</p>
+                              <p class="text-xs text-gray-500">.xlsx, .csv</p>
+                              <p id="file-name" class="mt-2 text-sm text-gray-500"></p> <!-- Dynamic File Name -->
+                          </div>
+                          <input id="dropzone-file" type="file" name="file" accept=".xlsx,.csv" required class="hidden" />
+                      </label>
+                  </div>
+              </div>
+              <button type="submit" class="w-full mx-auto bg-gray-800 text-white px-4 py-2 rounded-md hover:bg-gray-900 transition duration-200">
+                  Upload File
+              </button>
+            </form>
+          </div>
+
+          <!-- Common Errors & Solutions -->
+          <div class="mb-6">
+            <h3 class="text-xl font-bold text-gray-800 mb-2">⚠️ Common Upload Mistakes</h3>
+            <ul class="list-disc ml-6 text-gray-800">
+                <li>❌ Missing required fields → Ensure all columns are filled.</li>
+                <li>❌ Invalid roll number → Roll number must exist in the system.</li>
+                <li>❌ Marks out of range → Ensure marks are between 0 and 100.</li>
+                <li>❌ Unsupported file format → Upload only .xlsx or .csv files.</li>
+            </ul>
+          </div>
+
+            <!-- FAQs Section -->
+          <div>
+            <h3 class="text-xl font-bold text-gray-800 mb-2">❓ FAQs</h3>
+            <details class="mb-3">
+                <summary class="cursor-pointer text-gray-800 font-medium">What happens if I upload a wrong file?</summary>
+                <p class="ml-6 text-gray-800">The system will reject it and display an error message. Make sure to use the correct template.</p>
+            </details>
+            <details class="mb-3">
+                <summary class="cursor-pointer text-gray-800 font-medium">Can I update marks?</summary>
+                <p class="ml-6 text-gray-800">Yes, uploading the same roll number again will update the existing marks.</p>
+            </details>
+            <details class="mb-3">
+                <summary class="cursor-pointer text-gray-800 font-medium">Can I re-upload a corrected file?</summary>
+                <p class="ml-6 text-gray-800">Yes, but ensure that roll numbers are correct to avoid duplicate entries.</p>
+            </details>
+          </div>
+        </div>
+
+        <!-- JavaScript for toggling guidelines -->
+        <script>
+            // Add event listener to the file input to display the selected file name
+            document.getElementById('dropzone-file').addEventListener('change', function(event) {
+                const fileName = event.target.files.length > 0 ? event.target.files[0].name : "No file chosen";
+                document.getElementById('file-name').textContent = `📄 ${fileName}`;
+            });
+
+            document.getElementById('toggle-guidelines').addEventListener('click', function() {
+                var guidelines = document.getElementById('file-guidelines');
+                var contentWrapper = document.getElementById('content-wrapper');
+
+                // Toggle hidden class for both sections
+                guidelines.classList.toggle('hidden');
+                contentWrapper.classList.toggle('hidden');
+            });
+        </script>
+
+
+      </div>
+    </main>
+
+  </div>
+
+  <!-- JavaScript to toggle sidebar visibility -->
+  <script>
+    const hamburgerButton = document.getElementById('hamburger-button');
+    const sidebar = document.getElementById('sidebar');
+    const mainContent = document.getElementById('main-content');
+
+    hamburgerButton.addEventListener('click', () => {
+      sidebar.classList.toggle('-translate-x-full');
+      // Adjust main content width when the sidebar is hidden
+      mainContent.classList.toggle('lg:w-full');
+    });
+  </script>
+
+</body>
+</html>

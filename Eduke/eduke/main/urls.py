@@ -17,7 +17,6 @@ urlpatterns = [
     path('admin/student/<int:student_id>/', views.admin_student_detail, name='admin_student_detail'), # Admin student detail
     path('admin/profile/', views.admin_profile, name='admin_profile'),
     path('admin/logout/', views.logout, name='logout'),  # Admin logout
-
     
     path('upload_classes/', views.upload_classes, name='upload_classes'),
     path('upload_subjects/', views.upload_subjects, name='upload_subjects'),
@@ -32,6 +31,8 @@ urlpatterns = [
     path('class_head/class_head_chat/', views.class_head_chat, name='class_head_chat'), # Class Head chat
     path("class_head/class_head_chat_user/<int:user_id>/", views.class_head_chat_user, name="class_head_chat_user"), # Class Head chat user
     path('class_head/student_profile/<int:roll_no>/', views.class_head_student_profile, name='class_head_student_profile'), # Class Head Student Profile
+    path("update-attendance/", views.update_attendance, name="update_attendance"),
+    path('delete-attendance/', views.delete_attendance, name="delete_attendance"),
 
     path('subject_head/login/', views.subject_head_login, name='subject_head_login'), # Subject Head login
     path('subject_head/dashboard/', views.subject_head_dashboard, name='subject_head_dashboard'), # Subject Head dashboard
@@ -42,6 +43,12 @@ urlpatterns = [
     path('subject_head/chat/<int:user_id>/', views.subject_head_chat_user, name='subject_head_chat_user'),
     path('subject_head/quiz/', views.subject_head_quiz, name='subject_head_quiz'), # Subject Head Quiz
     path('subject_head/study_materials/', views.subject_head_studys, name='subject_head_studys'), # Subject Head Study Materials
+    path('subject_head/marks/', views.subject_head_marks, name='subject_head_marks'), # Subject Head Marks
+    path('download-marks-template/<int:subject_id>/', views.download_marks_template, name='download_marks_template'),
+    path('upload-marks/', views.upload_marks, name='upload_marks'),
+    path('subject_head/attendance/', views.subject_head_attendance, name='subject_head_attendance'), # Subject Head Attendance
+    path('subject_head/attendance_history/', views.subject_head_attendance_history, name='subject_head_attendance_history'), # Subject Head Attendance History
+    path('subject_head/evaluation/', views.subject_head_evaluation, name='subject_head_evaluation'), # Subject Head Evaluation
 
     path('student/login/', views.student_login, name='student_login'),
     path('student/dashboard/', views.student_dashboard, name='student_dashboard'),
@@ -55,9 +62,10 @@ urlpatterns = [
     path('parent/login/', views.parent_login, name='parent_login'),
     path('parent/dashboard/', views.parent_dashboard, name='parent_dashboard'),
     path('parent_teacher_profile/', views.parent_teacher_profile, name='parent_teacher_profile'),
-    path('parent_class/', views.parent_class, name='parent_class'),
+    path('parent/class/', views.parent_class, name='parent_class'),
     path('parent/profile/', views.parent_profile, name='parent_profile'),
     path('parent/parent_chat/', views.parent_chat, name='parent_chat'),
-    path('parent_chat/<int:user_id>/', views.parent_chat_user, name='parent_chat_user')
+    path('parent_chat/<int:user_id>/', views.parent_chat_user, name='parent_chat_user'),
+    path('parent/evaluation/', views.parent_evaluation, name='parent_evaluation'),
 
 ]   

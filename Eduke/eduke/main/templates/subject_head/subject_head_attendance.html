@@ -1,0 +1,274 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eduke Subject Head</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="{% static 'main/css/style.css' %}">
+  <link rel="icon" href="{% static 'main/images/logobase_white.png' %}">
+</head>
+<body class="bg-gray-100 text-gray-900">
+
+  <!-- Dashboard Wrapper -->
+  <div class="flex h-screen">
+    <!-- Main Content -->
+    <main id="main-content" class="flex-1 overflow-y-auto w-full transition-all">
+      
+      <!-- Top Navbar -->
+      <header class="bg-white shadow p-1 pr-4 flex justify-between items-center">
+        <div class="flex items-center space-x-4">
+          <!-- Hamburger Button outside Sidebar -->
+          <button id="hamburger-button" class="sm:hidden text-gray-800 ml-5 focus:outline-none">
+            <i class="fas fa-bars text-2xl"></i>
+          </button>
+          <div class="py-0">
+            <img src="{% static 'main/images/logo_text_long.png' %}" alt="Eduke Logo" class="w-full h-[80px] mx-auto">
+          </div>
+        </div>
+        <div class="flex items-center space-x-4">
+          <!-- Logout Button, visible on large screens and hidden on small screens -->
+          <a href="{% url 'logout' %}" class="hidden lg:block">
+            <button class="bg-[#4f0074] hover:bg-violet-700 text-white px-4 py-2 rounded-md">
+              <i class="fa-solid fa-power-off"></i> &nbsp; Logout
+            </button>
+          </a>
+        </div>
+      </header>
+
+      <!-- Wrapper for Sidebar and Main Content -->
+      <div class="flex h-screen relative main-screen">
+
+        <!-- Sidebar -->
+        <aside id="sidebar" class="w-64 bg-[#e5e5e5] text-black flex flex-col py-6 transform transition-transform -translate-x-full sm:translate-x-0 sm:relative absolute top-0 left-0 h-full z-10">
+          <nav class="flex-1">
+            <ul class="space-y-4 px-4">
+              <li>
+                <a href="{% url 'subject_head_dashboard' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-table-columns"></i> &nbsp;
+                  Dashboard
+                </a>
+              </li>
+              <li>
+                <a href="{% url 'subject_head_subjects' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-book"></i> &nbsp;
+                  Your Subject
+                </a>
+              </li>
+              <li>
+                <a href="{% url 'subject_head_class' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-chalkboard"></i> &nbsp;
+                  Your Class
+                </a>
+              </li>
+              <li class="bg-gray-300 rounded-md">
+                <a href="#" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-hand-point-up"></i> &nbsp;
+                  Student Attendance
+                </a>
+              </li>
+              <li>
+                <a href="{% url 'subject_head_marks' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-user-pen"></i> &nbsp;
+                  Student Marks
+                </a>
+              </li>
+              <li>
+                <a href="{% url 'subject_head_evaluation' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-square-poll-vertical"></i> &nbsp;
+                  Student Evaluation
+                </a>
+              </li>
+              <li>
+                <a href="{% url 'subject_head_chat' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-comments"></i> &nbsp;
+                  Eduke Chat
+                </a>
+              </li>
+              <li>
+                <a href="#" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-circle-user"></i> &nbsp;
+                  Profile
+                </a>
+              </li>
+              <li>
+                <a href="{% url 'logout' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-power-off"></i> &nbsp;
+                  Log Out
+                </a>
+              </li>
+            </ul>
+          </nav>
+        </aside>
+        
+        <!-- Dashboard Content -->
+        <div id="content-wrapper" class="p-6 space-y-6 w-full">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4 uppercase">📋 Mark Student Attendance</h2>
+
+            <!-- Select Class and Subject -->
+            <div class="bg-white p-4 shadow-md rounded-lg">
+                <div class="flex justify-between items-center space-x-4">
+                    <h2>Class: <span class="text-gray-800 font-bold">{{ class_name }}</span></h2>
+                    <h2>Subject: <span class="text-gray-800 font-bold">{{ subject_name }}</span></h2>
+                </div>
+
+                <form method="POST" action="{% url 'subject_head_attendance' %}">
+                    {% csrf_token %}
+                    
+                    <div class="flex justify-between items-center mt-6">
+                      <div class="flex space-x-4">
+                        <h2 class="bg-gray-200 text-gray-800 px-2 rounded-lg">📅 Select Date:
+                          <span class="text-gray-800 font-bold">
+                            <input type="date" id="attendance-date" name="attendance_date" class="p-2 text-md border-none bg-transparent font-normal border rounded-lg" placeholder="Select date" required>
+                          </span>
+                        </h2>
+
+                        <h2 class="bg-gray-200 text-gray-800 px-2 rounded-lg">🕒 Select Hour: 
+                          <span class="text-gray-800 font-bold">
+                            <select name="hour" id="hour" class="p-2 border rounded-lg text-md font-normal border-none bg-transparent" required>
+                              <option value="" hidden selected>Select Hour</option>
+                              <option value="1">1</option>
+                              <option value="2">2</option>
+                              <option value="3">3</option>
+                              <option value="4">4</option>
+                              <option value="5">5</option>
+                              <option value="6">6</option>
+                              <option value="7">7</option>
+                              <option value="8">8</option>
+                              <option value="9">9</option>
+                              <option value="10">10</option>
+                            </select>
+                          </span>
+                        </h2>
+                      </div>
+
+                      <div class="flex space-x-4 items-center">
+                        <a href="{% url 'subject_head_attendance_history' %}">
+                            <div class="bg-gray-800 p-2 text-white rounded-lg flex items-center hover:bg-gray-700 transition-all duration-300">
+                              <span class="text-white font-bold cursor-pointer">📜 Attendance History</span>
+                            </div>
+                        </a>
+                        <div class="bg-gray-200 p-2 text-gray-800 rounded-lg flex items-center">
+                          <input type="checkbox" id="mark-all-checkbox" class="w-5 h-5 cursor-pointer accent-gray-600 border-none" onchange="toggleAllAttendance()">
+                          <label for="mark-all-checkbox" class="text-gray-800 font-normal cursor-pointer ml-2">
+                            Mark All as Present
+                          </label>
+                        </div>
+                      </div>
+
+
+                    </div>
+
+
+                    {% if messages %}
+                        <div class="mt-4">
+                            {% for message in messages %}
+                                <div class="text-center {% if message.tags == 'error' %}text-red-500{% elif message.tags == 'success' %}text-green-500{% else %}text-yellow-700{% endif %}">
+                                    {{ message }}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+
+                    <table class="w-full border-collapse rounded-xl overflow-hidden mt-[20px]">
+                        <thead>
+                            <tr class="bg-gray-800 text-white text-left">
+                                <th class="p-3 text-center">Roll No</th>
+                                <th class="p-3 text-center">Name</th>
+                                <th class="p-3 text-center">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="attendance-table" class="divide-y divide-gray-300">
+                            {% for student in students %}
+                            <tr>
+                                <td class="p-3 text-center">{{ student.1 }}</td> <!-- Roll No -->
+                                <td class="p-3 text-center">{{ student.2 }}</td> <!-- Name -->
+                                <td class="p-3">
+                                    <ul class="items-center text-md font-medium text-gray-800 bg-white shadow-lg border border-gray-200 rounded-lg sm:flex w-1/2 mx-auto">
+                                        <li class="w-full">
+                                            <div class="flex items-center ps-3 border border-[#10f164] rounded-tl-lg rounded-bl-lg hover:bg-[#10f164] transition-all duration-300" id="present-div-{{ student.0 }}">
+                                                <input id="present_{{ student.0 }}" type="radio" value="present" name="attendance_{{ student.0 }}" class="w-3 h-4 invisible" onchange="updateBackground('{{ student.0 }}')">
+                                                <label for="present_{{ student.0 }}" class="w-full py-3 ms-2 font-bold text-sm font-medium text-gray-800 uppercase mx-auto">Present</label>
+                                            </div>
+                                        </li>
+                                        <li class="w-full">
+                                            <div class="flex items-center ps-3 border border-[#ff0000] rounded-tr-lg rounded-br-lg hover:bg-[#ff0000] transition-all duration-300" id="absent-div-{{ student.0 }}">
+                                                <input id="absent_{{ student.0 }}" type="radio" value="absent" name="attendance_{{ student.0 }}" class="w-3 h-4 invisible" onchange="updateBackground('{{ student.0 }}')">
+                                                <label for="absent_{{ student.0 }}" class="w-full py-3 ms-2 font-bold text-sm font-medium text-gray-800 uppercase">Absent</label>
+                                            </div>
+                                        </li>
+                                    </ul>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+
+                    
+                    <button type="submit" class="bg-gray-800 w-full mt-3 text-white px-6 py-2 rounded-lg shadow-lg hover:bg-gray-900 transition-all">
+                        Save Attendance
+                    </button>
+
+                </form>
+            </div>
+        </div>
+
+        <script>
+          function toggleAllAttendance() {
+              let checkbox = document.getElementById("mark-all-checkbox");
+              let radios = document.querySelectorAll("input[type='radio'][value='present']");
+
+              radios.forEach(radio => {
+                  radio.checked = checkbox.checked; // Check or uncheck all "Present" radios
+                  updateBackground(radio.id.split("_")[1]); // Update UI
+              });
+
+              if (!checkbox.checked) {
+                  let allRadios = document.querySelectorAll("input[type='radio']");
+                  allRadios.forEach(radio => radio.checked = false); // Uncheck all radios
+                  let students = document.querySelectorAll("[id^='present-div-'], [id^='absent-div-']");
+                  students.forEach(div => div.style.backgroundColor = ''); // Reset UI
+              }
+          }
+
+
+          function updateBackground(studentId) {
+              const presentDiv = document.getElementById(`present-div-${studentId}`);
+              const absentDiv = document.getElementById(`absent-div-${studentId}`);
+              const presentRadio = document.getElementById(`present_${studentId}`);
+              const absentRadio = document.getElementById(`absent_${studentId}`);
+
+              if (presentRadio.checked) {
+                  presentDiv.style.backgroundColor = '#10f164'; // Green for Present
+                  absentDiv.style.backgroundColor = ''; // Reset Absent
+              } else if (absentRadio.checked) {
+                  absentDiv.style.backgroundColor = '#ff0000'; // Red for Absent
+                  presentDiv.style.backgroundColor = ''; // Reset Present
+              }
+          }
+        </script>
+
+
+        
+      </div>
+    </main>
+
+  </div>
+
+  <!-- JavaScript to toggle sidebar visibility -->
+  <script>
+    const hamburgerButton = document.getElementById('hamburger-button');
+    const sidebar = document.getElementById('sidebar');
+    const mainContent = document.getElementById('main-content');
+
+    hamburgerButton.addEventListener('click', () => {
+      sidebar.classList.toggle('-translate-x-full');
+      // Adjust main content width when the sidebar is hidden
+      mainContent.classList.toggle('lg:w-full');
+    });
+  </script>
+
+</body>
+</html>

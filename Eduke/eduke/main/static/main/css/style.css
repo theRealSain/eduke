@@ -40,10 +40,89 @@ aside{
     height: 600px !important;
 }
 
+#file-guidelines{
+    overflow-y: auto;
+    height: 600px !important;
+}
+
 #content-wrapper::-webkit-scrollbar {
     display: none;
 }
 
 input[type="radio"] {
     accent-color: rgb(169, 49, 255);
+}
+
+tbody{
+    overflow-x: auto;
+}
+
+
+.rating-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: fit-content;
+}
+
+/* Custom styling for the range input (slider) */
+.rating-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 200px;
+    height: 30px;
+    background: transparent;
+    outline: none;
+    position: relative;
+    z-index: 2;
+    cursor: pointer;
+}
+
+/* Track (bar) of the slider */
+.rating-slider::-webkit-slider-runnable-track {
+    width: 100%;
+    height: 12px;
+    border-radius: 6px;
+    padding: 5px 8px 5px 8px;
+}
+
+/* Custom thumb (handle) */
+.rating-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 24px;
+    height: 24px;
+    background: url("/static/main/images/star-solid.svg") center/cover;
+    border: none;
+    cursor: pointer;
+    position: relative;
+    margin-top: -13px;
+    z-index: 3;
+    /* Apply yellow filter */
+    filter: brightness(0) saturate(100%) invert(19%) sepia(86%) saturate(535%) hue-rotate(242deg);
+}
+
+
+/* Star overlay */
+.star-overlay {
+    position: absolute;
+    top: 50%;
+    left: 5px;
+    width: 190px;
+    height: 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 5px;
+    pointer-events: none;
+    transform: translateY(-50%);
+    z-index: 1;
+}
+
+/* Star icons */
+.star-overlay i {
+    color: #ad16ff90;
+    font-size: 18px;
+    opacity: 0.8;
 }

@@ -1,0 +1,239 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eduke Parent</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="{% static 'main/css/style.css' %}">
+  <link rel="icon" href="{% static 'main/images/logobase_white.png' %}">
+</head>
+<body class="bg-gray-100 text-gray-900">
+
+  <!-- Dashboard Wrapper -->
+  <div class="flex h-screen">
+    <!-- Main Content -->
+    <main id="main-content" class="flex-1 overflow-y-auto w-full transition-all">
+      
+      <!-- Top Navbar -->
+      <header class="bg-white shadow p-1 pr-4 flex justify-between items-center">
+        <div class="flex items-center space-x-4">
+          <!-- Hamburger Button outside Sidebar -->
+          <button id="hamburger-button" class="sm:hidden text-gray-800 ml-5 focus:outline-none">
+            <i class="fas fa-bars text-2xl"></i>
+          </button>
+          <div class="py-0">
+            <img src="{% static 'main/images/logo_text_long.png' %}" alt="Eduke Logo" class="w-full h-[80px] mx-auto">
+          </div>
+        </div>
+        <div class="flex items-center space-x-4">
+          <!-- Logout Button, visible on large screens and hidden on small screens -->
+          <a href="{% url 'logout' %}" class="hidden lg:block">
+            <button class="bg-[#4f0074] hover:bg-violet-700 text-white px-4 py-2 rounded-md">
+              <i class="fa-solid fa-power-off"></i> &nbsp; Logout
+            </button>
+          </a>
+        </div>
+      </header>
+
+      <!-- Wrapper for Sidebar and Main Content -->
+      <div class="flex h-screen relative main-screen">
+
+        <!-- Sidebar -->
+        <aside id="sidebar" class="w-64 bg-[#e5e5e5] text-black flex flex-col py-6 transform transition-transform -translate-x-full sm:translate-x-0 sm:relative absolute top-0 left-0 h-full z-10">
+          <nav class="flex-1">
+            <ul class="space-y-4 px-4">
+              <li>
+                <a href="{% url 'parent_dashboard' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-table-columns"></i> &nbsp;
+                  Dashboard
+                </a>
+              </li>
+              <li>
+                <a href="{% url 'parent_class' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-chalkboard"></i> &nbsp;
+                  Your Class
+                </a>
+              </li>
+              <li>
+                <a href="{% url 'parent_teacher_profile' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-chalkboard-user"></i> &nbsp;
+                  Your Teacher
+                </a>
+              </li>
+              <li class="bg-gray-300 rounded-md">
+                <a href="{% url 'parent_evaluation' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-square-poll-vertical"></i> &nbsp;
+                  Student Evaluation
+                </a>
+              </li>
+              <li>
+                <a href="{% url 'parent_chat' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-comments"></i> &nbsp;
+                  Eduke Chat
+                </a>
+              </li>
+              <li>
+                <a href="{% url 'parent_profile' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-circle-user"></i> &nbsp;
+                  Profile
+                </a>
+              </li>
+              <li>
+                <a href="{% url 'logout' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-power-off"></i> &nbsp;
+                  Log Out
+                </a>
+              </li>
+            </ul>
+          </nav>
+        </aside>
+        
+        <!-- Dashboard Content -->
+        <div id="content-wrapper" class="p-6 space-y-6 w-full">
+            <h2 class="text-2xl text-gray-800 uppercase font-bold">📊 Student Evaluation</h2>
+            <div class="bg-white p-4 rounded-lg shadow-lg space-y-5">
+                <h2 class="text-lg font-semibold mb-2">Student Evaluation Ratings</h2>
+                <p class="text-gray-700">
+                    As a parent, understanding your child's study and sleep habits is crucial for their academic success...
+                </p>
+
+                <!-- FORM STARTS HERE -->
+                <form method="POST" action="{% url 'parent_evaluation' %}">
+                    {% csrf_token %}  <!-- Important for security -->
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full border-collapse rounded-xl overflow-hidden">
+                            <thead>
+                                <tr class="bg-gray-800 text-white text-left">
+                                    <th class="p-3">Evaluation Type</th>
+                                    <th class="p-3">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-300">
+                                <tr>
+                                    <td class="p-2">Study Time</td>
+                                    <td class="p-2">
+                                        <div class="rating-container relative">
+                                            <div class="star-overlay">
+                                                <i class="fa-regular fa-star"></i>
+                                                <i class="fa-regular fa-star"></i>
+                                                <i class="fa-regular fa-star"></i>
+                                                <i class="fa-regular fa-star"></i>
+                                                <i class="fa-regular fa-star"></i>
+                                            </div>
+                                            <input type="range" min="0" max="100" step="0.5"
+                                                value="{{ student.study_time_rating|default:0 }}" 
+                                                class="rating-slider"
+                                                name="study_time_rating_{{ student.roll_no }}"
+                                                oninput="updateStarHighlight(this)">
+                                            <span class="rating-value text-purple-700 font-semibold">
+                                                {{ student.study_time_rating|default:0 }}
+                                            </span>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="p-2">Sleep Time</td>
+                                    <td class="p-2">
+                                        <div class="rating-container relative">
+                                            <div class="star-overlay">
+                                                <i class="fa-regular fa-star"></i>
+                                                <i class="fa-regular fa-star"></i>
+                                                <i class="fa-regular fa-star"></i>
+                                                <i class="fa-regular fa-star"></i>
+                                                <i class="fa-regular fa-star"></i>
+                                            </div>
+                                            <input type="range" min="0" max="100" step="0.5"
+                                                value="{{ student.sleep_time_rating|default:0 }}" 
+                                                class="rating-slider"
+                                                name="sleep_time_rating_{{ student.roll_no }}"
+                                                oninput="updateStarHighlight(this)">
+                                            <span class="rating-value text-purple-700 font-semibold">
+                                                {{ student.sleep_time_rating|default:0 }}
+                                            </span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <button type="submit" class="bg-gray-800 w-full mt-3 text-white px-6 py-2 rounded-lg shadow-lg hover:bg-gray-900 transition-all">
+                        Submit Evaluations
+                    </button>
+                </form>
+                <!-- FORM ENDS HERE -->
+            </div>
+        </div>
+
+
+        <script>
+            // Update displayed rating value when the slider moves
+            document.querySelectorAll(".rating-slider").forEach(slider => {
+                slider.addEventListener("input", function() {
+                    this.nextElementSibling.textContent = this.value;
+                });
+            });
+
+            // Function to collect ratings and submit
+            function submitRatings(ratingType, buttonId) {
+                document.getElementById(buttonId).addEventListener("click", function() {
+                    let ratings = {};
+                    document.querySelectorAll(`input[name^='${ratingType}_rating_']`).forEach(slider => {
+                        ratings[slider.dataset.student] = slider.value;
+                    });
+
+                    console.log("Submitting ratings:", ratings); // Debugging - Replace with actual AJAX submission
+
+                    // Example: Submit via Fetch API (uncomment and update URL)
+                    /*
+                    fetch('/submit-ratings/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        },
+                        body: JSON.stringify({ratings: ratings, type: ratingType})
+                    }).then(response => response.json()).then(data => {
+                        alert("Ratings submitted successfully!");
+                    }).catch(error => console.error("Error:", error));
+                    */
+                });
+            }
+
+            // Attach event listeners
+            submitRatings("class_participation", "submit-class-participation");
+            submitRatings("academic_activity", "submit-academic-activity");
+
+
+            function updateStarHighlight(slider) {
+                let ratingValue = slider.value;
+                let ratingDisplay = slider.nextElementSibling; // Selects the span
+                ratingDisplay.textContent = ratingValue;
+            }
+
+        </script>
+        
+      </div>
+    </main>
+
+  </div>
+
+  <!-- JavaScript to toggle sidebar visibility -->
+  <script>
+    const hamburgerButton = document.getElementById('hamburger-button');
+    const sidebar = document.getElementById('sidebar');
+    const mainContent = document.getElementById('main-content');
+
+    hamburgerButton.addEventListener('click', () => {
+      sidebar.classList.toggle('-translate-x-full');
+      // Adjust main content width when the sidebar is hidden
+      mainContent.classList.toggle('lg:w-full');
+    });
+  </script>
+
+</body>
+</html>

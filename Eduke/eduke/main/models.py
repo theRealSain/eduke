@@ -62,23 +62,25 @@ class Attendance(models.Model):
         ('present', 'Present'),
         ('absent', 'Absent'),
     ]
+
     id = models.AutoField(primary_key=True)
+    attendance_date = models.DateField()
+    hour = models.PositiveSmallIntegerField()  # Holds values from 1 to 10
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES)
     student = models.ForeignKey(Students, on_delete=models.CASCADE)
     subject = models.ForeignKey(Subjects, on_delete=models.CASCADE)
-    attendance_date = models.DateField()
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES)
+    created_at = models.DateTimeField(auto_now_add=True)
 
 class StudentEvaluation(models.Model):
     id = models.AutoField(primary_key=True)
     student = models.ForeignKey(Students, on_delete=models.CASCADE)
     subject = models.ForeignKey(Subjects, on_delete=models.CASCADE)
-    study_time_rating = models.FloatField()
-    sleep_time_rating = models.FloatField()
-    homework_completion_rating = models.FloatField()
-    assignment_rating = models.FloatField()
-    attendance_percentage = models.FloatField()
-    marks_percentage = models.FloatField()
-    quiz_percentage = models.FloatField()
+    study_time_rating = models.FloatField(null=True)
+    sleep_time_rating = models.FloatField(null=True)
+    class_participation_rating = models.FloatField(null=True)
+    academic_activity_rating = models.FloatField(null=True)
+    attendance_percentage = models.FloatField(null=True)
+    marks_percentage = models.FloatField(null=True)
 
 class Chat(models.Model):
     id = models.AutoField(primary_key=True)

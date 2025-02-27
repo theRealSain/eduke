@@ -58,9 +58,27 @@
                 </a>
               </li>
               <li class="bg-gray-300 rounded-md">
-                <a href="" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                <a href="#" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
                   <i class="fa-solid fa-chalkboard"></i> &nbsp;
                   Your Class
+                </a>
+              </li>
+              <li>
+                <a href="{% url 'subject_head_attendance' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-hand-point-up"></i> &nbsp;
+                  Student Attendance
+                </a>
+              </li>
+              <li>
+                <a href="{% url 'subject_head_marks' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-user-pen"></i> &nbsp;
+                  Student Marks
+                </a>
+              </li>
+              <li>
+                <a href="{% url 'subject_head_evaluation' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-square-poll-vertical"></i> &nbsp;
+                  Student Evaluation
                 </a>
               </li>
               <li>

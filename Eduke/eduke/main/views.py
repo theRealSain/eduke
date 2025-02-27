@@ -16,7 +16,8 @@ from django.http import HttpResponse
 from django.core.mail import send_mail
 import pandas as pd
 from django.core.files.storage import FileSystemStorage
-
+import os, datetime
+import openpyxl
 
 
 # Index page
@@ -743,12 +744,6 @@ def admin_profile(request):
 
 ######################################################################################################################
 
-
-from django.contrib import messages
-import pandas as pd
-from django.core.files.storage import FileSystemStorage
-from django.db import connection
-from django.shortcuts import render, redirect
 
 def upload_classes(request):
     print("Request received. Method:", request.method)  # Debugging
@@ -2115,12 +2110,6 @@ def subject_head_quiz(request):
     })
 
 
-import os
-import datetime
-from django.shortcuts import render, redirect
-from django.db import connection
-from django.contrib import messages
-
 def subject_head_studys(request):
     # Ensure the user is a subject head
     subject_id = request.session.get('subject_id')
@@ -2191,6 +2180,732 @@ def subject_head_studys(request):
 
     print("Rendering template with uploaded documents.")
     return render(request, 'subject_head/subject_head_study.html', {'docs': docs})
+
+
+
+
+def subject_head_marks(request):
+    subject_id = request.session.get('subject_id')
+    if not subject_id:
+        return redirect('subject_head_login')
+
+    subject_data = None
+    student_list = []
+
+    try:
+        with connection.cursor() as cursor:
+            # Fetch subject details along with class name
+            cursor.execute("""
+                SELECT s.id, s.subject_name, c.class_name, s.class_obj_id 
+                FROM main_subjects s
+                JOIN main_classes c ON s.class_obj_id = c.id
+                WHERE s.id = %s
+            """, [subject_id])
+            subject = cursor.fetchone()
+
+            if subject:
+                subject_data = {
+                    'id': subject[0],
+                    'subject_name': subject[1],
+                    'class_obj_name': subject[2],  # Class name
+                    'class_obj_id': subject[3],
+                }
+
+                # Handle form submission to update marks
+                if request.method == "POST":
+                    success = True  # Track success
+
+                    for key, value in request.POST.items():
+                        if key.startswith("marks_"):
+                            student_id = key.split("_")[1]
+                            mark_value = value.strip()
+
+                            try:
+                                mark_value = float(mark_value)  # Convert to float safely
+
+                                # ✅ Step 1: Check if the record exists in `main_marks`
+                                cursor.execute("""
+                                    SELECT id FROM main_marks WHERE student_id = %s AND subject_id = %s
+                                """, [student_id, subject_data['id']])
+                                mark_record = cursor.fetchone()
+
+                                if mark_record:
+                                    # ✅ Step 2: If exists, UPDATE `main_marks`
+                                    cursor.execute("""
+                                        UPDATE main_marks 
+                                        SET mark_percentage = %s 
+                                        WHERE student_id = %s AND subject_id = %s
+                                    """, [mark_value, student_id, subject_data['id']])
+                                else:
+                                    # ✅ Step 3: If not exists, INSERT into `main_marks`
+                                    cursor.execute("""
+                                        INSERT INTO main_marks (mark_percentage, student_id, subject_id)
+                                        VALUES (%s, %s, %s)
+                                    """, [mark_value, student_id, subject_data['id']])
+
+                                # ✅ Step 4: Check if the record exists in `main_studentevaluation`
+                                cursor.execute("""
+                                    SELECT id FROM main_studentevaluation
+                                    WHERE student_id = %s AND subject_id = %s
+                                """, [student_id, subject_data['id']])
+                                evaluation = cursor.fetchone()
+
+                                if evaluation:
+                                    # ✅ Step 5: If exists, UPDATE `main_studentevaluation`
+                                    cursor.execute("""
+                                        UPDATE main_studentevaluation 
+                                        SET marks_percentage = %s
+                                        WHERE student_id = %s AND subject_id = %s
+                                    """, [mark_value, student_id, subject_data['id']])
+                                else:
+                                    # ✅ Step 6: If not exists, INSERT into `main_studentevaluation`
+                                    cursor.execute("""
+                                        INSERT INTO main_studentevaluation (student_id, subject_id, marks_percentage)
+                                        VALUES (%s, %s, %s)
+                                    """, [student_id, subject_data['id'], mark_value])
+
+                            except ValueError:  # Catch invalid input
+                                print(f"Invalid mark value for student {student_id}: {value}")
+                                success = False
+
+                    # Display success or error message
+                    if success:
+                        messages.success(request, "✅ Marks updated successfully!", extra_tags='marks_success')
+                    else:
+                        messages.error(request, "❌ Failed to update marks. Please try again.", extra_tags='marks_error')
+
+                # Fetch students of this class
+                cursor.execute("SELECT id, roll_no, name FROM main_students WHERE class_obj_id = %s", [subject_data['class_obj_id']])
+                students = cursor.fetchall()
+
+                for student in students:
+                    student_id = student[0]
+
+                    # Fetch marks for each student
+                    cursor.execute("""
+                        SELECT mark_percentage FROM main_marks 
+                        WHERE student_id = %s AND subject_id = %s
+                    """, [student_id, subject_data['id']])
+                    mark = cursor.fetchone()
+
+                    student_list.append({
+                        'id': student_id,
+                        'roll_no': student[1],
+                        'name': student[2],
+                        'mark_percentage': mark[0] if mark else None
+                    })
+
+    except Exception as e:
+        print(f"Database error: {e}")
+        messages.error(request, "An unexpected error occurred.", extra_tags='marks_error')
+
+    return render(request, 'subject_head/subject_head_marks.html', {
+        'subject': subject_data,
+        'students': student_list
+    })
+
+
+
+def download_marks_template(request, subject_id):
+    print(f"🔍 Fetching details for Subject ID: {subject_id}")
+
+    with connection.cursor() as cursor:
+        # Fetch subject name and class ID
+        cursor.execute("""
+            SELECT subject_name, class_obj_id FROM main_subjects WHERE id = %s
+        """, [subject_id])
+        subject_data = cursor.fetchone()
+
+        if not subject_data:
+            print("❌ Invalid subject ID! No data found.")
+            return HttpResponse("Invalid subject ID", status=400)
+
+        subject_name, class_id = subject_data
+        print(f"✅ Retrieved Subject Name: {subject_name}, Class ID: {class_id}")
+
+        # Fetch students belonging to the same class as the subject
+        cursor.execute("""
+            SELECT s.roll_no, s.name
+            FROM main_students s
+            WHERE s.class_obj_id = %s
+        """, [class_id])
+
+        students_data = cursor.fetchall()
+        print(f"✅ Found {len(students_data)} students in Class ID: {class_id}")
+
+    # Create a new Excel workbook and add a sheet
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Marks Template"
+    print("✅ Created new Excel workbook.")
+
+    # Define column headers
+    headers = ["Roll No", "Student Name", "Subject Name", "Mark Percentage"]
+    ws.append(headers)
+    print("✅ Added headers:", headers)
+
+    # Store Excel data for debugging
+    excel_data = [headers]
+
+    # Write student data (mark_percentage column is left empty)
+    for roll_no, name in students_data:
+        row = [roll_no, name, subject_name, ""]
+        ws.append(row)
+        excel_data.append(row)
+
+    print("✅ Populated Excel sheet with student details.")
+
+    # Print final contents of the dynamically created Excel
+    print("\n📋 Final Excel Content:")
+    for row in excel_data:
+        print(row)
+
+    # Prepare the response
+    response = HttpResponse(
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+    response["Content-Disposition"] = f'attachment; filename="Marks_Template_{subject_name}.xlsx"'
+
+    # Save the workbook to response
+    wb.save(response)
+    print("✅ Excel file generated and sent as response.")
+
+    return response
+
+
+
+def upload_marks(request):
+    if request.method == "POST" and request.FILES.get("file"):
+        excel_file = request.FILES["file"]
+        print(f"📂 Received file: {excel_file.name}")
+
+        try:
+            # Open the uploaded Excel file
+            wb = openpyxl.load_workbook(excel_file)
+            ws = wb.active
+            print(f"✅ Opened Excel file. Sheet: {ws.title}")
+
+            # Read headers
+            headers = [str(cell.value).strip() for cell in ws[1] if cell.value]
+            print(f"📑 Extracted Headers: {headers}")
+
+            expected_headers = ["Roll No", "Student Name", "Subject Name", "Mark Percentage"]
+
+            # Case-insensitive header validation
+            if [h.lower() for h in headers] != [eh.lower() for eh in expected_headers]:
+                print(f"❌ Invalid file format. Headers do not match. Expected: {expected_headers}, Found: {headers}")
+                messages.error(request, "❌ Invalid file format! Please use the correct template.", extra_tags="marks_error")
+                return redirect("subject_head_marks")
+
+            print("✅ Headers validated. Processing rows...")
+
+            # Fetch subject_id from session
+            subject_id = request.session.get("subject_id")
+            if not subject_id:
+                print("❌ Subject ID not found in session. Redirecting to login.")
+                messages.error(request, "❌ Please log in again.", extra_tags="marks_error")
+                return redirect("subject_head_login")
+
+            print(f"🎯 Subject ID identified from session: {subject_id}")
+
+            rows_processed = 0
+
+            # Start transaction for atomic inserts/updates
+            with transaction.atomic():
+                for row in ws.iter_rows(min_row=2, values_only=True):
+                    row_values = [cell for cell in row if cell is not None]  # Remove None values
+
+                    # Ensure we have exactly 4 values (skip rows with extra/missing columns)
+                    if len(row_values) != 4:
+                        print(f"⚠️ Skipping row due to incorrect column count: {row_values}")
+                        continue
+
+                    roll_no, student_name, subject_name, mark_percentage = row_values
+                    print(f"🔍 Processing: Roll No: {roll_no}, Student: {student_name}, Subject: {subject_name}, Marks: {mark_percentage}")
+
+                    # Validate mark_percentage
+                    if mark_percentage is None or not isinstance(mark_percentage, (int, float)):
+                        print(f"⚠️ Skipping Roll No {roll_no} - Invalid marks data.")
+                        continue
+
+                    with connection.cursor() as cursor:
+                        # Get student_id using roll_no
+                        cursor.execute("SELECT id FROM main_students WHERE roll_no = %s", [roll_no])
+                        student_data = cursor.fetchone()
+
+                        if not student_data:
+                            print(f"❌ Skipping Roll No {roll_no} - Student not found.")
+                            continue
+
+                        student_id = student_data[0]
+
+                        # Try updating existing marks in main_marks
+                        cursor.execute("""
+                            UPDATE main_marks 
+                            SET mark_percentage = %s 
+                            WHERE student_id = %s AND subject_id = %s
+                        """, [mark_percentage, student_id, subject_id])
+
+                        if cursor.rowcount > 0:
+                            print(f"🔄 Updated marks for Roll No {roll_no}: {mark_percentage}%")
+                        else:
+                            # If no update, insert new marks
+                            cursor.execute("""
+                                INSERT INTO main_marks (student_id, subject_id, mark_percentage) 
+                                VALUES (%s, %s, %s)
+                            """, [student_id, subject_id, mark_percentage])
+                            print(f"🆕 Inserted marks for Roll No {roll_no}: {mark_percentage}%")
+
+                        # Now update main_studentevaluation for the same student and subject
+                        cursor.execute("""
+                            UPDATE main_studentevaluation 
+                            SET marks_percentage = %s 
+                            WHERE student_id = %s AND subject_id = %s
+                        """, [mark_percentage, student_id, subject_id])
+
+                        if cursor.rowcount > 0:
+                            print(f"🔄 Updated StudentEvaluation for Roll No {roll_no}: {mark_percentage}%")
+                        else:
+                            # If no update, insert new record
+                            cursor.execute("""
+                                INSERT INTO main_studentevaluation (student_id, subject_id, marks_percentage) 
+                                VALUES (%s, %s, %s)
+                            """, [student_id, subject_id, mark_percentage])
+                            print(f"🆕 Inserted StudentEvaluation for Roll No {roll_no}: {mark_percentage}%")
+
+                    rows_processed += 1
+
+            print(f"✅ Finished processing {rows_processed} rows.")
+            messages.success(request, f"✅ Successfully updated {rows_processed} student marks.", extra_tags="marks_success")
+
+        except Exception as e:
+            print(f"❌ Error processing file: {e}")
+            messages.error(request, "❌ An error occurred while processing the file. Please try again.", extra_tags="marks_error")
+
+        return redirect("subject_head_marks")
+
+    print("❌ No file uploaded or invalid request method.")
+    messages.error(request, "Please upload a valid Excel file.")
+    return redirect("subject_head_marks")
+
+
+
+def subject_head_attendance(request):
+    subject_id = request.session.get('subject_id')
+
+    if not subject_id:
+        print("❌ Subject ID not found in session. Redirecting to login.")
+        return redirect('subject_head_login')
+
+    with connection.cursor() as cursor:
+        # Fetch subject and class details
+        cursor.execute("""
+            SELECT s.subject_name, c.class_name 
+            FROM main_subjects s
+            JOIN main_classes c ON s.class_obj_id = c.id
+            WHERE s.id = %s
+        """, [subject_id])
+        subject = cursor.fetchone()
+
+        if not subject:
+            print(f"❌ No subject found for subject_id: {subject_id}. Redirecting to dashboard.")
+            return redirect('subject_head_dashboard')
+
+        subject_name, class_name = subject  
+        print(f"✅ Subject: {subject_name}, Class: {class_name}")
+
+        # Fetch students of the subject's class
+        cursor.execute("""
+            SELECT s.id, s.roll_no, s.name 
+            FROM main_students s
+            WHERE s.class_obj_id = (SELECT class_obj_id FROM main_subjects WHERE id = %s)
+        """, [subject_id])
+        students = cursor.fetchall()
+        print(f"📌 Students Fetched ({len(students)} students): {students}")
+
+        # Handle POST request (Attendance Submission)
+        if request.method == "POST":
+            print("📝 Received Attendance Submission")
+
+            attendance_date = request.POST.get('attendance_date')
+            hour = request.POST.get('hour')
+
+            if not attendance_date or not hour:
+                print("⚠️ Missing Date or Hour. Showing error message.")
+                messages.error(request, "⚠️ Please select both date and hour.")
+                return redirect('subject_head_attendance')
+
+            hour = int(hour)  # Convert hour to integer
+
+            # **Check if attendance already exists for this date & hour**
+            cursor.execute("""
+                SELECT COUNT(*) FROM main_attendance 
+                WHERE subject_id = %s AND attendance_date = %s AND hour = %s
+            """, [subject_id, attendance_date, hour])
+            existing_records = cursor.fetchone()[0]
+
+            if existing_records > 0:
+                print(f"🚨 Attendance for {attendance_date}, Hour {hour} already exists!")
+                messages.warning(request, f"⚠️ Attendance for {attendance_date}, Hour {hour} has already been recorded.")
+                return redirect('subject_head_attendance')
+
+            # Insert new attendance records
+            for student in students:
+                student_id = student[0]
+                status = request.POST.get(f'attendance_{student_id}', 'absent')  # Default to 'absent' if not checked
+
+                cursor.execute("""
+                    INSERT INTO main_attendance (student_id, subject_id, attendance_date, hour, status, created_at)
+                    VALUES (%s, %s, %s, %s, %s, NOW())
+                """, [student_id, subject_id, attendance_date, hour, status])
+                print(f"✅ Attendance Added - Student: {student_id}, Date: {attendance_date}, Hour: {hour}, Status: {status}")
+
+                # **Calculate Attendance Percentage**
+                cursor.execute("""
+                    SELECT COUNT(*) FROM main_attendance 
+                    WHERE student_id = %s AND subject_id = %s
+                """, [student_id, subject_id])
+                total_classes = cursor.fetchone()[0]
+
+                cursor.execute("""
+                    SELECT COUNT(*) FROM main_attendance 
+                    WHERE student_id = %s AND subject_id = %s AND status = 'present'
+                """, [student_id, subject_id])
+                present_count = cursor.fetchone()[0]
+
+                attendance_percentage = (present_count / total_classes) * 100 if total_classes > 0 else 0
+                print(f"📊 Student {student_id} - Attendance: {attendance_percentage:.2f}%")
+
+                # **Update or Insert into StudentEvaluation**
+                cursor.execute("""
+                    SELECT id FROM main_studentevaluation 
+                    WHERE student_id = %s AND subject_id = %s
+                """, [student_id, subject_id])
+                existing_record = cursor.fetchone()
+
+                if existing_record:
+                    cursor.execute("""
+                        UPDATE main_studentevaluation 
+                        SET attendance_percentage = %s 
+                        WHERE student_id = %s AND subject_id = %s
+                    """, [attendance_percentage, student_id, subject_id])
+                    print(f"🔄 Updated Attendance Percentage: {attendance_percentage:.2f}% for Student {student_id}")
+                else:
+                    cursor.execute("""
+                        INSERT INTO main_studentevaluation (student_id, subject_id, attendance_percentage)
+                        VALUES (%s, %s, %s)
+                    """, [student_id, subject_id, attendance_percentage])
+                    print(f"✅ Inserted New Attendance Percentage: {attendance_percentage:.2f}% for Student {student_id}")
+
+            messages.success(request, "✅ Attendance successfully recorded!")
+            return redirect('subject_head_attendance')
+
+    context = {
+        'subject_name': subject_name,
+        'class_name': class_name,
+        'students': students,
+    }
+
+    return render(request, 'subject_head/subject_head_attendance.html', context)
+
+
+def subject_head_attendance_history(request):
+    subject_id = request.session.get('subject_id')
+
+    if not subject_id:
+        print("❌ Subject ID not found in session. Redirecting to login.")
+        return redirect('subject_head_login')
+
+    print(f"✅ Subject ID found: {subject_id}")
+
+    # Get filter parameters from request
+    filter_date = request.GET.get('date', '').strip()
+    filter_student = request.GET.get('student', '').strip()
+
+    print(f"🔍 Filter Date: {filter_date}, Filter Student: {filter_student}")
+
+    # Base SQL query with correct table name, ordered by date
+    sql_query = """
+        SELECT 
+            a.id, 
+            a.attendance_date AS date, 
+            a.hour, 
+            s.roll_no, 
+            COALESCE(s.name, '') AS student_name,  -- Handle NULL names
+            a.status
+        FROM main_attendance a
+        JOIN main_students s ON a.student_id = s.id
+        JOIN main_subjects sub ON a.subject_id = sub.id
+        WHERE sub.id = %s
+    """
+    
+    sql_params = [subject_id]
+
+    # Apply filters dynamically
+    if filter_date:
+        sql_query += " AND a.attendance_date = %s"
+        sql_params.append(filter_date)
+
+    if filter_student:
+        sql_query += " AND COALESCE(s.name, '') LIKE %s"  # Avoid NULL issues
+        sql_params.append(f"%{filter_student}%")
+
+    # Order by date (newest first) and hour (ascending)
+    sql_query += " ORDER BY a.attendance_date DESC, a.hour ASC"
+
+    # Execute raw SQL query
+    with connection.cursor() as cursor:
+        cursor.execute(sql_query, sql_params)
+        rows = cursor.fetchall()
+
+    print(f"✅ Retrieved {len(rows)} attendance records.")
+
+    # Convert query result to a list of dictionaries
+    attendance_records = [
+        {"id": row[0], "date": row[1], "hour": row[2], "roll_no": row[3], "student_name": row[4], "status": row[5]}
+        for row in rows
+    ]
+
+    return render(request, 'subject_head/subject_head_attendance_history.html', {
+        "attendance_records": attendance_records,
+        "filter_date": filter_date,
+        "filter_student": filter_student,
+    })
+
+
+
+def update_attendance(request):
+    if request.method == "POST":
+        attendance_ids = request.POST.getlist("attendance_ids[]")  # List of attendance record IDs
+        statuses = request.POST.getlist("status[]")  # List of new statuses
+
+        print("\n--- DEBUG: Incoming Attendance Update Request ---")
+        print(f"Attendance IDs: {attendance_ids}")
+        print(f"New Statuses: {statuses}")
+
+        try:
+            with connection.cursor() as cursor:
+                for att_id, status in zip(attendance_ids, statuses):
+                    # Update attendance status in the database
+                    cursor.execute("""
+                        UPDATE main_attendance
+                        SET status = %s
+                        WHERE id = %s
+                    """, [status, att_id])
+                    print(f"✅ Updated attendance ID {att_id} to status: {status}")
+
+                # Step 1: Get all unique student IDs that were updated
+                cursor.execute("""
+                    SELECT DISTINCT student_id FROM main_attendance WHERE id IN %s
+                """, [tuple(attendance_ids)])
+                student_ids = [row[0] for row in cursor.fetchall()]
+
+                print(f"\n🔍 Students affected: {student_ids}")
+
+                for student_id in student_ids:
+                    # Step 2: Recalculate attendance percentage
+                    cursor.execute("""
+                        SELECT 
+                            SUM(CASE WHEN status = 'present' THEN 1 ELSE 0 END) * 100.0 / COUNT(*)
+                        FROM main_attendance
+                        WHERE student_id = %s
+                    """, [student_id])
+                    attendance_percentage = cursor.fetchone()[0] or 0  # Ensure default value if no records found
+
+                    print(f"📊 Student {student_id} new attendance percentage: {attendance_percentage:.2f}%")
+
+                    # Step 3: Update `student_evaluations` table
+                    cursor.execute("""
+                        UPDATE main_studentevaluation
+                        SET attendance_percentage = %s
+                        WHERE student_id = %s
+                    """, [attendance_percentage, student_id])
+
+                    print(f"✅ Updated student_evaluations for student {student_id}")
+
+            messages.success(request, "✅ Attendance updated successfully!")
+        except Exception as e:
+            messages.error(request, f"❌ Error updating attendance: {str(e)}")
+            print(f"\n❌ ERROR: {str(e)}")
+
+        return redirect("subject_head_attendance_history")
+
+    messages.error(request, "❌ Invalid request.")
+    return redirect("update_attendance")
+
+
+
+def delete_attendance(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            record_id = data.get("id")
+
+            if not record_id:
+                return JsonResponse({"success": False, "error": "Invalid record ID."})
+
+            print(f"Deleting attendance record ID: {record_id}")
+
+            with connection.cursor() as cursor:
+                # Fetch student_id and subject_id before deleting
+                cursor.execute("SELECT student_id, subject_id FROM main_attendance WHERE id = %s", [record_id])
+                result = cursor.fetchone()
+
+                if not result:
+                    return JsonResponse({"success": False, "error": "Attendance record not found."})
+
+                student_id, subject_id = result
+                print(f"Found record - Student ID: {student_id}, Subject ID: {subject_id}")
+
+                # Delete the attendance record
+                cursor.execute("DELETE FROM main_attendance WHERE id = %s", [record_id])
+                print(f"Attendance record {record_id} deleted successfully.")
+
+                # Calculate new attendance percentage
+                cursor.execute("""
+                    SELECT COUNT(*) FROM main_attendance
+                    WHERE student_id = %s AND subject_id = %s
+                """, [student_id, subject_id])
+                total_classes = cursor.fetchone()[0]
+
+                cursor.execute("""
+                    SELECT COUNT(*) FROM main_attendance
+                    WHERE student_id = %s AND subject_id = %s AND status = 'present'
+                """, [student_id, subject_id])
+                total_present = cursor.fetchone()[0]
+
+                if total_classes > 0:
+                    new_attendance_percentage = (total_present / total_classes) * 100
+                else:
+                    new_attendance_percentage = 0  # No attendance records left
+
+                print(f"Updated Attendance Percentage: {new_attendance_percentage}%")
+
+                # Update the student_evaluations table
+                cursor.execute("""
+                    UPDATE main_studentevaluation
+                    SET attendance_percentage = %s
+                    WHERE student_id = %s AND subject_id = %s
+                """, [new_attendance_percentage, student_id, subject_id])
+
+                print(f"Attendance percentage updated for Student ID {student_id}.")
+
+            return JsonResponse({"success": True})
+
+        except Exception as e:
+            print(f"Error deleting attendance: {e}")
+            return JsonResponse({"success": False, "error": str(e)})
+
+    return JsonResponse({"success": False, "error": "Invalid request method."})
+
+
+
+from django.shortcuts import redirect
+from django.contrib import messages
+
+def subject_head_evaluation(request):
+    subject_id = request.session.get('subject_id')
+
+    if not subject_id:
+        print("❌ Subject ID not found in session. Redirecting to login.")
+        return redirect('subject_head_login')
+
+    # Fetch students for the given subject
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT main_students.id, main_students.name, main_students.roll_no
+            FROM main_students
+            JOIN main_classes ON main_students.class_obj_id = main_classes.id
+            JOIN main_subjects ON main_classes.id = main_subjects.class_obj_id
+            WHERE main_subjects.id = %s
+        """, [subject_id])
+        students = cursor.fetchall()
+
+    student_list = []
+    student_ids = [row[0] for row in students]
+    ratings_dict = {}
+
+    if student_ids:
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT student_id, academic_activity_rating, class_participation_rating
+                FROM main_studentevaluation
+                WHERE subject_id = %s AND student_id IN %s
+            """, [subject_id, tuple(student_ids)])
+
+            ratings = cursor.fetchall()
+            for rating in ratings:
+                ratings_dict[rating[0]] = {
+                    "academic_activity_rating": rating[1] if rating[1] is not None else 0,
+                    "class_participation_rating": rating[2] if rating[2] is not None else 0
+                }
+
+    for row in students:
+        student_id, name, roll_no = row
+        student_list.append({
+            'id': student_id,
+            'name': name,
+            'roll_no': roll_no,
+            'academic_activity_rating': ratings_dict.get(student_id, {}).get("academic_activity_rating", 0),
+            'class_participation_rating': ratings_dict.get(student_id, {}).get("class_participation_rating", 0),
+        })
+
+    # Handle Rating Submission
+    if request.method == "POST":
+        rating_type = request.POST.get("rating_type")  # Should be 'academic_activity_rating' or 'class_participation_rating'
+
+        # ✅ Debugging: Print received data to check if values exist
+        print(f"🔹 Received rating type: {rating_type}")
+        print(f"🔹 POST Data: {request.POST}")
+
+        # Extract rating inputs from POST data
+        student_ratings = {
+            key.split("_")[-1]: float(value) for key, value in request.POST.items()
+            if key.startswith("class_participation_rating_") or key.startswith("academic_activity_rating_")
+        }
+
+        print(f"✅ Parsed student ratings: {student_ratings}")  # Debugging output
+
+        # Ensure all students are updated even if their rating is unchanged
+        with connection.cursor() as cursor:
+            for student in student_list:
+                student_id = student['id']
+                roll_no = student['roll_no']
+
+                # Get the updated value or keep the existing one
+                new_rating = student_ratings.get(str(roll_no), student[rating_type])
+
+                print(f"🔄 Updating {rating_type} for Student {roll_no} (ID: {student_id}) to {new_rating}")  # Debugging
+
+                # Check if record exists
+                cursor.execute("""
+                    SELECT id FROM main_studentevaluation
+                    WHERE student_id = %s AND subject_id = %s
+                """, [student_id, subject_id])
+                record = cursor.fetchone()
+
+                if record:
+                    # Update existing record
+                    cursor.execute(f"""
+                        UPDATE main_studentevaluation
+                        SET {rating_type} = %s
+                        WHERE student_id = %s AND subject_id = %s
+                    """, [new_rating, student_id, subject_id])
+                else:
+                    # Insert new record
+                    cursor.execute(f"""
+                        INSERT INTO main_studentevaluation (student_id, subject_id, {rating_type})
+                        VALUES (%s, %s, %s)
+                    """, [student_id, subject_id, new_rating])
+
+        messages.success(request, f"{rating_type.replace('_', ' ').title()} updated successfully!")
+
+        # ✅ Redirect to prevent form resubmission
+        return redirect('subject_head_evaluation')
+
+    return render(request, 'subject_head/subject_head_evaluation.html', {'students': student_list})
+
+
 
 
 ######################################################################################################################
@@ -2740,92 +3455,121 @@ def student_quiz(request, subject_id, quiz_id):
 ######################################################################################################################
 
 def parent_login(request):
+    print("🔹 Parent login view called.")
+
     form = ParentLoginForm()
 
     if request.method == "POST":
+        print("🔹 POST request received.")
+
         form = ParentLoginForm(request.POST)
 
         if form.is_valid():
+            print("✅ Form is valid.")
             roll_no = form.cleaned_data.get("roll_no")
             password = form.cleaned_data.get("password")
+            print(f"🔹 Received Roll No: {roll_no}, Password: {password}")
 
             # Validate credentials with raw SQL query
             with connection.cursor() as cursor:
+                print("🔹 Executing SQL query to authenticate parent...")
                 cursor.execute("""
                     SELECT p.id FROM main_parents p
+                    JOIN main_students s ON p.student_id = s.id
                     JOIN main_users u ON p.user_id = u.id
-                    WHERE p.student_id = %s AND p.password = %s AND u.role = 'parent'
+                    WHERE s.roll_no = %s AND p.password = %s AND u.role = 'parent'
                 """, [roll_no, password])
                 parent = cursor.fetchone()
+                print(f"🔹 Query Result: {parent}")
 
             if parent:
-                # Save the parent ID in session (for use in dashboard or elsewhere)
+                # Save the parent ID in session
                 request.session['parent_id'] = parent[0]
+                print(f"✅ Session Created: parent_id = {request.session.get('parent_id')}")
                 messages.success(request, "Login successful.")
-                return redirect('parent_dashboard')  # Replace with the actual parent dashboard route
+                print("🔹 Redirecting to parent_dashboard...")
+                return redirect('parent_dashboard')  # Redirect to parent dashboard
             else:
+                print("❌ Invalid credentials.")
                 messages.error(request, "Invalid roll number or password.")
 
+    print("🔹 Rendering login page again.")
     return render(request, 'parents/parent_login.html', {'form': form})
+    
 
 
 def parent_dashboard(request):
-    # Ensure the parent is logged in
+    print("🔹 Parent Dashboard View Called")
+
+    # Debug session data
+    print(f"🔹 Session Data: {dict(request.session.items())}")
+
     parent_id = request.session.get('parent_id')
     if not parent_id:
-        return redirect('parent_login')  # Redirect to login if not logged in
+        print("❌ No parent_id in session. Redirecting to login.")
+        return redirect('parent_login')
 
     with connection.cursor() as cursor:
-        # Fetch parent and associated student details
+        print(f"🔹 Fetching parent details for parent_id: {parent_id}")
+        
         cursor.execute("""
             SELECT p.id, p.name AS parent_name, p.student_id, 
-                   s.name AS student_name, s.class_obj_id
+                   s.id AS student_id, s.name AS student_name, s.class_obj_id
             FROM main_parents p
-            JOIN main_students s ON p.student_id = s.roll_no
+            JOIN main_students s ON p.student_id = s.id  
             WHERE p.id = %s
         """, [parent_id])
+        
         parent_data = cursor.fetchone()
-
-        # Redirect to login if parent or student data is missing
+        
         if not parent_data:
+            print(f"❌ No parent found with id {parent_id}. Redirecting to login.")
             return redirect('parent_login')
 
-        # Extract details
-        parent_id = parent_data[0]
-        parent_name = parent_data[1]
-        student_roll_no = parent_data[2]
-        student_name = parent_data[3]
-        student_class_id = parent_data[4]
+        print(f"✅ Parent Data Fetched: {parent_data}")
 
-        # Fetch class name and teacher's name
+        # Correctly unpacking all 6 values
+        parent_id, parent_name, student_roll_no, student_id, student_name, student_class_id = parent_data
+
+        print(f"🔹 Fetching class details for class_id: {student_class_id}")
         cursor.execute("""
             SELECT class_name, class_head FROM main_classes
             WHERE id = %s
         """, [student_class_id])
         class_data = cursor.fetchone()
-        student_class = class_data[0] if class_data else "Class not assigned"
-        class_teacher = class_data[1] if class_data else "No teacher assigned"
 
-        # Fetch subjects count for the class
+        if class_data:
+            student_class, class_teacher = class_data
+            print(f"✅ Class Data: {class_data}")
+        else:
+            student_class, class_teacher = "Class not assigned", "No teacher assigned"
+            print("❌ Class data not found.")
+
+        # Fetch subjects count
+        print(f"🔹 Fetching subject count for class_id: {student_class_id}")
         cursor.execute("""
             SELECT COUNT(*) FROM main_subjects
             WHERE class_obj_id = %s
         """, [student_class_id])
         subjects_count_data = cursor.fetchone()
-        subjects_count = subjects_count_data[0] if subjects_count_data else 0  # Fixed
+        subjects_count = subjects_count_data[0] if subjects_count_data else 0
+        print(f"✅ Subjects Count: {subjects_count}")
 
     # Prepare context for the template
     context = {
         'parent_id': parent_id,
         'parent_name': parent_name,
-        'student_id': student_roll_no,
+        'student_roll_no': student_roll_no,  # Added
+        'student_id': student_id,  # Added
         'student_name': student_name,
         'student_class': student_class,
         'class_teacher': class_teacher,
         'subjects_count': subjects_count
     }
 
+    print("✅ Rendering Parent Dashboard Page")
     return render(request, 'parents/parent_dashboard.html', context)
+
 
 
 def parent_teacher_profile(request):
@@ -2839,7 +3583,7 @@ def parent_teacher_profile(request):
             SELECT c.class_head AS teacher_name, c.email AS teacher_email, 
                    c.class_name, i.institution_name
             FROM main_parents p
-            JOIN main_students s ON p.student_id = s.roll_no
+            JOIN main_students s ON p.student_id = s.id
             LEFT JOIN main_classes c ON s.class_obj_id = c.id
             LEFT JOIN main_institution i ON c.institution_id = i.institution_id
             WHERE p.id = %s
@@ -2861,58 +3605,61 @@ def parent_teacher_profile(request):
     return render(request, 'parents/parent_teacher_profile.html', context)
 
 
+
 def parent_class(request):
-    parent_id = request.session.get('parent_id')  # Ensure the parent is logged in
+    print("🔹 Parent Class View Called")
+
+    parent_id = request.session.get('parent_id')
+    print(f"🔹 Session Data: {request.session.items()}")  # Debug session
+
     if not parent_id:
+        print("❌ No parent session found. Redirecting to login.")
         return redirect('parent_login')
 
     with connection.cursor() as cursor:
-        # Fetch parent and associated student details
+        # Fetch parent and student details
         cursor.execute("""
             SELECT p.id, p.name AS parent_name, p.student_id, 
                    s.name AS student_name, s.class_obj_id 
             FROM main_parents p
-            JOIN main_students s ON p.student_id = s.roll_no
+            JOIN main_students s ON p.student_id = s.id
             WHERE p.id = %s
         """, [parent_id])
         parent_data = cursor.fetchone()
+        print(f"🔹 Parent Data Fetched: {parent_data}")
 
-    # Redirect to login if parent or student data is missing
-    if not parent_data:
-        return redirect('parent_login')
+        if not parent_data:
+            print("❌ Parent data not found. Redirecting to login.")
+            return redirect('parent_login')
 
-    # Extract details
-    parent_id = parent_data[0]
-    parent_name = parent_data[1]
-    student_roll_no = parent_data[2]
-    student_name = parent_data[3]
-    student_class_id = parent_data[4]
+        # Extract details
+        _, parent_name, student_roll_no, student_name, student_class_id = parent_data
 
-    # Fetch class details (class name and teacher)
-    with connection.cursor() as cursor:
+        # Fetch class details
         cursor.execute("""
             SELECT class_name, class_head FROM main_classes
             WHERE id = %s
         """, [student_class_id])
         class_data = cursor.fetchone()
-    student_class = class_data[0] if class_data else "Class not assigned"
-    class_teacher = class_data[1] if class_data else "No teacher assigned"
+        student_class = class_data[0] if class_data else "Class not assigned"
+        class_teacher = class_data[1] if class_data else "No teacher assigned"
+        print(f"🔹 Class Data: {class_data}")
 
-    # Fetch subjects for the class
-    with connection.cursor() as cursor:
+        # Fetch subjects
         cursor.execute("""
             SELECT subject_name, subject_head, email FROM main_subjects
             WHERE class_obj_id = %s
         """, [student_class_id])
         subjects = cursor.fetchall()
+        print(f"🔹 Subjects Found: {len(subjects)}")
 
-    # Fetch students of the class
-    with connection.cursor() as cursor:
+        # Fetch students
         cursor.execute("""
             SELECT roll_no, name FROM main_students
             WHERE class_obj_id = %s
         """, [student_class_id])
         students = cursor.fetchall()
+        print(f"🔹 Students Found: {len(students)}")
 
     # Prepare context for the template
     context = {
@@ -2922,9 +3669,10 @@ def parent_class(request):
         'class_teacher': class_teacher,
         'subjects': subjects,
         'students': students,
-        'student_count': len(students)  # Total number of students in the class
+        'student_count': len(students)
     }
 
+    print("✅ Rendering parent_class.html")
     return render(request, 'parents/parent_class.html', context)
 
 
@@ -2956,7 +3704,7 @@ def parent_profile(request):
                    c.class_name, 
                    c.class_head AS teacher_name, c.email AS teacher_email
             FROM main_parents p
-            JOIN main_students s ON p.student_id = s.roll_no
+            JOIN main_students s ON p.student_id = s.id
             LEFT JOIN main_classes c ON s.class_obj_id = c.id
             WHERE p.id = %s
         """, [parent_id])
@@ -2991,13 +3739,13 @@ def parent_chat(request):
     with connection.cursor() as cursor:
         # Get the parent's user ID
         cursor.execute("SELECT user_id FROM main_parents WHERE id = %s", [parent_id])
-        user_id = cursor.fetchone()
+        user_data = cursor.fetchone()
 
-        if not user_id:
+        if not user_data:
             print("No user_id found for this parent.")
             return render(request, 'parents/parent_chat.html', {'chat_users': [], 'suggested_users': []})
 
-        user_id = user_id[0]
+        user_id = user_data[0]
         print(f"User ID for parent: {user_id}")
 
         # Get recent chat users (Users the parent has already chatted with)
@@ -3016,7 +3764,7 @@ def parent_chat(request):
         chat_users = cursor.fetchall()
         print(f"Recent chat users: {chat_users}")
 
-        recent_chat_user_ids = {user[0] for user in chat_users}  # Extract only user IDs for easy checking
+        recent_chat_user_ids = {user[0] for user in chat_users}  # Extract user IDs
         print(f"Recent chat user IDs: {recent_chat_user_ids}")
 
         # Get the class_head of the student's class
@@ -3043,7 +3791,7 @@ def parent_chat(request):
             LEFT JOIN main_subjects s ON u.id = s.user_id
             WHERE u.role IN ('class_head', 'subject_head')
             AND (
-                (c.class_head IS NOT NULL AND c.class_head = (SELECT class_head FROM main_classes WHERE id = (SELECT class_obj_id FROM main_students WHERE roll_no = (SELECT student_id FROM main_parents WHERE id = %s))))
+                (c.class_head IS NOT NULL AND c.class_head = (SELECT class_head FROM main_classes WHERE id = (SELECT class_obj_id FROM main_students WHERE roll_no = (SELECT student_id FROM main_parents WHERE id = %s)) ))
                 OR s.subject_head IS NOT NULL
             )
             AND u.id NOT IN (
@@ -3055,9 +3803,10 @@ def parent_chat(request):
         """, [parent_id, user_id, user_id])
 
         suggested_users = cursor.fetchall()
+        suggested_users = list(suggested_users)  # Convert tuple to list to allow modification
         print(f"Suggested users before adding class head: {suggested_users}")
 
-        suggested_user_ids = {user[0] for user in suggested_users}  # Extract user IDs for easy checking
+        suggested_user_ids = {user[0] for user in suggested_users}  # Extract user IDs
 
         # Ensure the class head is suggested if they haven't been messaged yet
         if class_head_id and class_head_id not in recent_chat_user_ids and class_head_id not in suggested_user_ids:
@@ -3070,6 +3819,7 @@ def parent_chat(request):
         'chat_users': chat_users,
         'suggested_users': suggested_users,
     })
+
 
 
 def parent_chat_user(request, user_id):
@@ -3147,6 +3897,100 @@ def parent_chat_user(request, user_id):
         'selected_user_role': selected_user_role,
         'teacher_user_id': teacher_user_id
     })
+
+
+def parent_evaluation(request):
+    parent_id = request.session.get('parent_id')  # Get parent ID from session
+    if not parent_id:
+        print("❌ Parent ID not found in session. Redirecting to login.")
+        return redirect('parent_login')  # Redirect to login if not logged in
+
+    # Fetch the parent's associated student details
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT main_students.id, main_students.name, main_students.roll_no 
+            FROM main_students 
+            JOIN main_parents ON main_students.id = main_parents.student_id
+            WHERE main_parents.id = %s
+        """, [parent_id])
+        student = cursor.fetchone()
+
+    if not student:
+        print("❌ No student found for this parent.")
+        return render(request, 'parents/parent_evaluation.html', {'student': None})
+
+    student_id, student_name, roll_no = student
+
+    # Fetch existing evaluation data for this student
+    evaluation_data = {}
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT study_time_rating, sleep_time_rating 
+            FROM main_studentevaluation 
+            WHERE student_id = %s
+        """, [student_id])
+        evaluation = cursor.fetchone()
+
+    if evaluation:
+        evaluation_data['study_time_rating'] = evaluation[0] if evaluation[0] is not None else 0
+        evaluation_data['sleep_time_rating'] = evaluation[1] if evaluation[1] is not None else 0
+    else:
+        evaluation_data['study_time_rating'] = 0
+        evaluation_data['sleep_time_rating'] = 0
+
+    # Handle form submission
+    if request.method == "POST":
+        print("✅ Form submission received.")
+
+        # Extract rating values from POST request
+        study_time_rating = request.POST.get(f"study_time_rating_{roll_no}")
+        sleep_time_rating = request.POST.get(f"sleep_time_rating_{roll_no}")
+
+        print(f"🔍 Received Ratings: Study Time = {study_time_rating}, Sleep Time = {sleep_time_rating}")
+
+        # Convert to float if values exist
+        try:
+            study_time_rating = float(study_time_rating) if study_time_rating else 0
+            sleep_time_rating = float(sleep_time_rating) if sleep_time_rating else 0
+        except ValueError:
+            print("❌ Invalid rating values received. Skipping update.")
+            study_time_rating = evaluation_data['study_time_rating']
+            sleep_time_rating = evaluation_data['sleep_time_rating']
+
+        # Check if an evaluation already exists for the student
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT id FROM main_studentevaluation WHERE student_id = %s
+            """, [student_id])
+            existing_record = cursor.fetchone()
+
+            if existing_record:
+                # Update the existing record
+                print("🔄 Updating existing student evaluation record.")
+                cursor.execute("""
+                    UPDATE main_studentevaluation 
+                    SET study_time_rating = %s, sleep_time_rating = %s 
+                    WHERE student_id = %s
+                """, [study_time_rating, sleep_time_rating, student_id])
+            else:
+                # Insert a new record
+                print("➕ Inserting new student evaluation record.")
+                cursor.execute("""
+                    INSERT INTO main_studentevaluation (student_id, study_time_rating, sleep_time_rating)
+                    VALUES (%s, %s, %s)
+                """, [student_id, study_time_rating, sleep_time_rating])
+
+        messages.success(request, "Student evaluation updated successfully!")
+        return redirect('parent_evaluation')  # Redirect to refresh the page
+
+    return render(request, 'parents/parent_evaluation.html', {'student': {
+        'id': student_id,
+        'name': student_name,
+        'roll_no': roll_no,
+        'study_time_rating': evaluation_data['study_time_rating'],
+        'sleep_time_rating': evaluation_data['sleep_time_rating'],
+    }})
+
 
 
 
