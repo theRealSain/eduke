@@ -1,0 +1,352 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eduke Parent</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="{% static 'main/css/style.css' %}">
+  <link rel="icon" href="{% static 'main/images/logobase_white.png' %}">
+</head>
+<body class="bg-gray-100 text-gray-900">
+
+  <!-- Dashboard Wrapper -->
+  <div class="flex h-screen">
+    <!-- Main Content -->
+    <main id="main-content" class="flex-1 overflow-y-auto w-full transition-all">
+      
+      <!-- Top Navbar -->
+      <header class="bg-white shadow p-1 pr-4 flex justify-between items-center">
+        <div class="flex items-center space-x-4">
+          <!-- Hamburger Button outside Sidebar -->
+          <button id="hamburger-button" class="sm:hidden text-gray-800 ml-5 focus:outline-none">
+            <i class="fas fa-bars text-2xl"></i>
+          </button>
+          <div class="py-0">
+            <img src="{% static 'main/images/logo_text_long.png' %}" alt="Eduke Logo" class="w-full h-[80px] mx-auto">
+          </div>
+        </div>
+        <div class="flex items-center space-x-4">
+          <!-- Logout Button, visible on large screens and hidden on small screens -->
+          <a href="{% url 'logout' %}" class="hidden lg:block">
+            <button class="bg-[#4f0074] hover:bg-violet-700 text-white px-4 py-2 rounded-md">
+              <i class="fa-solid fa-power-off"></i> &nbsp; Logout
+            </button>
+          </a>
+        </div>
+      </header>
+
+      <!-- Wrapper for Sidebar and Main Content -->
+      <div class="flex h-screen relative main-screen">
+
+        <!-- Sidebar -->
+        <aside id="sidebar" class="w-64 bg-[#e5e5e5] text-black flex flex-col py-6 transform transition-transform -translate-x-full sm:translate-x-0 sm:relative absolute top-0 left-0 h-full z-10">
+          <nav class="flex-1">
+            <ul class="space-y-4 px-4">
+              <li>
+                <a href="{% url 'parent_dashboard' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-table-columns"></i> &nbsp;
+                  Dashboard
+                </a>
+              </li>
+              <li>
+                <a href="{% url 'parent_class' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-chalkboard"></i> &nbsp;
+                  Your Class
+                </a>
+              </li>
+              <li>
+                <a href="{% url 'parent_teacher_profile' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-chalkboard-user"></i> &nbsp;
+                  Your Teacher
+                </a>
+              </li>
+              <li>
+                <a href="{% url 'parent_evaluation' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-square-poll-vertical"></i> &nbsp;
+                  Student Evaluation
+                </a>
+              </li>
+              <li class="bg-gray-300 rounded-md">
+                <a href="#" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-chart-line"></i> &nbsp;
+                  Student Performance
+                </a>
+              </li>
+              <li>
+                <a href="{% url 'parent_chat' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-comments"></i> &nbsp;
+                  Eduke Chat
+                </a>
+              </li>
+              <li>
+                <a href="{% url 'parent_profile' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-circle-user"></i> &nbsp;
+                  Profile
+                </a>
+              </li>
+              <li>
+                <a href="{% url 'logout' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-power-off"></i> &nbsp;
+                  Log Out
+                </a>
+              </li>
+            </ul>
+          </nav>
+        </aside>
+        
+        <!-- Dashboard Content -->
+        <div id="content-wrapper" class="p-6 space-y-6 w-full">
+          <!-- Page Title -->
+          <div id="performanceHeader" class="bg-white shadow-md rounded-lg p-6 flex flex-col md:flex-row justify-between items-center">
+              <div>
+                  <h2 class="text-2xl font-bold text-gray-700 uppercase">📊 Student Performance</h2>
+                  <p class="text-gray-500 mt-1">Track your academic progress</p>
+              </div>
+          </div>
+
+          <!-- Student Details -->
+          <div id="studentDetailsSection" class="bg-white shadow-md rounded-lg p-6">
+              <h3 class="text-lg font-bold text-gray-700 mb-4 uppercase">👤 Student Details</h3>
+              <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                  <div class="bg-gray-200 p-4 rounded-md">
+                      <h4 class="text-gray-600 text-sm">Student Name</h4>
+                      <p class="text-lg font-bold text-purple-800">{{ student.name }}</p>
+                  </div>
+                  <div class="bg-gray-200 p-4 rounded-md">
+                      <h4 class="text-gray-600 text-sm">Roll Number</h4>
+                      <p class="text-lg font-bold text-purple-800">{{ student.roll_no }}</p>
+                  </div>
+                  <div class="bg-gray-200 p-4 rounded-md">
+                      <h4 class="text-gray-600 text-sm">Class</h4>
+                      <p class="text-lg font-bold text-purple-800">{{ student.class_name }}</p>
+                  </div>
+                  <div class="bg-gray-200 p-4 rounded-md">
+                      <h4 class="text-gray-600 text-sm">Email</h4>
+                      <p class="text-lg font-bold text-purple-800">{{ student.email }}</p>
+                  </div>
+              </div>
+          </div>
+
+          <!-- Subject Performance -->
+          <div id="performanceSection" class="bg-white shadow-md rounded-lg p-6">
+              <div class="flex justify-between items-center mb-4">
+                  <h3 class="text-lg font-bold text-gray-700 uppercase">📖 Subject Performance</h3>
+                  
+                  <!-- Subject Selection Form -->
+                  <form method="GET" action="{% url 'parent_student_performance' %}">
+                      <select name="subject_id" class="border-2 border-gray-400 rounded-lg p-2 text-gray-700" onchange="this.form.submit()">
+                          <option value="" selected hidden>Select a Subject</option>
+                          {% for subject in subjects %}
+                              <option value="{{ subject.id }}" {% if subject.id == selected_subject_id %}selected{% endif %}>
+                                  {{ subject.name }}
+                              </option>
+                          {% endfor %}
+                      </select>
+                  </form>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                  <div class="bg-gradient-to-r from-purple-100 to-purple-200 p-6 rounded-md text-center shadow-md">
+                      <h3 class="text-lg font-bold text-gray-700">📊 Marks Percentage</h3>
+                      <p class="text-3xl font-bold text-purple-700" id="marksPercentage">{{ evaluations.marks_percentage|default:"--" }}%</p>
+                  </div>
+                  <div class="bg-gradient-to-r from-blue-100 to-blue-200 p-6 rounded-md text-center shadow-md">
+                      <h3 class="text-lg font-bold text-gray-700">📅 Attendance Percentage</h3>
+                      <p class="text-3xl font-bold text-blue-700" id="attendancePercentage">{{ evaluations.attendance_percentage|default:"--" }}%</p>
+                  </div>
+                  <div class="bg-gradient-to-r from-green-100 to-green-200 p-6 rounded-md text-center shadow-md">
+                      <h3 class="text-lg font-bold text-gray-700">📝 Quiz Performance</h3>
+                      <p class="text-3xl font-bold text-green-700" id="quizPercentage">{{ quiz_percentage }}%</p>
+                  </div>
+              </div>
+          </div>
+
+          <!-- Student Evaluations -->
+          <div id="evaluationSection" class="bg-white shadow-md rounded-lg p-6">
+              <h3 class="text-lg font-bold text-gray-700 uppercase mb-4">📝 Student Evaluations</h3>
+              <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  <div class="bg-gray-100 p-6 rounded-md text-center shadow-md">
+                      <h3 class="text-lg font-bold text-gray-700">📖 Study Time Evaluation</h3>
+                      <p class="text-3xl font-bold text-purple-700" id="studyTimeRating">{{ evaluations.study_time_rating|default:"--" }}</p>
+                  </div>
+                  <div class="bg-gray-100 p-6 rounded-md text-center shadow-md">
+                      <h3 class="text-lg font-bold text-gray-700">💤 Sleep Time Evaluation</h3>
+                      <p class="text-3xl font-bold text-purple-700" id="sleepTimeRating">{{ evaluations.sleep_time_rating|default:"--" }}</p>
+                  </div>
+                  <div class="bg-gray-100 p-6 rounded-md text-center shadow-md">
+                      <h3 class="text-lg font-bold text-gray-700">🙋 Class Participation</h3>
+                      <p class="text-3xl font-bold text-purple-700" id="classParticipationRating">{{ evaluations.class_participation_rating|default:"--" }}</p>
+                  </div>
+                  <div class="bg-gray-100 p-6 rounded-md text-center shadow-md">
+                      <h3 class="text-lg font-bold text-gray-700">📚 Academic Activity</h3>
+                      <p class="text-3xl font-bold text-purple-700" id="academicActivityRating">{{ evaluations.academic_activity_rating|default:"--" }}</p>
+                  </div>
+              </div>
+          </div>
+
+          <!-- Performance Graph -->
+          <div id="graphSection" class="bg-white shadow-md rounded-lg p-6">
+              <h3 class="text-lg font-bold text-gray-700 uppercase mb-4">📈 Performance Overview</h3>
+              <div class="h-64">
+                  <canvas id="performanceChart" width="500" height="200"></canvas>
+              </div>
+          </div>
+
+          <!-- Print Report Button -->
+          <div class="text-center mt-6">
+              <button id="printReportBtn" onclick="printReport()" class="text-gray-800 border border-gray-800 font-bold py-3 px-6 rounded-lg">
+                  🖨️ Print Report
+              </button>
+          </div>
+        </div>
+
+        <!-- JavaScript -->
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+        <script>
+            let chartInstance = null;
+
+            function updateChart(data) {
+                const canvas = document.getElementById("performanceChart");
+
+                if (!canvas) {
+                    console.error("Error: Chart canvas not found!");
+                    return;
+                }
+
+                const ctx = canvas.getContext("2d");
+
+                if (chartInstance) {
+                    chartInstance.destroy();
+                }
+
+                chartInstance = new Chart(ctx, {
+                    type: "bar",
+                    data: {
+                        labels: ["Marks", "Attendance", "Study Time", "Sleep Time", "Class Participation", "Academic Activity", "Quiz Percentage"],
+                        datasets: [{
+                            label: "Score",
+                            data: data,
+                            backgroundColor: Array(data.length).fill("#ad16ff90"),
+                            borderRadius: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        animation: false,
+                        scales: {
+                            x: { grid: { display: false } },
+                            y: { beginAtZero: true, max: 100 }
+                        }
+                    }
+                });
+            }
+
+            function printReport() {
+                const contentWrapper = document.getElementById("content-wrapper");
+
+                // Store original styles
+                const originalBodyStyle = document.body.style.cssText;
+                const originalWrapperStyle = contentWrapper.style.cssText;
+
+                // Disable fixed height and overflow for full content visibility
+                contentWrapper.style.height = "auto";
+                contentWrapper.style.overflow = "visible";
+
+                // Clone the content wrapper
+                const cloneWrapper = contentWrapper.cloneNode(true);
+
+                // Remove existing chart to avoid duplication
+                const clonedCanvas = cloneWrapper.querySelector("#performanceChart");
+                if (clonedCanvas) {
+                    clonedCanvas.remove();
+                }
+
+                // Create a new canvas element inside the cloned wrapper
+                const newCanvas = document.createElement("canvas");
+                newCanvas.id = "performanceChart";
+                newCanvas.width = 700;
+                newCanvas.height = 500;
+                newCanvas.style.display = "block";
+                newCanvas.style.margin = "50px auto";
+
+                // Append the new canvas to the correct section
+                cloneWrapper.querySelector(".h-64").appendChild(newCanvas);
+
+                // Store original page content
+                const originalContent = document.body.innerHTML;
+
+                // Replace body content with the cloned wrapper
+                document.body.innerHTML = cloneWrapper.innerHTML;
+
+                // Recreate the chart in the new canvas before printing
+                setTimeout(() => {
+                    const ctx = document.getElementById("performanceChart").getContext("2d");
+
+                    new Chart(ctx, {
+                        type: "bar",
+                        data: {
+                            labels: ["Marks", "Attendance", "Study Time", "Sleep Time", "Class Participation", "Academic Activity", "Quiz Percentage"],
+                            datasets: [{
+                                label: "Performance Scores",
+                                data: exampleData,
+                                backgroundColor: Array(exampleData.length).fill("#ad16ff90"),
+                                borderRadius: 4
+                            }]
+                        },
+                        options: {
+                            responsive: false,
+                            maintainAspectRatio: false,
+                            animation: false,
+                            scales: {
+                                x: { grid: { display: false } },
+                                y: { beginAtZero: true, max: 100 }
+                            }
+                        }
+                    });
+
+                    setTimeout(() => {
+                        window.print();
+
+                        // Restore the original content and styles
+                        document.body.innerHTML = originalContent;
+                        document.body.style.cssText = originalBodyStyle;
+                        contentWrapper.style.cssText = originalWrapperStyle;
+
+                        location.reload();
+                    }, 500);
+                }, 500);
+            }
+
+            // Fetching data from Django template
+            const exampleData = JSON.parse("{{ graph_data|safe }}");
+
+            document.addEventListener("DOMContentLoaded", () => {
+                updateChart(exampleData);
+            });
+        </script>
+        
+      </div>
+    </main>
+
+  </div>
+
+  <!-- JavaScript to toggle sidebar visibility -->
+  <script>
+    const hamburgerButton = document.getElementById('hamburger-button');
+    const sidebar = document.getElementById('sidebar');
+    const mainContent = document.getElementById('main-content');
+
+    hamburgerButton.addEventListener('click', () => {
+      sidebar.classList.toggle('-translate-x-full');
+      // Adjust main content width when the sidebar is hidden
+      mainContent.classList.toggle('lg:w-full');
+    });
+  </script>
+
+</body>
+</html>

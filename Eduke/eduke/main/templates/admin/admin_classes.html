@@ -168,40 +168,40 @@
                 
                 <!-- Classes Section -->
                 <div class="bg-white p-4 rounded-md shadow">
-                    <h3 class="text-lg font-bold mb-4">Classes</h3>
+                    <h3 class="text-lg font-bold mb-3">CLASSES</h3>
                     
                         <!-- Classes Table -->
-                    <table class="min-w-full table-auto border-collapse mt-[30px]">
+                    <table class="w-full border-collapse rounded-xl overflow-hidden">
                         <thead>
-                            <tr class="bg-purple-600 text-white">
-                                <th class="p-3 border-b text-center">Class Name</th>
-                                <th class="p-3 border-b text-center">Class Head</th>
-                                <th class="p-3 border-b text-center">Email</th>
-                                <th class="p-3 border-b text-center">Details</th>
-                                <th class="p-3 border-b text-center">Actions</th>
+                            <tr class="bg-gray-800 text-white text-left">
+                                <th class="p-3 text-center">Class Name</th>
+                                <th class="p-3 text-center">Class Head</th>
+                                <th class="p-3 text-center">Email</th>
+                                <th class="p-3 text-center">Details</th>
+                                <th class="p-3 text-center">Actions</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody class="divide-y divide-gray-300">
                             {% for class in classes %}
                             <tr data-class-id="{{ class.id }}">
                                 <form method="POST" action="{% url 'admin_class_edit' class.id %}">
                                     {% csrf_token %}
-                                    <td class="px-4 py-2 text-center border-b-2 border-b-gray-300 bg-gray-200 class-name">
+                                    <td class="p-3 text-center class-name">
                                         <input type="text" name="class_name" value="{{ class.class_name }}" class="hidden input-field p-2 rounded-md">
                                         <span class="display-field">{{ class.class_name }}</span>
                                     </td>
-                                    <td class="px-4 py-2 text-center border-b-2 border-b-gray-300 bg-gray-200 class-head">
+                                    <td class="p-3 text-center class-head">
                                         <input type="text" name="class_head" value="{{ class.class_head }}" class="hidden input-field p-2 rounded-md">
                                         <span class="display-field">{{ class.class_head }}</span>
                                     </td>
-                                    <td class="px-4 py-2 text-center border-b-2 border-b-gray-300 bg-gray-200 email">
+                                    <td class="p-3 text-center email">
                                         <input type="email" name="email" value="{{ class.email }}" class="hidden input-field p-2 rounded-md">
-                                        <span class="display-field">{{ class.email }}</span>
+                                        <span class="display-field"><a href="mailto:{{ class.email }}" class="text-purple-700 hover:underline">{{ class.email }}</a></span>
                                     </td>
-                                    <td class="px-4 py-2 text-center border-b-2 border-b-gray-300 bg-gray-200">
+                                    <td class="p-3 text-center">
                                         <a href="{% url 'admin_class_detail' class.id %}" class="text-gray-900 hover:underline">View</a>
                                     </td>
-                                    <td class="px-4 py-2 text-center border-b-2 border-b-gray-300 bg-gray-200">
+                                    <td class="p-3 text-center">
                                         <button type="button" class="edit-btn text-gray-900 hover:text-white border border-purple-600 hover:bg-purple-600 rounded-md px-2 py-1">
                                             <i class="fa-solid fa-pen-to-square"></i> &nbsp;Edit
                                         </button>

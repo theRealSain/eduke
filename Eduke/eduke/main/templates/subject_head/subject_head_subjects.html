@@ -143,27 +143,33 @@
             <!-- Students Section -->
             <div class="bg-white p-4 rounded-md shadow">
                 <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-lg font-bold">Students of {{ class_name }}</h3>
+                    <h3 class="text-lg font-bold">STUDENTS OF {{ class_name }}</h3>
                     <p class="font-bold text-purple-700 mr-[20px]">Total Students: {{ student_count }}</p>
                 </div>
 
                 <!-- Students Table -->
-                <table class="min-w-full table-auto border-collapse mt-[30px]">
+                <table class="w-full border-collapse rounded-xl overflow-hidden">
                   <thead>
-                    <tr class="bg-[#4f0074] text-white">
-                      <th class="p-3 border-b text-center mx-auto">Roll No</th>
-                      <th class="p-3 border-b text-center mx-auto">Name</th>
-                      <th class="p-3 border-b text-center mx-auto">Class</th>
-                      <th class="p-3 border-b text-center mx-auto">Information</th>
+                    <tr class="bg-gray-800 text-white text-left">
+                      <th class="p-3 text-center">Roll No</th>
+                      <th class="p-3 text-center">Name</th>
+                      <th class="p-3 text-center">Email</th>
+                      <th class="p-3 text-center">Class</th>
+                      <th class="p-3 text-center">Information</th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody class="divide-y divide-gray-300">
                     {% for student in students %}
                     <tr>
-                      <td class="px-4 py-2 text-center border-b-2 border-b-gray-300 bg-gray-200">{{ student.roll_no }}</td>
-                      <td class="px-4 py-2 text-center border-b-2 border-b-gray-300 bg-gray-200">{{ student.name }}</td>
-                      <td class="px-4 py-2 text-center border-b-2 border-b-gray-300 bg-gray-200">{{ class_name }}</td>
-                      <td class="px-4 py-2 text-center border-b-2 border-b-gray-300 bg-gray-200">Details</td>
+                      <td class="p-3 text-center">{{ student.roll_no }}</td>
+                      <td class="p-3 text-center">{{ student.name }}</td>
+                        <td class="p-3 text-center">
+                        <a href="mailto:{{ student.email }}" class="text-purple-700 hover:underline">{{ student.email }}</a>
+                        </td>
+                      <td class="p-3 text-center">{{ class_name }}</td>
+                      <td class="p-3 text-center">
+                        <a href="{% url 'subject_head_students' student.id %}" class="text-purple-700 hover:underline">Profile</a>
+                      </td>
                     </tr>
                     {% empty %}
                     <tr>

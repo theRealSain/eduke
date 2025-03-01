@@ -70,6 +70,12 @@
                 </a>
               </li>
               <li>
+                <a href="{% url 'parent_student_performance' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-chart-line"></i> &nbsp;
+                  Student Performance
+                </a>
+              </li>
+              <li>
                 <a href="{% url 'parent_chat' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
                   <i class="fa-solid fa-comments"></i> &nbsp;
                   Eduke Chat
@@ -99,6 +105,9 @@
                 <p class="text-gray-700">
                     As a parent, understanding your child's study and sleep habits is crucial for their academic success...
                 </p>
+                <p class="text-gray-700 font-semibold text-orange-600 p-2 rounded">
+                  ⚠️ Consider adding same sleep time for all subjects!
+                </p>
 
                 <!-- FORM STARTS HERE -->
                 <form method="POST" action="{% url 'parent_evaluation' %}">
@@ -108,13 +117,17 @@
                         <table class="w-full border-collapse rounded-xl overflow-hidden">
                             <thead>
                                 <tr class="bg-gray-800 text-white text-left">
-                                    <th class="p-3">Evaluation Type</th>
-                                    <th class="p-3">Action</th>
+                                    <th class="p-3">Subjects</th>
+                                    <th class="p-3">Sleep Time</th>
+                                    <th class="p-3">Study Time</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-300">
+                                {% for subject in subjects %}
                                 <tr>
-                                    <td class="p-2">Study Time</td>
+                                    <td class="p-2">{{ subject.name }}</td>
+
+                                    <!-- Sleep Time -->
                                     <td class="p-2">
                                         <div class="rating-container relative">
                                             <div class="star-overlay">
@@ -125,18 +138,17 @@
                                                 <i class="fa-regular fa-star"></i>
                                             </div>
                                             <input type="range" min="0" max="100" step="0.5"
-                                                value="{{ student.study_time_rating|default:0 }}" 
+                                                value="{{ subject.sleep_time_rating|default:0 }}"
                                                 class="rating-slider"
-                                                name="study_time_rating_{{ student.roll_no }}"
+                                                name="sleep_time_rating_{{ subject.id }}"
                                                 oninput="updateStarHighlight(this)">
                                             <span class="rating-value text-purple-700 font-semibold">
-                                                {{ student.study_time_rating|default:0 }}
+                                                {{ subject.sleep_time_rating|default:0 }}
                                             </span>
                                         </div>
                                     </td>
-                                </tr>
-                                <tr>
-                                    <td class="p-2">Sleep Time</td>
+
+                                    <!-- Study Time -->
                                     <td class="p-2">
                                         <div class="rating-container relative">
                                             <div class="star-overlay">
@@ -147,16 +159,19 @@
                                                 <i class="fa-regular fa-star"></i>
                                             </div>
                                             <input type="range" min="0" max="100" step="0.5"
-                                                value="{{ student.sleep_time_rating|default:0 }}" 
+                                                value="{{ subject.study_time_rating|default:0 }}"
                                                 class="rating-slider"
-                                                name="sleep_time_rating_{{ student.roll_no }}"
+                                                name="study_time_rating_{{ subject.id }}"
                                                 oninput="updateStarHighlight(this)">
                                             <span class="rating-value text-purple-700 font-semibold">
-                                                {{ student.sleep_time_rating|default:0 }}
+                                                {{ subject.study_time_rating|default:0 }}
                                             </span>
                                         </div>
                                     </td>
                                 </tr>
+                                {% endfor %}
+
+
                             </tbody>
                         </table>
                     </div>

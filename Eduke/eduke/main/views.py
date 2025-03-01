@@ -18,6 +18,7 @@ import pandas as pd
 from django.core.files.storage import FileSystemStorage
 import os, datetime
 import openpyxl
+from decimal import Decimal, ROUND_HALF_UP
 
 
 # Index page
@@ -630,7 +631,19 @@ def admin_student_edit(request, student_id):
         return redirect('admin_students')  # Redirect to the student list if student not found
 
 
-def admin_student_detail(request, student_id):
+
+from django.shortcuts import render, redirect
+from django.db import connection
+from django.contrib import messages
+
+def admin_student_performance(request, student_id):
+    if 'institution_id' not in request.session:
+        messages.error(request, 'Please log in to access this page.')
+        return redirect('login')
+    
+    institution_id = request.session['institution_id']
+    print(f"DEBUG: Institution ID from session - {institution_id}")
+    
     print(f"Received student_id: {student_id}, Type: {type(student_id)}")
 
     # Validate student_id
@@ -639,57 +652,136 @@ def admin_student_detail(request, student_id):
         messages.error(request, "Invalid student ID.")
         return redirect('admin_students')
 
-    # Check if the user is logged in
-    if 'institution_id' not in request.session:
-        print("User not logged in, redirecting to login page.")
-        messages.error(request, 'Please log in to access this page.')
-        return redirect('login')
+    try:
+        with connection.cursor() as cursor:
+            # Fetch student details (excluding parent details)
+            cursor.execute("""
+                SELECT 
+                    s.id, s.roll_no, s.name, s.email, s.class_obj_id, c.class_name
+                FROM main_students s
+                JOIN main_classes c ON s.class_obj_id = c.id
+                WHERE s.id = %s
+            """, [student_id])
+            student_row = cursor.fetchone()
+            
+            if not student_row:
+                print("Student not found, redirecting to admin_students.")
+                messages.error(request, "Student not found.")
+                return redirect('admin_students')
 
-    # Get the institution_id from the session
-    institution_id = request.session['institution_id']
-    print(f"Institution ID from session: {institution_id}")
+            student = {
+                'id': student_row[0],
+                'roll_no': student_row[1],
+                'name': student_row[2],
+                'email': student_row[3],
+                'class_id': student_row[4],
+                'class_name': student_row[5],
+            }
+            print(f"Student Name: {student['name']}")
 
-    with connection.cursor() as cursor:
-        # Fetch institution details
-        cursor.execute("SELECT institution_name FROM main_institution WHERE institution_id = %s", [institution_id])
-        institution_row = cursor.fetchone()
-        if not institution_row:
-            print("Institution not found, redirecting to login.")
-            messages.error(request, "Institution not found.")
-            return redirect('login')
-        institution_name = institution_row[0]
-        print(f"Institution Name: {institution_name}")
+        # Extract subject_id from GET request
+        subject_id = request.GET.get('subject_id', None)
 
-        # Fetch student details (excluding parent details)
-        cursor.execute("""
-            SELECT 
-                s.id, s.roll_no, s.name, s.email, c.class_name
-            FROM main_students s
-            JOIN main_classes c ON s.class_obj_id = c.id
-            WHERE s.id = %s
-        """, [student_id])
-        student_row = cursor.fetchone()
-        if not student_row:
-            print("Student not found, redirecting to admin_students.")
-            messages.error(request, "Student not found.")
-            return redirect('admin_students')
+        # Fetch subjects for the student's class
+        subjects = []
+        if student.get("class_id"):
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                    SELECT id, subject_name FROM main_subjects WHERE class_obj_id = %s
+                """, [student["class_id"]])
+                subjects = [{"id": row[0], "name": row[1]} for row in cursor.fetchall()]
 
-        student_obj = {
-            'id': student_row[0],
-            'roll_no': student_row[1],
-            'name': student_row[2],
-            'email': student_row[3],
-            'class_name': student_row[4],
+        # Get the name of the selected subject
+        selected_subject_name = None
+        if subject_id:
+            selected_subject_name = next((s["name"] for s in subjects if str(s["id"]) == subject_id), None)
+            print(f"[DEBUG] Selected Subject: {selected_subject_name} (ID: {subject_id})")
+
+        # Initialize default evaluation data
+        evaluations = {
+            "marks_percentage": 0,
+            "attendance_percentage": 0,
+            "study_time_rating": 0,
+            "sleep_time_rating": 0,
+            "class_participation_rating": 0,
+            "academic_activity_rating": 0,
         }
-        print(f"Student Name: {student_obj['name']}")
+
+        # Fetch student evaluation details for the selected subject
+        if subject_id:
+            print(f"[DEBUG] Fetching evaluation data for subject: {selected_subject_name} (ID: {subject_id})...")
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                    SELECT marks_percentage, attendance_percentage,
+                           study_time_rating, sleep_time_rating, 
+                           class_participation_rating, academic_activity_rating
+                    FROM main_studentevaluation
+                    WHERE student_id = %s AND subject_id = %s
+                """, [student_id, subject_id])
+                row = cursor.fetchone()
+
+                if row:
+                    evaluations = {
+                        "marks_percentage": round(row[0] or 0, 2),
+                        "attendance_percentage": round(row[1] or 0, 2),
+                        "study_time_rating": round(row[2] or 0, 2),
+                        "sleep_time_rating": round(row[3] or 0, 2),
+                        "class_participation_rating": round(row[4] or 0, 2),
+                        "academic_activity_rating": round(row[5] or 0, 2),
+                    }
+                    print(f"[DEBUG] Evaluation Data: {evaluations}")
+                else:
+                    print(f"[WARNING] No evaluation data found for {selected_subject_name}.")
+
+        # Fetch quiz performance for the selected subject
+        quiz_percentage = 0
+        if subject_id:
+            print(f"[DEBUG] Fetching quiz performance for {selected_subject_name} (ID: {subject_id})...")
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                    SELECT COUNT(*) AS total_attempted,
+                           SUM(CASE WHEN q.correct_option = r.student_response THEN 1 ELSE 0 END) AS correct_answers
+                    FROM main_quizresponse r
+                    JOIN main_quizquestions q ON r.question_id = q.id
+                    JOIN main_quizzes mq ON q.quiz_id = mq.id
+                    WHERE r.student_id = %s AND mq.subject_id = %s
+                """, [student_id, subject_id])
+                row = cursor.fetchone()
+
+                if row:
+                    total_attempted, correct_answers = row[0], row[1] or 0
+                    quiz_percentage = round((correct_answers / total_attempted) * 100, 2) if total_attempted > 0 else 0
+                    print(f"[DEBUG] Quiz Performance: Attempted = {total_attempted}, Correct = {correct_answers}, Percentage = {quiz_percentage}%")
+                else:
+                    print(f"[WARNING] No quiz data found for {selected_subject_name}.")
+
+        # Prepare data for Graph
+        graph_data = [
+            float(evaluations.get("marks_percentage", 0)),
+            float(evaluations.get("attendance_percentage", 0)),
+            float(evaluations.get("study_time_rating", 0)),
+            float(evaluations.get("sleep_time_rating", 0)),
+            float(evaluations.get("class_participation_rating", 0)),
+            float(evaluations.get("academic_activity_rating", 0)),
+            float(quiz_percentage)
+        ]
+
+    except Exception as e:
+        print(f"[ERROR] An error occurred: {e}")
+        return redirect('error_page')  # Redirect to an error page if needed
 
     # Prepare context for the template
     context = {
-        'institution_name': institution_name,
-        'student_obj': student_obj,
+        'student': student,
+        'subjects': subjects,
+        'selected_subject_id': subject_id,
+        'evaluations': evaluations,
+        'quiz_percentage': quiz_percentage,
+        "graph_data": json.dumps(graph_data)
     }
 
-    return render(request, 'admin/admin_student_detail.html', context)
+    return render(request, 'admin/admin_student_performance.html', context)
+
 
 
 
@@ -1225,119 +1317,6 @@ def class_head_class(request):
     })
 
 
-def class_head_students(request):
-    class_id = request.session.get('class_id')
-    if not class_id:
-        return redirect('class_head_login')  # Redirect to login if not logged in
-    
-    # Fetch the class details for the logged-in class head
-    try:
-        class_details = Classes.objects.get(id=class_id)  # Retrieve class using the class_id
-    except Classes.DoesNotExist:
-        messages.error(request, 'Class not found.')
-        return redirect('class_head_login')
-
-    # Fetch all students assigned to this class
-    students = Students.objects.filter(class_obj=class_details)
-
-    if request.method == 'POST':
-        # Get input data from the form
-        roll_no = request.POST.get('roll_no')
-        student_name = request.POST.get('name')
-
-        # Validate input fields
-        if not roll_no or not student_name:
-            messages.error(request, "Roll number and name are required.")
-            return redirect('class_head_students')
-
-        try:
-            with transaction.atomic():
-                # 1. Add student data to the Users table
-                student_user = Users.objects.create(role='student')
-
-                # 2. Add student data to the Students table, with the class_id from the logged-in class
-                student = Students.objects.create(
-                    roll_no=roll_no,
-                    password=roll_no,  # Default password is roll_no
-                    user=student_user,  # Link the user_id to the student user created above
-                    class_obj=class_details,  # Set class_obj to the logged-in class
-                    name=student_name,
-                )
-
-                # 3. Add parent data to the Users table
-                parent_user = Users.objects.create(role='parent')
-
-                # 4. Add parent data to the Parents table, associating the parent with the student
-                Parents.objects.create(
-                    password=roll_no,  # Default password is same as student's roll_no
-                    student=student,  # Link the parent to the created student
-                    user=parent_user,  # Link the user_id to the parent user created above
-                )
-
-                messages.success(request, "Student and parent records added successfully!")
-                return redirect('class_head_students')  # Redirect to the same page to refresh
-
-        except Exception as e:
-            messages.error(request, f"Error adding student and parent: {str(e)}")
-            return redirect('class_head_students')
-
-    # Render the page with student data and the class details
-    return render(request, 'class_head/class_head_students.html', {
-        'students': students,
-        'class_name': class_details.class_name,  # Pass the class name to the template
-        'class_id': class_details.id,  # Pass the class ID to the template
-    })
-
-
-def class_head_subjects(request):
-    class_id = request.session.get('class_id')
-    if not class_id:
-        return redirect('class_head_login')  # Redirect to login if not logged in
-
-    try:
-        class_details = Classes.objects.get(id=class_id)
-        subjects = Subjects.objects.filter(class_obj=class_details)  # Fetch subjects for the class
-    except Classes.DoesNotExist:
-        messages.error(request, 'Class not found.')
-        return redirect('class_head_login')
-
-    if request.method == 'POST':
-        form = AddSubjectForm(request.POST)
-        if form.is_valid():
-            try:
-                with transaction.atomic():
-                    subject_name = form.cleaned_data['subject_name']
-                    subject_head = form.cleaned_data['subject_head']
-                    email = form.cleaned_data['email']
-                    password = form.cleaned_data['password']
-
-                    user = Users.objects.create(role='subject_head')
-
-                    subject = Subjects.objects.create(
-                        subject_name=subject_name,
-                        subject_head=subject_head,
-                        email=email,
-                        password=password,
-                        user=user,
-                        class_obj=class_details
-                    )
-
-                messages.success(request, "Subject added successfully!")
-                return redirect('class_head_subjects')
-            except Exception as e:
-                messages.error(request, f"Error adding subject: {str(e)}")
-        else:
-            messages.error(request, "Invalid input. Please check the form.")
-
-    else:
-        form = AddSubjectForm()
-
-    return render(request, 'class_head/class_head_subjects.html', {
-        'class_name': class_details.class_name,
-        'class_id': class_id,
-        'form': form,
-        'subjects': subjects,  # Pass subjects to the template
-    })
 
 
 def class_head_profile(request):
@@ -1540,33 +1519,197 @@ def class_head_chat_user(request, user_id):
 
 
 
-def class_head_student_profile(request, roll_no):
+
+def class_head_students(request):
+    class_id = request.session.get('class_id')
+
+    if not class_id:
+        print("❌ Class ID not found in session. Redirecting to login.")
+        return redirect('class_head_login')  # Redirect to login if not logged in
+
+    with connection.cursor() as cursor:
+        # Fetch class name
+        cursor.execute("""
+            SELECT class_name FROM main_classes WHERE id = %s
+        """, [class_id])
+        class_name = cursor.fetchone()
+
+        if class_name:
+            class_name = class_name[0]  # Extract the class name value
+            print(f"🏫 Class Name: {class_name}")
+        else:
+            print(f"⚠️ No class found for class_id: {class_id}")
+            class_name = "N/A"
+
+        # Fetch all students for the logged-in class
+        cursor.execute("""
+            SELECT id, name, roll_no, email FROM main_students
+            WHERE class_obj_id = %s
+        """, [class_id])
+        
+        students = cursor.fetchall()
+
+        if not students:
+            print(f"⚠️ No students found for class_id: {class_id}")
+        else:
+            print(f"✅ Found {len(students)} students for class_id: {class_id}")
+
+        # Convert student data to a list of dictionaries
+        student_list = []
+        for student in students:
+            student_data = {
+                "id": student[0],
+                "name": student[1],
+                "roll_no": student[2],
+                "email": student[3] if student[3] else "N/A"
+            }
+            student_list.append(student_data)
+
+        print("📌 Student List:", student_list)  # Debugging: Print the final list
+
+    return render(request, 'class_head/class_head_students.html', {
+        "class_name": class_name,
+        "students": student_list
+    })
+
+
+
+
+def class_head_student_performance(request, student_id):
     # Retrieve the class_id from session
     class_id = request.session.get('class_id')
 
     if not class_id:
+        print("[ERROR] No class_id found in session. Redirecting to class_head login.")
         return redirect('class_head_login')
 
-    # Fetch student details using class_obj_id
-    student = Students.objects.filter(roll_no=roll_no, class_obj_id=class_id).first()
+    subject_id = request.GET.get('subject_id')  # Get the selected subject from query params
+    print(f"\n[INFO] Class Head Student Performance View Loaded for Student ID: {student_id}")
+    if subject_id:
+        print(f"[INFO] Selected Subject ID: {subject_id}")
 
-    if not student:
-        return HttpResponse("Student not found", status=404)
+    student_data = {}
+    evaluations = {}
+    quiz_percentage = 0  # Default value to avoid None issues
+    subjects = []
+    selected_subject_name = None
 
-    # Fetch class details
-    student_class = Classes.objects.filter(id=student.class_obj_id).first()
+    try:
+        with connection.cursor() as cursor:
+            # Fetch student details
+            cursor.execute("""
+                SELECT s.id, s.name, s.roll_no, c.class_name, s.email, c.id AS class_id
+                FROM main_students s
+                JOIN main_classes c ON s.class_obj_id = c.id
+                WHERE s.id = %s AND s.class_obj_id = %s
+            """, [student_id, class_id])
+            row = cursor.fetchone()
 
-    # Fetch institution details
-    institution = Institution.objects.filter(institution_id=student_class.institution_id).first() if student_class else None
+            if row:
+                student_data = {
+                    "id": row[0],  # ✅ Corrected: Student ID
+                    "name": row[1],  # ✅ Student Name
+                    "roll_no": row[2],
+                    "class_name": row[3],
+                    "email": row[4] if row[4] else "--",
+                    "class_id": row[5]
+                }
+                print(f"[DEBUG] Student Details: {student_data}")
+            else:
+                print("[ERROR] Student not found or does not belong to this class.")
+                return redirect('class_head_dashboard')
+
+        # Fetch subjects for the student's class
+        if student_data.get("class_id"):
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                    SELECT id, subject_name FROM main_subjects WHERE class_obj_id = %s
+                """, [student_data["class_id"]])
+                subjects = [{"id": row[0], "name": row[1]} for row in cursor.fetchall()]
+
+            # Get the name of the selected subject
+            selected_subject_name = next((s["name"] for s in subjects if str(s["id"]) == subject_id), None)
+
+            if selected_subject_name:
+                print(f"[DEBUG] Selected Subject: {selected_subject_name} (ID: {subject_id})")
+            else:
+                print("[WARNING] Selected subject not found in student's class subjects.")
+
+        # Fetch student evaluation details for the selected subject
+        if subject_id:
+            print(f"[DEBUG] Fetching evaluation data for subject: {selected_subject_name} (ID: {subject_id})...")
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                    SELECT marks_percentage, attendance_percentage,
+                           study_time_rating, sleep_time_rating, 
+                           class_participation_rating, academic_activity_rating
+                    FROM main_studentevaluation
+                    WHERE student_id = %s AND subject_id = %s
+                """, [student_id, subject_id])
+                row = cursor.fetchone()
+
+                if row:
+                    evaluations = {
+                        "marks_percentage": round(row[0] or 0, 2),
+                        "attendance_percentage": round(row[1] or 0, 2),
+                        "study_time_rating": round(row[2] or 0, 2),
+                        "sleep_time_rating": round(row[3] or 0, 2),
+                        "class_participation_rating": round(row[4] or 0, 2),
+                        "academic_activity_rating": round(row[5] or 0, 2),
+                    }
+                    print(f"[DEBUG] Evaluation Data: {evaluations}")
+                else:
+                    print(f"[WARNING] No evaluation data found for {selected_subject_name}.")
+        
+        # Fetch quiz performance for the selected subject
+        if subject_id:
+            print(f"[DEBUG] Fetching quiz performance for {selected_subject_name} (ID: {subject_id})...")
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                    SELECT COUNT(*) AS total_attempted,
+                           SUM(CASE WHEN q.correct_option = r.student_response THEN 1 ELSE 0 END) AS correct_answers
+                    FROM main_quizresponse r
+                    JOIN main_quizquestions q ON r.question_id = q.id
+                    JOIN main_quizzes mq ON q.quiz_id = mq.id
+                    WHERE r.student_id = %s AND mq.subject_id = %s
+                """, [student_id, subject_id])
+                row = cursor.fetchone()
+
+                if row:
+                    total_attempted, correct_answers = row[0], row[1] or 0
+                    quiz_percentage = round((correct_answers / total_attempted) * 100, 2) if total_attempted > 0 else 0
+                    print(f"[DEBUG] Quiz Performance: Attempted = {total_attempted}, Correct = {correct_answers}, Percentage = {quiz_percentage}%")
+                else:
+                    print(f"[WARNING] No quiz data found for {selected_subject_name}.")
+
+        # Prepare data for Graph
+        graph_data = [
+            float(evaluations.get("marks_percentage", 0)),
+            float(evaluations.get("attendance_percentage", 0)),
+            float(evaluations.get("study_time_rating", 0)),
+            float(evaluations.get("sleep_time_rating", 0)),
+            float(evaluations.get("class_participation_rating", 0)),
+            float(evaluations.get("academic_activity_rating", 0)),
+            float(quiz_percentage)
+        ]
+
+    except Exception as e:
+        print(f"[ERROR] An error occurred: {e}")
+        return redirect('error_page')  # Redirect to an error page if needed
 
     context = {
-        'name': student.name,
-        'roll_no': student.roll_no,
-        'class_name': student_class.class_name if student_class else "N/A",
-        'institution_name': institution.institution_name if institution else "N/A",
+        "student": student_data,  # ✅ Now contains `id`
+        "evaluations": evaluations,
+        "quiz_percentage": quiz_percentage,
+        "subjects": subjects,
+        "selected_subject_id": int(subject_id) if subject_id else None,
+        "graph_data": json.dumps(graph_data)  # ✅ Ensure JSON-safe format
     }
 
-    return render(request, 'class_head/class_head_student_profile.html', context)
+    print("[INFO] Final Context Data Prepared for Rendering.")
+    return render(request, "class_head/class_head_student_performance.html", context)
+
+
 
 
 
@@ -1693,12 +1836,12 @@ def subject_head_class(request):
     # Fetch students under this class
     with connection.cursor() as cursor:
         cursor.execute("""
-            SELECT roll_no, name
+            SELECT id, roll_no, name, email
             FROM main_students
             WHERE class_obj_id = (SELECT class_obj_id FROM main_subjects WHERE id = %s)
         """, [subject_id])
         students = [
-            {'roll_no': row[0], 'name': row[1]}
+            {'id': row[0], 'roll_no': row[1], 'name': row[2], 'email': row[3]}
             for row in cursor.fetchall()
         ]
 
@@ -1754,12 +1897,12 @@ def subject_head_subjects(request):
     # Fetch students under this subject's class
     with connection.cursor() as cursor:
         cursor.execute("""
-            SELECT roll_no, name
+            SELECT id, roll_no, name, email
             FROM main_students
             WHERE class_obj_id = (SELECT class_obj_id FROM main_subjects WHERE id = %s)
         """, [subject_id])
         students = [
-            {'roll_no': row[0], 'name': row[1]}
+            {'id': row[0], 'roll_no': row[1], 'name': row[2], 'email': row[3]}
             for row in cursor.fetchall()
         ]
 
@@ -1896,7 +2039,7 @@ def subject_head_chat(request):
             ) AS name
         FROM main_users u
         LEFT JOIN main_students st ON u.id = st.user_id AND u.role = 'student' AND st.class_obj_id = %s
-        LEFT JOIN main_parents p ON u.id = p.user_id AND u.role = 'parent'
+        LEFT JOIN main_parents p ON u.id = p.user_id AND u.role = 'parent'  
         LEFT JOIN main_students st2 ON p.student_id = st2.roll_no AND u.role = 'parent' AND st2.class_obj_id = %s
         LEFT JOIN main_classes c ON u.id = c.user_id AND u.role = 'class_head' AND c.id = %s
         LEFT JOIN main_subjects s ON u.id = s.user_id AND u.role = 'subject_head' AND s.class_obj_id = %s
@@ -2800,8 +2943,6 @@ def delete_attendance(request):
 
 
 
-from django.shortcuts import redirect
-from django.contrib import messages
 
 def subject_head_evaluation(request):
     subject_id = request.session.get('subject_id')
@@ -2904,6 +3045,109 @@ def subject_head_evaluation(request):
         return redirect('subject_head_evaluation')
 
     return render(request, 'subject_head/subject_head_evaluation.html', {'students': student_list})
+
+
+
+
+def subject_head_students(request, student_id):
+    subject_id = request.session.get('subject_id')
+
+    if not subject_id:
+        print("❌ Subject ID not found in session. Redirecting to login.")
+        return redirect('subject_head_login')
+
+    with connection.cursor() as cursor:
+        # Fetch student details
+        cursor.execute("""
+            SELECT s.name, s.roll_no, c.class_name, s.email 
+            FROM main_students s
+            LEFT JOIN main_classes c ON s.class_obj_id = c.id
+            WHERE s.id = %s
+        """, [student_id])
+        student = cursor.fetchone()
+
+        if not student:
+            return redirect('subject_head_dashboard')
+
+        student_data = {
+            "name": student[0],
+            "roll_no": student[1],
+            "class_name": student[2] if student[2] else "N/A",
+            "email": student[3] if student[3] else "N/A"
+        }
+
+        # Fetch evaluation details
+        cursor.execute("""
+            SELECT study_time_rating, sleep_time_rating, class_participation_rating, 
+                   academic_activity_rating, attendance_percentage, marks_percentage
+            FROM main_studentevaluation
+            WHERE student_id = %s AND subject_id = %s
+        """, [student_id, subject_id])
+        evaluation = cursor.fetchone()
+
+        evaluations = {
+            "study_time_rating": round(evaluation[0], 2) if evaluation and evaluation[0] is not None else "--",
+            "sleep_time_rating": round(evaluation[1], 2) if evaluation and evaluation[1] is not None else "--",
+            "class_participation_rating": round(evaluation[2], 2) if evaluation and evaluation[2] is not None else "--",
+            "academic_activity_rating": round(evaluation[3], 2) if evaluation and evaluation[3] is not None else "--",
+            "attendance_percentage": round(evaluation[4], 2) if evaluation and evaluation[4] is not None else "--",
+            "marks_percentage": round(evaluation[5], 2) if evaluation and evaluation[5] is not None else "--",
+        }
+
+        # Calculate attendance percentage
+        cursor.execute("SELECT COUNT(*) FROM main_attendance WHERE student_id = %s AND subject_id = %s", [student_id, subject_id])
+        total_attendance = cursor.fetchone()[0] or 0
+
+        cursor.execute("SELECT COUNT(*) FROM main_attendance WHERE student_id = %s AND subject_id = %s AND status = 'present'", [student_id, subject_id])
+        present_attendance = cursor.fetchone()[0] or 0
+
+        attendance_percentage = round((present_attendance / total_attendance) * 100, 2) if total_attendance > 0 else "--"
+
+        # Fetch marks percentage
+        cursor.execute("SELECT mark_percentage FROM main_marks WHERE student_id = %s AND subject_id = %s", [student_id, subject_id])
+        marks_percentage = cursor.fetchone()
+        marks_percentage = marks_percentage[0] if marks_percentage and marks_percentage[0] is not None else "--"
+
+        # Calculate quiz performance percentage
+        cursor.execute("""
+            SELECT COUNT(*) FROM main_quizresponse r
+            JOIN main_quizquestions q ON r.question_id = q.id
+            JOIN main_quizzes mq ON q.quiz_id = mq.id
+            WHERE r.student_id = %s AND mq.subject_id = %s
+        """, [student_id, subject_id])
+        total_quizzes = cursor.fetchone()[0] or 0
+
+        cursor.execute("""
+            SELECT COUNT(*) FROM main_quizresponse r
+            JOIN main_quizquestions q ON r.question_id = q.id
+            JOIN main_quizzes mq ON q.quiz_id = mq.id
+            WHERE r.student_id = %s AND mq.subject_id = %s AND r.student_response = q.correct_option
+        """, [student_id, subject_id])
+        correct_quizzes = cursor.fetchone()[0] or 0
+
+        quiz_percentage = round((correct_quizzes / total_quizzes) * 100, 2) if total_quizzes > 0 else "--"
+
+    # Prepare graph data
+    graph_data = [
+        marks_percentage if marks_percentage != "--" else 0,
+        attendance_percentage if attendance_percentage != "--" else 0,
+        evaluations["study_time_rating"] if evaluations["study_time_rating"] != "--" else 0,
+        evaluations["sleep_time_rating"] if evaluations["sleep_time_rating"] != "--" else 0,
+        evaluations["class_participation_rating"] if evaluations["class_participation_rating"] != "--" else 0,
+        evaluations["academic_activity_rating"] if evaluations["academic_activity_rating"] != "--" else 0,
+        quiz_percentage if quiz_percentage != "--" else 0
+    ]
+
+    context = {
+        "student": student_data,
+        "evaluations": evaluations,
+        "attendance_percentage": attendance_percentage,
+        "marks_percentage": marks_percentage,
+        "quiz_percentage": quiz_percentage,
+        "graph_data": json.dumps(graph_data)  # Ensure JSON formatting
+    }
+
+    return render(request, 'subject_head/subject_head_students.html', context)
 
 
 
@@ -3451,6 +3695,149 @@ def student_quiz(request, subject_id, quiz_id):
 
 
 
+from django.db import connection
+
+from django.shortcuts import render, redirect
+from django.db import connection
+
+def student_performance(request):
+    if 'student_id' not in request.session:
+        print("[DEBUG] Redirecting to student login (no student_id in session).")
+        return redirect('student_login')
+
+    student_id = request.session['student_id']
+    subject_id = request.GET.get('subject_id')  # Get the selected subject from query params
+
+    print(f"\n[INFO] Student Performance View Loaded for Student ID: {student_id}")
+    if subject_id:
+        print(f"[INFO] Selected Subject ID: {subject_id}")
+
+    student_data = {}
+    evaluations = {}
+    quiz_percentage = 0  # Initialize with 0 instead of "--" to avoid issues in float conversion
+    subjects = []
+    selected_subject_name = None
+
+    try:
+        with connection.cursor() as cursor:
+            # Fetch student details along with class info
+            cursor.execute("""
+                SELECT s.name, s.roll_no, c.class_name, s.email, c.id AS class_id
+                FROM main_students s
+                JOIN main_classes c ON s.class_obj_id = c.id
+                WHERE s.id = %s
+            """, [student_id])
+            row = cursor.fetchone()
+            
+            if row:
+                student_data = {
+                    "name": row[0],
+                    "roll_no": row[1],
+                    "class_name": row[2],
+                    "email": row[3],
+                    "class_id": row[4]
+                }
+                print(f"[DEBUG] Student Details: {student_data}")
+            else:
+                print("[ERROR] Student data not found!")
+                return redirect('student_dashboard')
+
+        # Fetch subjects for the student's class
+        if student_data.get("class_id"):
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                    SELECT id, subject_name FROM main_subjects WHERE class_obj_id = %s
+                """, [student_data["class_id"]])
+                subjects = [{"id": row[0], "name": row[1]} for row in cursor.fetchall()]
+
+            # Get the name of the selected subject
+            selected_subject_name = next((s["name"] for s in subjects if str(s["id"]) == subject_id), None)
+            
+            if selected_subject_name:
+                print(f"[DEBUG] Selected Subject: {selected_subject_name} (ID: {subject_id})")
+            else:
+                print("[WARNING] Selected subject not found in student's class subjects.")
+
+        # Fetch student evaluation details for the selected subject
+        if subject_id:
+            print(f"[DEBUG] Fetching evaluation data for subject: {selected_subject_name} (ID: {subject_id})...")
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                    SELECT marks_percentage, attendance_percentage,
+                           study_time_rating, sleep_time_rating, 
+                           class_participation_rating, academic_activity_rating
+                    FROM main_studentevaluation
+                    WHERE student_id = %s AND subject_id = %s
+                """, [student_id, subject_id])
+                row = cursor.fetchone()
+
+                if row:
+                    evaluations = {
+                        "marks_percentage": round(row[0] or 0, 2),
+                        "attendance_percentage": round(row[1] or 0, 2),
+                        "study_time_rating": round(row[2] or 0, 2),
+                        "sleep_time_rating": round(row[3] or 0, 2),
+                        "class_participation_rating": round(row[4] or 0, 2),
+                        "academic_activity_rating": round(row[5] or 0, 2),
+                    }
+                    print(f"[DEBUG] Evaluation Data: {evaluations}")
+                else:
+                    print(f"[WARNING] No evaluation data found for {selected_subject_name}.")
+
+        # Fetch quiz performance for the selected subject
+        if subject_id:
+            print(f"[DEBUG] Fetching quiz performance for {selected_subject_name} (ID: {subject_id})...")
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                    SELECT COUNT(*) AS total_attempted,
+                           SUM(CASE WHEN q.correct_option = r.student_response THEN 1 ELSE 0 END) AS correct_answers
+                    FROM main_quizresponse r
+                    JOIN main_quizquestions q ON r.question_id = q.id
+                    JOIN main_quizzes mq ON q.quiz_id = mq.id
+                    WHERE r.student_id = %s AND mq.subject_id = %s
+                """, [student_id, subject_id])
+                row = cursor.fetchone()
+
+                if row:
+                    total_attempted, correct_answers = row[0], row[1] or 0
+                    quiz_percentage = round((correct_answers / total_attempted) * 100, 2) if total_attempted > 0 else 0
+                    print(f"[DEBUG] Quiz Performance: Attempted = {total_attempted}, Correct = {correct_answers}, Percentage = {quiz_percentage}%")
+                else:
+                    print(f"[WARNING] No quiz data found for {selected_subject_name}.")
+
+        # Prepare data for Graph
+        graph_data = [
+            float(evaluations.get("marks_percentage", 0)),
+            float(evaluations.get("attendance_percentage", 0)),
+            float(evaluations.get("study_time_rating", 0)),
+            float(evaluations.get("sleep_time_rating", 0)),
+            float(evaluations.get("class_participation_rating", 0)),
+            float(evaluations.get("academic_activity_rating", 0)),
+            float(quiz_percentage)
+        ]
+
+    except Exception as e:
+        print(f"[ERROR] An error occurred: {e}")
+        return redirect('error_page')  # Redirect to an error page if needed
+
+    context = {
+        "student": student_data,
+        "evaluations": evaluations,
+        "quiz_percentage": quiz_percentage,
+        "subjects": subjects,
+        "selected_subject_id": int(subject_id) if subject_id else None,
+        "graph_data": graph_data  # Add graph data to the context
+    }
+
+    print("[INFO] Final Context Data Prepared for Rendering.")
+    return render(request, "students/student_performance.html", context)
+
+
+
+
+
+
+
 
 ######################################################################################################################
 
@@ -3655,7 +4042,7 @@ def parent_class(request):
 
         # Fetch students
         cursor.execute("""
-            SELECT roll_no, name FROM main_students
+            SELECT roll_no, name, email FROM main_students
             WHERE class_obj_id = %s
         """, [student_class_id])
         students = cursor.fetchall()
@@ -3903,12 +4290,12 @@ def parent_evaluation(request):
     parent_id = request.session.get('parent_id')  # Get parent ID from session
     if not parent_id:
         print("❌ Parent ID not found in session. Redirecting to login.")
-        return redirect('parent_login')  # Redirect to login if not logged in
+        return redirect('parent_login')
 
     # Fetch the parent's associated student details
     with connection.cursor() as cursor:
         cursor.execute("""
-            SELECT main_students.id, main_students.name, main_students.roll_no 
+            SELECT main_students.id, main_students.name, main_students.roll_no, main_students.class_obj_id
             FROM main_students 
             JOIN main_parents ON main_students.id = main_parents.student_id
             WHERE main_parents.id = %s
@@ -3917,80 +4304,219 @@ def parent_evaluation(request):
 
     if not student:
         print("❌ No student found for this parent.")
-        return render(request, 'parents/parent_evaluation.html', {'student': None})
+        return render(request, 'parents/parent_evaluation.html', {'student': None, 'subjects': []})
 
-    student_id, student_name, roll_no = student
+    student_id, student_name, roll_no, class_id = student
 
-    # Fetch existing evaluation data for this student
-    evaluation_data = {}
+    # Fetch subjects for the student's class
     with connection.cursor() as cursor:
         cursor.execute("""
-            SELECT study_time_rating, sleep_time_rating 
+            SELECT id, subject_name FROM main_subjects WHERE class_obj_id = %s
+        """, [class_id])
+        subjects = cursor.fetchall()
+
+    # Fetch existing evaluation data per subject
+    evaluation_data = []
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT subject_id, study_time_rating, sleep_time_rating 
             FROM main_studentevaluation 
             WHERE student_id = %s
         """, [student_id])
-        evaluation = cursor.fetchone()
+        evaluations = {row[0]: row for row in cursor.fetchall()}  # Convert to dictionary with subject_id as key
 
-    if evaluation:
-        evaluation_data['study_time_rating'] = evaluation[0] if evaluation[0] is not None else 0
-        evaluation_data['sleep_time_rating'] = evaluation[1] if evaluation[1] is not None else 0
-    else:
-        evaluation_data['study_time_rating'] = 0
-        evaluation_data['sleep_time_rating'] = 0
+    # Prepare structured evaluation data
+    structured_subjects = []
+    for subject in subjects:
+        subject_id, subject_name = subject
+        structured_subjects.append({
+            'id': subject_id,
+            'name': subject_name,
+            'study_time_rating': evaluations.get(subject_id, [None, 0, 0])[1],  # Default 0 if not found
+            'sleep_time_rating': evaluations.get(subject_id, [None, 0, 0])[2],  # Default 0 if not found
+        })
 
     # Handle form submission
     if request.method == "POST":
         print("✅ Form submission received.")
 
-        # Extract rating values from POST request
-        study_time_rating = request.POST.get(f"study_time_rating_{roll_no}")
-        sleep_time_rating = request.POST.get(f"sleep_time_rating_{roll_no}")
+        for subject in structured_subjects:
+            subject_id = subject['id']
+            study_time_rating = request.POST.get(f"study_time_rating_{subject_id}")
+            sleep_time_rating = request.POST.get(f"sleep_time_rating_{subject_id}")
 
-        print(f"🔍 Received Ratings: Study Time = {study_time_rating}, Sleep Time = {sleep_time_rating}")
+            try:
+                study_time_rating = float(study_time_rating) if study_time_rating else 0
+                sleep_time_rating = float(sleep_time_rating) if sleep_time_rating else 0
+            except ValueError:
+                print(f"❌ Invalid rating values for subject {subject['name']}. Skipping update.")
+                continue
 
-        # Convert to float if values exist
-        try:
-            study_time_rating = float(study_time_rating) if study_time_rating else 0
-            sleep_time_rating = float(sleep_time_rating) if sleep_time_rating else 0
-        except ValueError:
-            print("❌ Invalid rating values received. Skipping update.")
-            study_time_rating = evaluation_data['study_time_rating']
-            sleep_time_rating = evaluation_data['sleep_time_rating']
-
-        # Check if an evaluation already exists for the student
-        with connection.cursor() as cursor:
-            cursor.execute("""
-                SELECT id FROM main_studentevaluation WHERE student_id = %s
-            """, [student_id])
-            existing_record = cursor.fetchone()
-
-            if existing_record:
-                # Update the existing record
-                print("🔄 Updating existing student evaluation record.")
+            with connection.cursor() as cursor:
                 cursor.execute("""
-                    UPDATE main_studentevaluation 
-                    SET study_time_rating = %s, sleep_time_rating = %s 
-                    WHERE student_id = %s
-                """, [study_time_rating, sleep_time_rating, student_id])
-            else:
-                # Insert a new record
-                print("➕ Inserting new student evaluation record.")
-                cursor.execute("""
-                    INSERT INTO main_studentevaluation (student_id, study_time_rating, sleep_time_rating)
-                    VALUES (%s, %s, %s)
-                """, [student_id, study_time_rating, sleep_time_rating])
+                    SELECT id FROM main_studentevaluation 
+                    WHERE student_id = %s AND subject_id = %s
+                """, [student_id, subject_id])
+                existing_record = cursor.fetchone()
+
+                if existing_record:
+                    cursor.execute("""
+                        UPDATE main_studentevaluation 
+                        SET study_time_rating = %s, sleep_time_rating = %s 
+                        WHERE student_id = %s AND subject_id = %s
+                    """, [study_time_rating, sleep_time_rating, student_id, subject_id])
+                else:
+                    cursor.execute("""
+                        INSERT INTO main_studentevaluation (student_id, subject_id, study_time_rating, sleep_time_rating)
+                        VALUES (%s, %s, %s, %s)
+                    """, [student_id, subject_id, study_time_rating, sleep_time_rating])
 
         messages.success(request, "Student evaluation updated successfully!")
-        return redirect('parent_evaluation')  # Redirect to refresh the page
+        return redirect('parent_evaluation')
 
-    return render(request, 'parents/parent_evaluation.html', {'student': {
-        'id': student_id,
-        'name': student_name,
-        'roll_no': roll_no,
-        'study_time_rating': evaluation_data['study_time_rating'],
-        'sleep_time_rating': evaluation_data['sleep_time_rating'],
-    }})
+    return render(request, 'parents/parent_evaluation.html', {
+        'student': {'id': student_id, 'name': student_name, 'roll_no': roll_no},
+        'subjects': structured_subjects,  # Now contains the necessary data
+    })
 
+
+
+
+
+from decimal import Decimal, ROUND_HALF_UP
+from django.shortcuts import render, redirect
+from django.db import connection
+
+def parent_student_performance(request):
+    print("🔹 Starting parent_student_performance view...")
+
+    parent_id = request.session.get('parent_id')  # Get parent ID from session
+    if not parent_id:
+        print("❌ Parent ID not found in session. Redirecting to login.")
+        return redirect('parent_login')
+
+    student_data = {}
+    evaluations = {}
+    quiz_percentage = 0  # Default to 0 instead of "--" for easier float conversion
+    subjects = []
+    selected_subject_name = None
+
+    subject_id = request.GET.get('subject_id')  # Get selected subject from query params
+
+    print(f"ℹ️ Parent ID from session: {parent_id}")
+
+    try:
+        # Fetch student linked to this parent
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT s.id, s.name, s.roll_no, c.class_name, s.email, c.id AS class_id
+                FROM main_parents p
+                JOIN main_students s ON p.student_id = s.id
+                JOIN main_classes c ON s.class_obj_id = c.id
+                WHERE p.id = %s
+            """, [parent_id])
+            row = cursor.fetchone()
+
+            if row:
+                student_id = row[0]
+                student_data = {
+                    "name": row[1],
+                    "roll_no": row[2],
+                    "class_name": row[3],
+                    "email": row[4],
+                    "class_id": row[5],
+                }
+                print(f"✅ Student Data Retrieved: {student_data}")
+            else:
+                print("⚠️ No student linked to this parent.")
+                return render(request, "parents/parent_student_performance.html", {"error": "No student data available."})
+
+        # Fetch subjects for the student's class
+        if student_data.get("class_id"):
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                    SELECT id, subject_name FROM main_subjects WHERE class_obj_id = %s
+                """, [student_data["class_id"]])
+                subjects = [{"id": row[0], "name": row[1]} for row in cursor.fetchall()]
+
+            # Get the name of the selected subject
+            selected_subject_name = next((s["name"] for s in subjects if str(s["id"]) == subject_id), None)
+            
+            if selected_subject_name:
+                print(f"🔹 Selected Subject: {selected_subject_name} (ID: {subject_id})")
+            else:
+                print("⚠️ Selected subject not found in student's class subjects.")
+
+        # Fetch Student Evaluations for the selected subject
+        if subject_id:
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                    SELECT marks_percentage, attendance_percentage,
+                           study_time_rating, sleep_time_rating, class_participation_rating, academic_activity_rating
+                    FROM main_studentevaluation
+                    WHERE student_id = %s AND subject_id = %s
+                """, [student_id, subject_id])
+                row = cursor.fetchone()
+
+                if row:
+                    evaluations = {
+                        "marks_percentage": round(float(row[0] or 0), 2),
+                        "attendance_percentage": round(float(row[1] or 0), 2),
+                        "study_time_rating": round(float(row[2] or 0), 2),
+                        "sleep_time_rating": round(float(row[3] or 0), 2),
+                        "class_participation_rating": round(float(row[4] or 0), 2),
+                        "academic_activity_rating": round(float(row[5] or 0), 2),
+                    }
+                    print(f"📊 Evaluations Retrieved: {evaluations}")
+                else:
+                    print(f"⚠️ No evaluation data found for {selected_subject_name}.")
+
+        # Fetch Quiz Performance for the selected subject
+        if subject_id:
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                    SELECT COUNT(*) AS total_attempted,
+                           SUM(CASE WHEN q.correct_option = r.student_response THEN 1 ELSE 0 END) AS correct_answers
+                    FROM main_quizresponse r
+                    JOIN main_quizquestions q ON r.question_id = q.id
+                    JOIN main_quizzes mq ON q.quiz_id = mq.id
+                    WHERE r.student_id = %s AND mq.subject_id = %s
+                """, [student_id, subject_id])
+                row = cursor.fetchone()
+
+                if row:
+                    total_attempted, correct_answers = row[0], row[1] or 0
+                    quiz_percentage = round((correct_answers / total_attempted) * 100, 2) if total_attempted > 0 else 0
+                    print(f"📝 Quiz Performance: Attempted = {total_attempted}, Correct = {correct_answers}, Percentage = {quiz_percentage}%")
+                else:
+                    print(f"⚠️ No quiz data found for {selected_subject_name}.")
+
+        # Prepare data for Graph
+        graph_data = [
+            float(evaluations.get("marks_percentage", 0)),
+            float(evaluations.get("attendance_percentage", 0)),
+            float(evaluations.get("study_time_rating", 0)),
+            float(evaluations.get("sleep_time_rating", 0)),
+            float(evaluations.get("class_participation_rating", 0)),
+            float(evaluations.get("academic_activity_rating", 0)),
+            float(quiz_percentage)
+        ]
+
+    except Exception as e:
+        print(f"❌ An error occurred: {e}")
+        return redirect('error_page')
+
+    context = {
+        "student": student_data,
+        "evaluations": evaluations,
+        "quiz_percentage": quiz_percentage,
+        "subjects": subjects,
+        "selected_subject_id": int(subject_id) if subject_id else None,
+        "graph_data": graph_data,  # Pass graph data for chart rendering
+    }
+
+    print("✅ Rendering 'parent_student_performance.html' template.")
+    return render(request, "parents/parent_student_performance.html", context)
 
 
 

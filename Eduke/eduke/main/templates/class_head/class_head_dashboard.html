@@ -64,12 +64,6 @@
                 </a>
               </li>
               <li>
-                <a href="{% url 'class_head_subjects' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
-                  <i class="fa-solid fa-book"></i> &nbsp;
-                  Subjects
-                </a>
-              </li>
-              <li>
                 <a href="{% url 'class_head_chat' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
                   <i class="fa-solid fa-comments"></i> &nbsp;
                   Eduke Chat
@@ -105,7 +99,7 @@
           </section>
 
           <!-- 6 Cards Section -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6">
             <!-- Card 1 -->
             <a href="{% url 'class_head_class' %}" class="block relative group">
               <div class="bg-white p-6 rounded-lg shadow-lg pt-[15px] pl-[15px]">
@@ -123,14 +117,7 @@
               <!-- Cartoon PNG Image positioned at the bottom-right corner -->
               <img src="{% static 'main/images/student.png' %}" alt="Cartoon" class="absolute bottom-0 right-0 w-[150px] transform translate-x-4 translate-y-4 opacity-80 group-hover:opacity-100 transition-opacity duration-300" />
             </a>
-            <a href="{% url 'class_head_subjects' %}" class="block relative group">
-              <div class="bg-white p-6 rounded-lg shadow-lg pt-[15px] pl-[15px]">
-                <h3 class="text-2xl font-bold text-gray-800 uppercase mb-[20px]">SUBJECTS</h3>
-                <p class="font-semibold text-purple-700 text-[20px]">{{ subject_count }}</p>
-              </div>
-              <!-- Cartoon PNG Image positioned at the bottom-right corner -->
-              <img src="{% static 'main/images/subject.png' %}" alt="Cartoon" class="absolute bottom-0 right-0 w-[150px] transform translate-x-4 translate-y-4 opacity-80 group-hover:opacity-100 transition-opacity duration-300" />
-            </a>
+            
             <a href="{% url 'class_head_chat' %}" class="block relative group">
               <div class="bg-white p-6 rounded-lg shadow-lg pt-[15px] pl-[15px]">
                 <h3 class="text-2xl font-bold text-gray-800 uppercase mb-[20px]">EDUKE CHAT</h3>
@@ -139,14 +126,7 @@
               <!-- Cartoon PNG Image positioned at the bottom-right corner -->
               <img src="{% static 'main/images/chat.png' %}" alt="Cartoon" class="absolute bottom-0 right-0 w-[150px] transform translate-x-4 translate-y-4 opacity-80 group-hover:opacity-100 transition-opacity duration-300" />
             </a>
-            <a href="" class="block relative group">
-              <div class="bg-white p-6 rounded-lg shadow-lg pt-[15px] pl-[15px]">
-                <h3 class="text-2xl font-bold text-gray-800 uppercase mb-[20px]">EVALUATION</h3>
-                <p class="font-semibold text-purple-700 text-[20px]">Evaluate your students</p>
-              </div>
-              <!-- Cartoon PNG Image positioned at the bottom-right corner -->
-              <img src="{% static 'main/images/eval.png' %}" alt="Cartoon" class="absolute bottom-0 right-0 w-[150px] transform translate-x-4 translate-y-4 opacity-80 group-hover:opacity-100 transition-opacity duration-300" />
-            </a>
+            
             <a href="{% url 'class_head_profile' %}" class="block relative group">
               <div class="bg-white p-6 rounded-lg shadow-lg pt-[15px] pl-[15px]">
                 <h3 class="text-2xl font-bold text-gray-800 uppercase mb-[20px]">PROFILE</h3>

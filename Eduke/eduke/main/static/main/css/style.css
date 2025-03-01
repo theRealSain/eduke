@@ -1,3 +1,4 @@
+
 #message-container {
     overflow-y: scroll;
 }
@@ -34,6 +35,7 @@
 
 aside{
     height: 90vh !important;
+    width: 280px !important;
 }
 #content-wrapper{
     overflow-y: auto;
@@ -125,4 +127,112 @@ tbody{
     color: #ad16ff90;
     font-size: 18px;
     opacity: 0.8;
+}
+
+
+
+@media print {
+    /* Hide the Print Button */
+    #printReportBtn {
+        display: none !important;
+    }
+
+    #content-wrapper {
+        height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+        box-shadow: none !important;
+        background-color: white !important;
+    }
+
+    /* Adjust Zoom for Better Fit (90%) */
+    body {
+        zoom: 90%; /* Slightly larger than previous 80% */
+        background-color: white !important;
+    }
+
+    /* Reduce Margins & Padding for a Compact Look */
+    * {
+        margin: 5px !important;
+        padding: 2px !important;
+        box-shadow: none !important;
+        background-color: white !important;
+        color: black !important;
+    }
+
+    #performanceHeader{
+        box-shadow: none;
+        text-align: center;
+    }
+
+    /* Show Graph when Printing */
+    #graphSection, #performanceChart {
+        display: block !important;
+        visibility: visible !important;
+        width: 100% !important;
+        height: 250px !important; /* Ensure Graph is Large Enough */
+        box-shadow: none;
+    }
+
+    /* Arrange Student Details in a Balanced Grid */
+    #studentDetailsSection .grid {
+        display: grid !important;
+        grid-template-columns: repeat(4, 1fr) !important; /* 4 columns */
+        gap: 8px !important; /* Slightly larger gap */
+        font-size: 14px !important; /* Bigger text */
+        box-shadow: none;
+    }
+    #studentDetailsSection .grid div {
+        background-color: white !important;
+        color: black !important;
+    }
+
+    /* Arrange Performance Cards in a Compact Grid */
+    #performanceSection .grid {
+        display: grid !important;
+        grid-template-columns: repeat(3, 1fr) !important; /* 3 columns */
+        gap: 8px !important;
+        font-size: 14px !important;
+        box-shadow: none;
+    }
+    #performanceSection .grid div {
+        background: white !important;
+        color: black !important;
+    }
+
+    /* Arrange Evaluation Cards in a Compact Grid */
+    #evaluationSection .grid {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important; /* 2 columns */
+        gap: 8px !important;
+        font-size: 14px !important;
+        box-shadow: none;
+    }
+    #evaluationSection .grid div {
+        background-color: white !important;
+        color: black !important;
+    }
+
+    /* Adjust Chart Size for Better Visibility */
+    #performanceChart {
+        display: block !important;
+        max-height: 250px !important; /* Slightly bigger */
+        box-shadow: none;
+    }
+
+    /* Increase Card Sizes Slightly */
+    .card {
+        padding: 8px !important;
+        font-size: 14px !important; /* Increased text size */
+        box-shadow: none;
+    }
+
+    /* Ensure No Unwanted Page Breaks */
+    #studentDetailsSection, 
+    #performanceSection, 
+    #evaluationSection, 
+    #graphSection {
+        page-break-inside: avoid;
+        box-shadow: none;
+    }
 }
