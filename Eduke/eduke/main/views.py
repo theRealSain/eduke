@@ -3,7 +3,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from .forms import InstitutionRegisterForm, LoginForm, ClassHeadLoginForm, SubjectHeadLoginForm, StudentLoginForm, ParentLoginForm, AddClassForm, AddSubjectForm, AddStudentForm, ClassUploadForm, SubjectUploadForm, StudentUploadForm
-from .models import Institution, Classes, Subjects, Students, Users, Parents, Chat, Announcements
+from .models import Institution, Classes, Subjects, Students, Users, Parents, Chat, Announcements, Marks, Attendance, StudentEvaluation, QuizResponse
 from django.db import IntegrityError, transaction
 from django.db import connection
 from django.core.exceptions import ObjectDoesNotExist
@@ -19,7 +19,9 @@ from django.core.files.storage import FileSystemStorage
 import os, datetime
 import openpyxl
 from decimal import Decimal, ROUND_HALF_UP
-
+import random
+import re
+from textblob import TextBlob
 
 # Index page
 def index(request):
@@ -3695,10 +3697,6 @@ def student_quiz(request, subject_id, quiz_id):
 
 
 
-from django.db import connection
-
-from django.shortcuts import render, redirect
-from django.db import connection
 
 def student_performance(request):
     if 'student_id' not in request.session:
@@ -3836,6 +3834,469 @@ def student_performance(request):
 
 
 
+
+
+
+# 🔹 Function to preprocess text: correct spelling, remove extra spaces
+def preprocess_text(text):
+    text = text.strip().lower()  # Remove extra spaces & lowercase text
+    text = str(TextBlob(text).correct())  # Correct spelling
+    return text
+
+
+def student_eduke_bot(request):
+    """Handles chatbot page rendering and processing chatbot queries."""
+
+    # Redirect if student is not logged in
+    if 'student_id' not in request.session:
+        return redirect('student_login')
+
+    student_id = request.session.get("student_id")
+
+    # Fetch student details
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT main_students.name, main_students.roll_no, main_classes.class_name
+            FROM main_students 
+            LEFT JOIN main_classes ON main_students.class_obj_id = main_classes.id
+            WHERE main_students.id = %s
+        """, [student_id])
+        student = cursor.fetchone()
+
+    if not student:
+        return JsonResponse({"response": "Student not found. Please log in again."})
+
+    student_details = {
+        "name": student[0],
+        "roll_no": student[1],
+        "class": student[2] if student[2] else "Not assigned"
+    }
+
+    if request.method == "GET" and "query" in request.GET:
+        query = preprocess_text(request.GET.get("query", ""))  # NLP Preprocessing
+
+        # 🔹 Capabilities
+        capability_queries = [
+            "what can you do", "how can you help me", "can you help me", "what else can you do",
+            "what are your features", "what are your capabilities", "what services do you offer",
+            "how can you assist me", "tell me your functions", "what kind of help do you provide",
+            "explain your abilities", "what tasks can you perform", "how do you work",
+            "are you useful", "why should I use you"
+        ]
+        capabilities_response = (
+            "I can help you with:\n"
+            "✔ Checking your attendance records 📅\n"
+            "✔ Viewing your marks 📊\n"
+            "✔ Viewing your quiz score 📅\n"
+            "✔ Providing study tips 📖\n"
+            "✔ Suggesting ways to improve in weak subjects 🎯\n"
+            "✔ Showing the student leaderboard 🏆\n"
+            "✔ Helping with exam preparation 📝\n"
+            "✔ Providing time management tips ⏳\n"
+            "✔ Boosting your motivation 🚀\n"
+            "✔ Reducing stress and improving focus 🌿\n"
+            "✔ Teaching memorization & learning techniques 🧠\n"
+            "✔ Answering common student queries 💡\n"
+            "✔ Increase Productivity and improving focus 🌿\n"
+            "Feel free to ask me anything! 😊"
+        )
+        if any(q in query for q in capability_queries):
+            return JsonResponse({"response": (capabilities_response)})
+
+        greeting_responses = {
+        "hi": lambda name: f"Hey {name}! Hope you're having a great day. How can I assist you in your studies today? 😊",
+        "hello": lambda name: f"Hello {name}! I'm here to help you with your academic journey. What do you need help with?",
+        "hey": lambda name: f"Hey {name}! What's up? Need any study tips or motivation? I'm here for you! 🎯",
+        "good morning": lambda name: f"Good morning, {name}! Wishing you a productive and successful day ahead. ☀️",
+        "good afternoon": lambda name: f"Good afternoon, {name}! Keep up the great work. Need help with anything? 😊",
+        "good evening": lambda name: f"Good evening, {name}! Hope you had a great day. Let me know if you need any help! 🌆",
+        "good night": lambda name: f"Good night, {name}! Don't forget to rest well and recharge for tomorrow! 🌙",
+        "what's up": lambda name: f"Not much, {name}! Just here to help you ace your studies. How can I assist you today? 🎓",
+        "how are you": lambda name: f"I'm just a chatbot, {name}, but I'm feeling great because I'm here to help you succeed! 🚀",
+        "goodbye": lambda name: f"Goodbye, {name}! Keep learning and stay curious. See you next time! 👋",
+        "bye": lambda name: f"Bye, {name}! Have a great day and don't forget to take breaks while studying! 🎯",
+        "see you": lambda name: f"See you later, {name}! Remember, learning never stops! 📚",
+        "take care": lambda name: f"Take care, {name}! Stay focused, stay positive, and keep striving for success! 🌟",
+        "thanks": lambda name: f"You're welcome, {name}! I'm always here to help. Keep up the hard work! 🚀",
+        "thank you": lambda name: f"You're most welcome, {name}! If you ever need help again, just ask! 😊"
+    }
+
+        # 🔹 Greeting Responses
+        for greeting, response in greeting_responses.items():
+            if query.startswith(greeting):
+                return JsonResponse({"response": response(student_details["name"])})  # ✅ Call function with name
+
+        # 🔹 Identity
+        identity_queries = [
+            "who are you", "what is your name", "tell me about yourself", "introduce yourself",
+            "what are you", "who created you", "who made you", "what do people call you",
+            "are you a bot", "are you human", "are you a bot", "tell me about eduke bot",
+            "what is eduke bot", "what do you do", "explain yourself"
+        ]
+        identity_responses = [
+            "I'm Eduke Bot, your friendly academic assistant! I help students track their progress, manage attendance, and improve their study habits.",
+            "Hey! I'm Eduke Bot, designed to assist you with learning, marks, and study strategies!"
+        ]
+        if any(q in query for q in identity_queries):
+            return JsonResponse({"response": random.choice(identity_responses)})
+
+        # 🔹 Motivation Queries
+        motivation_queries = [
+            "motivate me", "give me motivation", "inspire me", "i feel demotivated", "i feel down",
+            "help me stay motivated", "i lack motivation", "i feel like giving up", "keep me motivated",
+            "i need encouragement", "boost my confidence", "i'm losing hope", "help me push forward",
+            "i feel stuck", "i'm feeling unmotivated", "i need inspiration", "i feel like i'm failing",
+            "how do I stay motivated", "i'm struggling to stay focused", "studying is hard for me"
+        ]
+        motivation_responses = [
+            "You're stronger than you think! Every challenge you face is an opportunity to grow and push your limits. Keep pushing forward, stay consistent, and you’ll see that your efforts will eventually lead to success. 💪",
+            "Success comes from small daily improvements. Every step, no matter how small, brings you closer to your goals. Keep going, stay focused on your progress, and you'll achieve things you never thought possible. You’re doing great! 🚀",
+            "Mistakes help you learn and grow. They're not failures, but stepping stones on the road to success. Keep trying, because each effort and setback is building your strength and resilience. Success will follow when you persist and believe in the process! 🎯",
+            "Believe in yourself! Every expert was once a beginner, and every success story started with a single step. Keep learning, stay curious, and embrace every challenge as a learning opportunity. Your journey is unique, and your growth is inevitable. 📖",
+        ]
+
+        if any(q in query for q in motivation_queries):
+            return JsonResponse({"response": random.choice(motivation_responses)})
+
+        # 🔹 Study Tips Queries
+        study_tips_queries = [
+            "give me study tips", "how to study better", "help me study", "best way to study",
+            "how to stay focused", "how to study effectively", "how to avoid distractions while studying",
+            "how to improve concentration", "how to remember what I study", "how to stop procrastinating",
+            "how to manage study time", "how to prepare for exams", "how to study smart", "how to revise properly",
+            "how to increase learning speed", "how to make studying fun", "how to avoid stress while studying",
+            "how to retain information better", "how to create a study schedule", "best techniques for studying"
+        ]
+        study_tips_responses = [
+            "Consistency is key! Instead of cramming all at once, make a study routine and dedicate a little time each day to review what you’ve learned. This steady approach helps you absorb the material better and ensures you’re not overwhelmed when exams come around. Regular review strengthens long-term retention.",
+            "Use the Pomodoro technique: Study for 25 minutes, then take a 5-minute break. This method helps you maintain focus and prevents burnout. The short breaks give your mind time to recharge so that you can approach your studies with fresh energy and concentration each time. Try to stay on task during your study sessions, and reward yourself after each cycle!",
+            "Practice with past exams and quizzes to improve memory retention. The more you test yourself on the material, the better you’ll remember it. This active recall technique helps you identify areas where you need improvement and boosts your confidence as you get familiar with the format of potential exam questions.",
+            "Stay hydrated and well-rested! A healthy mind learns better, so prioritize sleep and drink plenty of water. Dehydration and lack of sleep can impair cognitive function, making it harder to concentrate and retain information. Ensure you get enough rest and keep water nearby while you study to stay sharp and alert."
+        ]
+
+        if any(q in query for q in study_tips_queries):
+            return JsonResponse({"response": random.choice(study_tips_responses)})
+
+        # 🔹 Exam Preparation Queries
+        exam_prep_queries = [
+            "how to prepare for exams", "exam preparation tips", "how to study for exams",
+            "best way to revise before an exam", "how to stay calm before an exam",
+            "how to score high in exams", "how to study last minute", "best way to study for finals",
+            "how to avoid exam stress", "how to manage time during exams", "how to deal with exam fear",
+            "how to improve exam performance", "best revision techniques", "how to memorize faster for exams",
+            "how to create an exam study plan", "how to stay focused during exams", "how to avoid silly mistakes in exams"
+        ]
+        exam_prep_responses = [
+            "Start preparing early and create a study schedule to cover all topics before the exam. ✅ This will give you plenty of time to review, understand, and practice without feeling rushed. Break down each topic into manageable chunks, and stick to your schedule to stay on track and avoid last-minute cramming.",
+            "Practice past papers and quizzes to get familiar with the exam pattern! 📚 Doing so helps you understand the format of the questions, improves your time management, and gives you insight into which topics are frequently tested. It’s one of the best ways to prepare for the actual exam experience.",
+            "Take short breaks while studying to keep your mind fresh and focused! 💡 Studies show that short, regular breaks increase productivity and prevent burnout. Use these breaks to stretch, grab a snack, or take a quick walk. This helps you recharge and maintain concentration over longer study sessions.",
+            "Revise your notes, use flashcards, and teach someone else to reinforce learning. 🎯 Revising actively helps you remember key concepts better, and teaching others is a powerful method to test your understanding. The more you explain a topic, the more solid your grasp will be, making it easier to recall on exam day."
+        ]
+
+        if any(q in query for q in exam_prep_queries):
+            return JsonResponse({"response": random.choice(exam_prep_responses)})
+
+        # 🔹 Time Management Queries
+        time_management_queries = [
+            "how to manage time", "time management tips", "how to balance studies and fun",
+            "how to complete homework on time", "how to avoid procrastination",
+            "best time management techniques for students", "how to create a study schedule",
+            "how to stop wasting time", "how to be more productive", "how to stay disciplined with studies",
+            "how to avoid distractions while studying", "how to plan my day effectively",
+            "how to manage time for exams and assignments", "how to improve focus and concentration",
+            "how to balance school and personal life", "how to avoid last-minute studying"
+        ]
+        time_management_responses = [
+            "Prioritize your tasks and set specific study hours to stay on track! ⏳ Identify the most important and time-sensitive tasks first, and break them down into smaller, manageable steps. Scheduling your study time not only helps you stay organized but also ensures you're using your time efficiently to accomplish what needs to be done.",
+            "Use a to-do list or a planner to organize your daily tasks effectively. 📅 Writing down your tasks gives you a clear visual of what needs to be accomplished and helps prevent you from feeling overwhelmed. It’s a great way to stay accountable and motivated as you check off each completed task throughout the day.",
+            "Break your tasks into smaller goals and reward yourself after completing each one. 🎯 Breaking big tasks into smaller, more manageable chunks makes them seem less daunting and allows you to make steady progress. After completing each goal, take a short break or treat yourself to something small as a reward to stay motivated and energized.",
+            "Avoid distractions like social media while studying. Keep your phone away or use study apps. 📵 Distractions can break your focus and waste valuable time. Try using apps that block distracting sites or set specific time slots for social media breaks. Creating a distraction-free environment helps you maximize your productivity and stay in the zone while studying."
+        ]
+
+        if any(q in query for q in time_management_queries):
+            return JsonResponse({"response": random.choice(time_management_responses)})
+
+        # 🔹 Stress Management Queries
+        stress_management_queries = [
+            "how to handle stress", "how to reduce stress", "i feel stressed", "i feel overwhelmed",
+            "how to stay calm under pressure", "how to handle exam stress",
+            "how to deal with academic pressure", "how to relax after studying", 
+            "how to overcome fear of exams", "how to stop overthinking about studies",
+            "ways to stay mentally healthy as a student", "how to stay positive during exams",
+            "how to manage anxiety before an exam", "how to avoid burnout while studying",
+            "how to stay confident before a test", "how to handle school workload stress",
+            "how to improve mental well-being as a student"
+        ]
+        stress_management_responses = [
+            "Take deep breaths and remind yourself that you are capable of handling challenges. 🌿 Stress is a natural part of life, but you have the strength to manage it. Taking a few moments to breathe deeply can help calm your nervous system and bring you back to the present. Remember, you've overcome obstacles before, and you can do it again!",
+            "Practice meditation or listen to calming music to relax your mind. 🎵 Meditation helps clear your mind and lowers stress by promoting mindfulness. Alternatively, listening to calming music or nature sounds can help reduce anxiety and elevate your mood. Create a peaceful atmosphere where you can unwind and recharge.",
+            "Talk to a friend or family member about your worries—it helps to share your feelings. 💬 Opening up to someone you trust can lighten your emotional load and provide a fresh perspective. Talking about what’s stressing you out can also help you process your emotions and feel supported, which can ease the burden of stress.",
+            "Stay positive and focus on what you can control instead of worrying about the outcome. 😊 Focusing on what you can manage—like your effort, attitude, and next steps—can help you feel more empowered and less overwhelmed. Trust that you are doing your best and that worrying about things outside your control won't help you succeed."
+        ]
+
+        if any(q in query for q in stress_management_queries):
+            return JsonResponse({"response": random.choice(stress_management_responses)})
+
+        # 🔹 Productivity Boost Queries
+        productivity_queries = [
+            "how to be more productive", "how to focus better", "how to avoid distractions",
+            "How to improve concentration", "how to get more work done",
+            "how to stop procrastinating", "how to build good study habits", 
+            "best techniques for deep focus", "how to improve attention span",
+            "how to avoid wasting time", "how to stay consistent with studies",
+            "how to be more disciplined", "how to create a productive study environment",
+            "how to manage study sessions effectively", "how to get into study mode quickly",
+            "how to develop a strong work ethic", "how to stay motivated to complete tasks"
+        ]
+        productivity_responses = [
+            "Eliminate distractions and set a timer for focused study sessions! ⏳ Create a distraction-free environment by turning off notifications, keeping your workspace clean, and setting a clear goal for your study session. Using a timer, such as with the Pomodoro technique, can help you stay focused for a set amount of time, boosting your productivity and preventing burnout.",
+            "Work on one task at a time instead of multitasking to improve efficiency. 🎯 While multitasking may seem efficient, it often leads to mistakes and wasted time as your focus is divided. By concentrating on one task at a time, you can give it your full attention, complete it faster, and produce higher-quality results.",
+            "Use the '2-minute rule': If something takes less than 2 minutes, do it immediately. ✅ Whether it's responding to an email, organizing your desk, or making a quick phone call, completing small tasks right away prevents them from piling up. This simple rule helps you stay on top of your responsibilities and reduces the mental load of unfinished tasks.",
+            "Get enough sleep and exercise regularly to keep your brain sharp and active! 🧠 Taking care of your body is crucial for maintaining high levels of productivity. Adequate sleep helps with memory retention and focus, while regular exercise boosts energy and reduces stress, making it easier to stay alert and productive throughout the day."
+        ]
+
+        if any(q in query for q in productivity_queries):
+            return JsonResponse({"response": random.choice(productivity_responses)})
+
+        # 🔹 Memorization & Learning Techniques Queries
+        learning_queries = [
+            "how to memorize better", "how to improve memory", "best ways to learn new things",
+            "how to retain information", "how to understand complex subjects",
+            "how to learn faster", "how to improve comprehension skills",
+            "how to remember what I study", "how to develop critical thinking",
+            "best techniques for active learning", "how to improve problem-solving skills",
+            "how to learn difficult concepts", "how to study smart, not hard",
+            "how to apply what I learn", "how to improve analytical skills",
+            "how to strengthen cognitive skills", "how to boost brainpower for studying",
+            "how to effectively take notes", "best strategies for lifelong learning"
+        ]
+        learning_responses = [
+            "Use mnemonic techniques, like acronyms or visualization, to remember information easily! 🧠 Mnemonics are powerful tools that help you link new information to something you already know, making it easier to recall. Visualizing concepts or creating memorable phrases can significantly boost your memory and make learning more enjoyable.",
+            
+            "Teach someone else what you've learned—it reinforces your understanding! 🎤 When you explain a topic to another person, you solidify your own knowledge. It forces you to organize and articulate your thoughts, and you may discover areas where you need to strengthen your understanding. Teaching is one of the best ways to master material.",
+            
+            "Break information into smaller chunks and review it regularly instead of cramming. 📖 Instead of overwhelming yourself with long study sessions, break your material into bite-sized pieces and review them consistently. This method improves long-term retention and makes studying less stressful. The more you review, the easier it becomes to remember.",
+            
+            "Try using spaced repetition apps to enhance long-term retention! 🔄 Spaced repetition uses algorithms to schedule reviews of material at increasing intervals, which helps you retain information for the long term. Apps like Anki or Quizlet are great for this technique and can boost your recall by ensuring you review key concepts just before you're about to forget them."
+        ]
+
+        if any(q in query for q in learning_queries):
+            return JsonResponse({"response": random.choice(learning_responses)})
+        
+
+        # 🔹 Best & Worst Subjects Query
+        if "best and worst subjects" in query or "strongest and weakest subjects" in query:
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                    SELECT main_subjects.subject_name, main_marks.mark_percentage 
+                    FROM main_marks 
+                    JOIN main_subjects ON main_marks.subject_id = main_subjects.id
+                    WHERE main_marks.student_id = %s
+                """, [student_id])
+                marks_data = cursor.fetchall()
+
+            if marks_data:
+                best_subject = max(marks_data, key=lambda x: x[1])
+                worst_subject = min(marks_data, key=lambda x: x[1])
+
+                return JsonResponse({
+                    "response": f"Your best subject is {best_subject[0]} with {best_subject[1]}% marks. "
+                                f"Your weakest subject is {worst_subject[0]} with {worst_subject[1]}%. Keep practicing!"
+                })
+
+        # 🔹 Attendance Queries
+        if "attendance" in query or "how many classes" in query:
+            with connection.cursor() as cursor:
+                cursor.execute("SELECT COUNT(*) FROM main_attendance WHERE student_id = %s", [student_id])
+                total_classes = cursor.fetchone()[0] or 0
+
+                cursor.execute("SELECT COUNT(*) FROM main_attendance WHERE student_id = %s AND status = 'present'", [student_id])
+                present_classes = cursor.fetchone()[0] or 0
+
+            if total_classes > 0:
+                attendance_percentage = (present_classes / total_classes) * 100
+                motivation = "You're doing great! Keep attending! 😊" if attendance_percentage > 75 else "Try to attend more classes to stay on track. 📚"
+                return JsonResponse({"response": f"You attended {present_classes}/{total_classes} classes ({attendance_percentage:.2f}%). {motivation}"})
+
+        # 🔹 Quiz Score Query
+        if "quiz" in query and ("score" in query or "quiz performance" in query):
+            print("📌 [DEBUG] Quiz score query detected.")  
+
+            with connection.cursor() as cursor:
+                sql_query = """
+                    SELECT main_quizzes.name, 
+                        COUNT(*) AS total_questions, 
+                        SUM(CASE WHEN main_quizresponse.student_response = main_quizquestions.correct_option THEN 1 ELSE 0 END) AS correct_answers
+                    FROM main_quizresponse
+                    JOIN main_quizquestions ON main_quizresponse.question_id = main_quizquestions.id
+                    JOIN main_quizzes ON main_quizquestions.quiz_id = main_quizzes.id
+                    WHERE main_quizresponse.student_id = %s
+                    GROUP BY main_quizzes.name
+                    ORDER BY correct_answers DESC
+                """
+
+                cursor.execute(sql_query, [student_id])
+                quiz_results = cursor.fetchall()
+
+            if quiz_results:
+                quiz_text = "\n".join(
+                    f"📖 {quiz[0]}: {quiz[2]}/{quiz[1]} correct ({(quiz[2] / quiz[1]) * 100:.2f}%)"
+                    for quiz in quiz_results
+                )
+                return JsonResponse({"response": f"Here are your quiz scores:\n{quiz_text}\nKeep practicing to improve! 🚀"})
+            else:
+                return JsonResponse({"response": "You haven't taken any quizzes yet. Try one to test your knowledge! 📚"})
+
+
+        # 🔹 Student Evaluation Query (Study, Sleep, Class Participation, Academic Activity)
+        if any(keyword in query for keyword in ["focus", "study", "improve", "stress", "concentration", "sleep", "class participation", "academic activity"]):
+            print("📌 [DEBUG] Student evaluation query detected.")
+
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                    SELECT study_time_rating, sleep_time_rating, class_participation_rating, academic_activity_rating
+                    FROM main_studentevaluation WHERE student_id = %s
+                """, [student_id])
+                evaluations = cursor.fetchall()
+
+            if evaluations:
+                # Initialize sum and count for calculating averages
+                total_study_time, total_sleep_time, total_class_participation, total_academic_activity = 0, 0, 0, 0
+                count_study_time, count_sleep_time, count_class_participation, count_academic_activity = 0, 0, 0, 0
+
+                # Process each evaluation row
+                for study_time, sleep_time, class_participation, academic_activity in evaluations:
+                    if study_time is not None:
+                        total_study_time += study_time
+                        count_study_time += 1
+                    if sleep_time is not None:
+                        total_sleep_time += sleep_time
+                        count_sleep_time += 1
+                    if class_participation is not None:
+                        total_class_participation += class_participation
+                        count_class_participation += 1
+                    if academic_activity is not None:
+                        total_academic_activity += academic_activity
+                        count_academic_activity += 1
+
+                # Calculate averages (handling NULL values)
+                avg_study_time = total_study_time / count_study_time if count_study_time > 0 else None
+                avg_sleep_time = total_sleep_time / count_sleep_time if count_sleep_time > 0 else None
+                avg_class_participation = total_class_participation / count_class_participation if count_class_participation > 0 else None
+                avg_academic_activity = total_academic_activity / count_academic_activity if count_academic_activity > 0 else None
+
+                response = None  # Default response
+
+                # Check query intent and respond specifically
+                if "study" in query or "focus" in query or "improve" in query:
+                    if avg_study_time is not None:
+                        if avg_study_time < 40:
+                            response = ("Your study time is quite low, which might be affecting your academic performance. 📚 "
+                                        "It's important to establish a structured study routine. Try setting small, achievable goals for each session, "
+                                        "and use techniques like the Pomodoro method to stay focused. Also, consider reducing distractions by keeping your study space organized "
+                                        "and free from interruptions. Over time, consistency will help you improve significantly! 🚀")
+                        elif avg_study_time < 70:
+                            response = ("You're doing a decent job with your studies, but there's room for improvement. 💡 "
+                                        "Try to analyze which subjects or topics need more focus and allocate additional time to them. "
+                                        "Studying smarter is just as important as studying harder—use active recall, note-making, and mind maps to make learning more effective. "
+                                        "Setting deadlines and rewarding yourself after completing study goals can keep you motivated. Keep pushing forward!")
+                        else:
+                            response = ("Fantastic! You're maintaining a great study routine, and it's clearly benefiting your learning. 🚀 "
+                                        "To maximize your efforts, consider teaching what you've learned to others—it strengthens your understanding. "
+                                        "Also, make sure to take short breaks to avoid burnout and refresh your mind. Keep challenging yourself with new learning strategies, "
+                                        "and don't forget to stay curious and enjoy the process of learning! 🎓")
+                    else:
+                        response = ("I don't have enough study data yet to give you feedback. 📊 "
+                                    "However, if you're looking to improve your study habits, start by tracking your daily study hours and the topics you cover. "
+                                    "Small, steady improvements will make a big difference over time!")
+
+                elif "sleep" in query:
+                    if avg_sleep_time is not None:
+                        if avg_sleep_time < 40:
+                            response = ("You're not getting enough sleep, and this could be affecting your concentration, memory, and overall health. 💤 "
+                                        "Lack of sleep can lead to decreased focus, slower cognitive function, and even increased stress levels. "
+                                        "Try to set a fixed bedtime and wake-up schedule, avoid screen time before sleeping, and create a relaxing bedtime routine. "
+                                        "Aim for at least 7-8 hours of sleep every night, as quality rest is essential for learning and brain function. 🌙")
+                        elif avg_sleep_time < 70:
+                            response = ("You're getting a moderate amount of sleep, but improving your sleep quality could enhance your energy levels and focus. 🌙 "
+                                        "Consider maintaining a regular sleep schedule, avoiding caffeine before bedtime, and ensuring that your sleeping environment is comfortable. "
+                                        "Your brain consolidates information while you sleep, so getting better rest can actually help you retain what you study more effectively!")
+                        else:
+                            response = ("You're doing an excellent job maintaining a good sleep schedule! ✅ "
+                                        "Quality sleep is one of the key factors in academic success. It helps with focus, mood regulation, and energy levels. "
+                                        "Just make sure you continue this healthy habit, and if you ever feel fatigued despite enough sleep, consider your diet and exercise routine as well. "
+                                        "Keep up the great work, and your brain will thank you!")
+                    else:
+                        response = ("I don't have enough sleep data yet, but if you're looking to improve your sleep quality, start tracking your sleep patterns. 🌙 "
+                                    "A well-rested mind is more productive and efficient, so prioritize good sleep habits!")
+
+                elif "class participation" in query:
+                    if avg_class_participation is not None:
+                        if avg_class_participation < 40:
+                            response = ("It looks like you aren't participating much in class discussions. 🎤 "
+                                        "Active participation can help you understand topics better and improve your confidence. "
+                                        "Try asking questions, sharing your thoughts, or even taking small steps like nodding and making eye contact with the teacher. "
+                                        "Engaging with the class material and your peers can make learning more interactive and enjoyable!")
+                        elif avg_class_participation < 70:
+                            response = ("You're participating fairly well in class, but there's still room to be more involved. ✨ "
+                                        "Try contributing more by answering questions, discussing ideas with classmates, and sharing your opinions on topics. "
+                                        "Even small efforts like summarizing what the teacher said in your own words can boost understanding and retention. "
+                                        "Active learning is a great way to build confidence and sharpen your thinking skills!")
+                        else:
+                            response = ("You're doing a fantastic job actively participating in class! 📖 "
+                                        "Engaging in discussions and asking questions not only helps you learn better but also makes the learning process more enjoyable. "
+                                        "Keep up the enthusiasm and continue being involved—your curiosity and effort will take you far!")
+                    else:
+                        response = ("I don't have enough class participation data yet, but remember that speaking up and engaging in discussions can improve your understanding. 🎤 "
+                                    "Start by answering simple questions, sharing your thoughts, and gradually building the confidence to express yourself more in class!")
+
+                elif "academic activity" in query:
+                    if avg_academic_activity is not None:
+                        if avg_academic_activity < 40:
+                            response = ("It seems like you're not engaging much in academic activities outside regular studies. 📊 "
+                                        "Taking part in extra learning opportunities, such as solving additional exercises, joining study groups, or participating in academic clubs, "
+                                        "can help you develop a deeper understanding of subjects. Try exploring online courses, competitions, or group discussions—they can make learning fun and effective!")
+                        elif avg_academic_activity < 70:
+                            response = ("You're doing a decent job engaging in academic activities, but pushing yourself a little further can be beneficial. 📌 "
+                                        "Consider exploring new learning resources like educational videos, books, and online practice tests. "
+                                        "Participating in academic discussions or challenging yourself with new problems can help you develop a broader perspective. "
+                                        "Keep up the momentum, and soon, you'll see improvements in your critical thinking and analytical skills!")
+                        else:
+                            response = ("You're actively engaged in academic activities, and that's a fantastic habit! 🎯 "
+                                        "Your curiosity and willingness to explore beyond textbooks are what set high achievers apart. "
+                                        "Keep challenging yourself with new learning experiences, and don't hesitate to take up leadership roles in academic projects or mentor your peers. "
+                                        "Your dedication will lead to great success!")
+                    else:
+                        response = ("I don't have enough academic activity data yet, but participating in extra learning activities can make a big difference. 📚 "
+                                    "Try joining academic clubs, taking part in discussions, or engaging in self-learning outside class—these efforts can greatly enhance your knowledge!")
+
+                else:
+                    response = ("I'm not sure how to interpret your query. Could you clarify what you're looking for? 😊")
+
+
+                return JsonResponse({"response": response})
+            else:
+                return JsonResponse({"response": "I don't have any evaluation data yet. Keep up the good work and check back later! 📊"})
+
+
+        # 🔹 Leaderboard Query
+        if "leaderboard" in query or "top students" in query:
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                    SELECT name, AVG(mark_percentage) as avg_marks FROM main_students 
+                    JOIN main_marks ON main_students.id = main_marks.student_id
+                    GROUP BY main_students.id ORDER BY avg_marks DESC LIMIT 5
+                """)
+                leaderboard = cursor.fetchall()
+
+            leaderboard_text = "\n".join(f"{i+1}. {row[0]} - {row[1]:.2f}%" for i, row in enumerate(leaderboard))
+            return JsonResponse({"response": f"🏆 Top Performing Students:\n{leaderboard_text}\n\nKeep working hard! 💪"})
+
+
+        # 🔹 Default Response
+        return JsonResponse({"response": "I'm here to help with attendance, marks, and study tips! Just ask! 😊"})
+
+    return render(request, "students/student_eduke_bot.html", {"student": student_details})
 
 
 

@@ -28,6 +28,9 @@
 #scrollbar-off::-webkit-scrollbar {
     display: none;
 }
+#chat-box::-webkit-scrollbar {
+    display: none;
+}
 
 .main-screen{
     height: 400px !important;

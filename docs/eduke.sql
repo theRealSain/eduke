@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3307
--- Generation Time: Feb 27, 2025 at 01:32 PM
+-- Generation Time: Mar 10, 2025 at 07:47 AM
 -- Server version: 9.1.0
 -- PHP Version: 8.2.12
 
@@ -368,11 +368,12 @@ INSERT INTO `django_session` (`session_key`, `session_data`, `expire_date`) VALU
 ('0sqw8o0o8mhayjchrhtl2w6v0aj2l3kv', 'eyJjbGFzc19oZWFkX2lkIjoxM30:1teAY3:dJ_S_q8GBRIV6iObczDcnUlK_UUyEYQSl1M_imqWfVs', '2025-02-15 10:16:23.547677'),
 ('1gpyt7qf0zwgjv0ks3phj8kgky7sujui', 'e30:1tbIQB:POyn-rEoj-sxlUT5I0fZxGB8HipITsS_lEUf11In7UQ', '2025-02-07 12:04:23.929518'),
 ('h5pc1p9nec27wdykh2qt4mk3x722na02', 'e30:1tbZMT:FdwmYlisd-l-pxW7jS1z9YUv536sEY52rWlm1KIRT8c', '2025-02-08 06:09:41.949257'),
-('iwpgeaih0wjunob5y7lblfj8izx3aix8', 'eyJwYXJlbnRfaWQiOjMwfQ:1tncyF:IJhyHTBiZjnwgz0ZVGUTbddPm4bDOFmbviZ27EzOhH8', '2025-03-13 12:26:31.554028'),
+('iy50ymfvuabvrs6zzsg9qqt101y7m2cb', 'eyJjbGFzc19pZCI6MjB9:1towA5:dVEPMlhSNFYXBRQ6Vz46q-kGgEv5dupnuxIfe78K6h0', '2025-03-17 03:08:09.985790'),
 ('p9rbo3jfob45shgippf65xqmxcwm2px5', 'e30:1tbIQa:t8noblKYAHTQaK-nODwDQhiLUyUu8hZWLBGdoUAPH0Y', '2025-02-07 12:04:48.695025'),
 ('q2ry82ujy4xq0ubcekh7gjv27mmg3dkm', 'e30:1tbITs:iCq2XiI3lYkOS59VwFcfcfL3j2lOhn_KcFnK5fUGh6c', '2025-02-07 12:08:12.871277'),
 ('q663wz1plma1getb4y9gh3cxg8sa74yl', 'eyJ0ZWFjaGVyX2lkIjozfQ:1tbAhP:jrYiLIlKpvJjC8qWeaYEh0TyA7l_dr6t_ct2L3D6syg', '2025-02-07 03:49:39.794741'),
 ('s8bg8ppi7ld6bqexoeg4padni4qucqo6', 'eyJjbGFzc19oZWFkX2lkIjoxM30:1teAX7:4BgPYk55nnCIw1fMWIP3kj9QzQ7b9Ll-UfJUSznFPxg', '2025-02-15 10:15:25.661351'),
+('wjfbsupjeu0kkfc8ehxfmwh81u2hcrax', 'eyJzdHVkZW50X2lkIjoyMX0:1tr9gN:FQWWEnrYZiVzkmge0rE6E0DC1H54K4yNfdv-_5RAToM', '2025-03-23 05:58:39.964156'),
 ('xuiiy8d7orowqcmqn7wm0xlov7tttahu', 'e30:1tbZMi:Alo1mi87tOh2qUhsmwP8J5rkP9E8ZaqbzrNyep7wJrg', '2025-02-08 06:09:56.751798');
 
 -- --------------------------------------------------------
@@ -437,7 +438,12 @@ INSERT INTO `main_attendance` (`id`, `attendance_date`, `status`, `student_id`, 
 (27, '2025-02-26', 'present', 22, 9, '2025-02-26 13:34:32.000000', 1),
 (28, '2025-02-26', 'present', 33, 9, '2025-02-26 13:34:32.000000', 1),
 (29, '2025-02-26', 'present', 34, 9, '2025-02-26 13:34:32.000000', 1),
-(30, '2025-02-26', 'present', 35, 9, '2025-02-26 13:34:32.000000', 1);
+(30, '2025-02-26', 'present', 35, 9, '2025-02-26 13:34:32.000000', 1),
+(31, '2025-02-23', 'present', 21, 14, '2025-03-01 09:51:46.000000', 2),
+(32, '2025-02-23', 'present', 22, 14, '2025-03-01 09:51:46.000000', 2),
+(33, '2025-02-23', 'present', 33, 14, '2025-03-01 09:51:46.000000', 2),
+(34, '2025-02-23', 'present', 34, 14, '2025-03-01 09:51:46.000000', 2),
+(35, '2025-02-23', 'present', 35, 14, '2025-03-01 09:51:46.000000', 2);
 
 -- --------------------------------------------------------
 
@@ -452,14 +458,6 @@ CREATE TABLE `main_chat` (
   `sender_id` int NOT NULL,
   `created_at` datetime(6) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
---
--- Dumping data for table `main_chat`
---
-
-INSERT INTO `main_chat` (`id`, `message`, `receiver_id`, `sender_id`, `created_at`) VALUES
-(76, 'Hii', 77, 80, '2025-02-26 08:03:28.362589'),
-(77, 'hii', 77, 118, '2025-02-27 17:09:19.000000');
 
 -- --------------------------------------------------------
 
@@ -485,7 +483,7 @@ INSERT INTO `main_classes` (`id`, `institution_id`, `class_head`, `class_name`, 
 (20, 9, 'Sain', 'MCA', 'sainsaburajpnc@gmail.com', 'ssss', 77),
 (21, 9, 'Abin', 'BCA', 'abinsaburaj2000@gmail.com', 'aaaa', 78),
 (22, 9, 'Jasmine', 'B. Com', 'jasmine@example.com', 'jjjj', 87),
-(23, 9, 'Geo', 'MBA', 'geo@example.com', 'gggg', 88),
+(23, 9, 'Geo B', 'MBA', 'geo@example.com', 'gggg', 88),
 (28, 9, 'John Doe', 'MA HRM', 'john.doe@example.com', '12345678', 123),
 (29, 9, 'Jane Smith', 'BA English', 'jane.smith@example.com', '87654321', 124);
 
@@ -532,7 +530,12 @@ INSERT INTO `main_marks` (`id`, `mark_percentage`, `student_id`, `subject_id`) V
 (33, 60, 22, 9),
 (34, 90, 33, 9),
 (35, 50, 34, 9),
-(36, 70, 35, 9);
+(36, 70, 35, 9),
+(37, 80, 21, 14),
+(38, 50, 22, 14),
+(39, 30, 33, 14),
+(40, 70, 34, 14),
+(41, 60, 35, 14);
 
 -- --------------------------------------------------------
 
@@ -577,6 +580,18 @@ CREATE TABLE `main_quizquestions` (
   `quiz_id` int NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+--
+-- Dumping data for table `main_quizquestions`
+--
+
+INSERT INTO `main_quizquestions` (`id`, `question`, `option_a`, `option_b`, `option_c`, `option_d`, `correct_option`, `quiz_id`) VALUES
+(4, 'dkucnsidichso sd chisuc osidvho sdcjsp dvj?', 'a', 'b', 'c', 'd', 'C', 3),
+(5, 'ius dfsd sidfuos diu sdho cpco dsfis cpo?', 'h', 'i', 'o', 'p', 'B', 3),
+(6, 'iusf isfd aisd pos kdcpos djfp sc?', 'c', 'u', 'r', 'l', 'A', 3),
+(7, 'Which of the following is a type of supervised learning algorithm?', 'K-Means', 'Decision Trees', 'DBSCAN', 'PCA', 'B', 4),
+(8, 'In a neural network, what is the role of the activation function?', 'To prevent overfitting', 'To update weights during training', 'To introduce non-linearity in the model', ' To calculate the loss function', 'C', 4),
+(9, 'Which of the following is true for a Random Forest model?', 'It uses a single decision tree to make predictions', 'It can handle both regression and classification problems', 'It works only with numerical data', 'It is not an ensemble learning method', 'B', 4);
+
 -- --------------------------------------------------------
 
 --
@@ -590,6 +605,18 @@ CREATE TABLE `main_quizresponse` (
   `student_id` int NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+--
+-- Dumping data for table `main_quizresponse`
+--
+
+INSERT INTO `main_quizresponse` (`id`, `student_response`, `question_id`, `student_id`) VALUES
+(5, 'C', 4, 21),
+(6, 'D', 5, 21),
+(7, 'A', 6, 21),
+(8, 'B', 7, 21),
+(9, 'A', 8, 21),
+(10, 'B', 9, 21);
+
 -- --------------------------------------------------------
 
 --
@@ -602,6 +629,14 @@ CREATE TABLE `main_quizzes` (
   `class_obj_id` int DEFAULT NULL,
   `subject_id` int NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `main_quizzes`
+--
+
+INSERT INTO `main_quizzes` (`id`, `name`, `class_obj_id`, `subject_id`) VALUES
+(3, 'iuadsfh s sdiu hisdv isudvh  sudh vusdh', 20, 9),
+(4, 'Machine Learning Test', 20, 9);
 
 -- --------------------------------------------------------
 
@@ -626,11 +661,18 @@ CREATE TABLE `main_studentevaluation` (
 --
 
 INSERT INTO `main_studentevaluation` (`id`, `study_time_rating`, `sleep_time_rating`, `class_participation_rating`, `academic_activity_rating`, `attendance_percentage`, `marks_percentage`, `student_id`, `subject_id`) VALUES
-(20, 2.5, 100, 28.5, 50, 66.66667, 50, 21, 9),
+(20, 54, 20, 82, 50, 66.66667, 50, 21, 9),
 (21, NULL, NULL, 28, 52.5, 100, 60, 22, 9),
 (22, 89.5, 97.5, 29, 100, 100, 90, 33, 9),
 (23, NULL, NULL, 26.5, 51.5, 80, 50, 34, 9),
-(24, NULL, NULL, 28, 51.5, 100, 70, 35, 9);
+(24, NULL, NULL, 28, 51.5, 100, 70, 35, 9),
+(25, 51.5, 25, 51, 91.5, 100, 80, 21, 14),
+(26, NULL, NULL, 47, 79.5, 100, 50, 22, 14),
+(27, NULL, NULL, 52, 84, 100, 30, 33, 14),
+(28, NULL, NULL, 51, 86, 100, 70, 34, 14),
+(29, NULL, NULL, 53.5, 89, 100, 60, 35, 14),
+(30, 53, 24, NULL, NULL, NULL, NULL, 21, 8),
+(31, 51.5, 23, NULL, NULL, NULL, NULL, 21, 13);
 
 -- --------------------------------------------------------
 
@@ -653,7 +695,7 @@ CREATE TABLE `main_students` (
 --
 
 INSERT INTO `main_students` (`id`, `roll_no`, `password`, `class_obj_id`, `name`, `user_id`, `email`) VALUES
-(21, 1001, '1001', 20, 'Freddy', 81, 'foniyad777@intady.com'),
+(21, 1001, '1001', 20, 'Freddy Franco', 81, 'foniyad777@intady.com'),
 (22, 1002, '1002', 20, 'Harry', 83, 'haricey441@minduls.com'),
 (23, 1003, '1003', 21, 'Kevin', 85, 'kibaxak448@intady.com'),
 (33, 9001, 'aaaa', 20, 'Albert Joseph', 117, 'albert@example.com'),
@@ -1005,7 +1047,7 @@ ALTER TABLE `main_attendance`
 -- AUTO_INCREMENT for table `main_chat`
 --
 ALTER TABLE `main_chat`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=78;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=79;
 
 --
 -- AUTO_INCREMENT for table `main_classes`
@@ -1023,43 +1065,43 @@ ALTER TABLE `main_institution`
 -- AUTO_INCREMENT for table `main_marks`
 --
 ALTER TABLE `main_marks`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=37;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=42;
 
 --
 -- AUTO_INCREMENT for table `main_parents`
 --
 ALTER TABLE `main_parents`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=33;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=34;
 
 --
 -- AUTO_INCREMENT for table `main_quizquestions`
 --
 ALTER TABLE `main_quizquestions`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT for table `main_quizresponse`
 --
 ALTER TABLE `main_quizresponse`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT for table `main_quizzes`
 --
 ALTER TABLE `main_quizzes`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `main_studentevaluation`
 --
 ALTER TABLE `main_studentevaluation`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=32;
 
 --
 -- AUTO_INCREMENT for table `main_students`
 --
 ALTER TABLE `main_students`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=36;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=37;
 
 --
 -- AUTO_INCREMENT for table `main_studymaterials`
@@ -1077,7 +1119,7 @@ ALTER TABLE `main_subjects`
 -- AUTO_INCREMENT for table `main_users`
 --
 ALTER TABLE `main_users`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=127;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=129;
 
 --
 -- Constraints for dumped tables

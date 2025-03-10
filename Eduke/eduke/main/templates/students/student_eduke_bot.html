@@ -1,0 +1,279 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eduke Student</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="{% static 'main/css/style.css' %}">
+  <link rel="icon" href="{% static 'main/images/logobase_white.png' %}">
+</head>
+<body class="bg-gray-100 text-gray-900">
+
+  <!-- Dashboard Wrapper -->
+  <div class="flex h-screen">
+    <!-- Main Content -->
+    <main id="main-content" class="flex-1 overflow-y-auto w-full transition-all">
+      
+      <!-- Top Navbar -->
+      <header class="bg-white shadow p-1 pr-4 flex justify-between items-center">
+        <div class="flex items-center space-x-4">
+          <!-- Hamburger Button outside Sidebar -->
+          <button id="hamburger-button" class="sm:hidden text-gray-800 ml-5 focus:outline-none">
+            <i class="fas fa-bars text-2xl"></i>
+          </button>
+          <div class="py-0">
+            <img src="{% static 'main/images/logo_text_long.png' %}" alt="Eduke Logo" class="w-full h-[80px] mx-auto">
+          </div>
+        </div>
+        <div class="flex items-center space-x-4">
+          <!-- Logout Button, visible on large screens and hidden on small screens -->
+          <a href="{% url 'logout' %}" class="hidden lg:block">
+            <button class="bg-[#4f0074] hover:bg-violet-700 text-white px-4 py-2 rounded-md">
+              <i class="fa-solid fa-power-off"></i> &nbsp; Logout
+            </button>
+          </a>
+        </div>
+      </header>
+
+      <!-- Wrapper for Sidebar and Main Content -->
+      <div class="flex h-screen relative main-screen">
+
+        <!-- Sidebar -->
+        <aside id="sidebar" class="w-64 bg-[#e5e5e5] text-black flex flex-col py-6 transform transition-transform -translate-x-full sm:translate-x-0 sm:relative absolute top-0 left-0 h-full z-10">
+          <nav class="flex-1">
+            <ul class="space-y-4 px-4">
+              <li>
+                <a href="{% url 'student_dashboard' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-table-columns"></i> &nbsp;
+                  Dashboard
+                </a>
+              </li>
+              <li>
+                <a href="{% url 'student_class' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-chalkboard"></i> &nbsp;
+                  Your Class
+                </a>
+              </li>
+              <li>
+                <a href="{% url 'student_performance' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-chart-line"></i> &nbsp;
+                  Your Performance
+                </a>
+              </li>
+              <li class="bg-gray-300 rounded-md">
+                <a href="{% url 'student_eduke_bot' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-robot"></i> &nbsp;
+                  Eduke Bot
+                </a>
+              </li>
+              <li>
+                <a href="{% url 'student_chat' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-comments"></i> &nbsp;
+                  Eduke Chat
+                </a>
+              </li>
+              <li>
+                <a href="" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-circle-user"></i> &nbsp;
+                  Profile
+                </a>
+              </li>
+              <li>
+                <a href="{% url 'logout' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-power-off"></i> &nbsp;
+                  Log Out
+                </a>
+              </li>
+            </ul>
+          </nav>
+        </aside>
+        
+        <!-- Dashboard Content -->
+        <div id="content-wrapper" class="p-6 space-y-4 w-full flex flex-col items-center justify-center">
+            <!-- Chat Container -->
+            <div class="w-full max-w-6xl bg-white shadow-lg rounded-lg overflow-hidden">
+                
+                <!-- Chat Header -->
+                <div class="bg-gray-800 text-white p-4 font-bold text-lg">
+                    <div class="flex justify-between items-center">
+                        <a href="">  
+                          <div>
+                              <i class="fa-solid fa-robot"></i> Eduke Bot
+                          </div>
+                        </a>
+                        <div>
+                            <span class="font-semibold text-sm">{{ student.name }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chat Window -->
+                <div id="chat-box" class="p-4 h-96 overflow-y-auto space-y-4">
+                    <!-- Welcome Message (Hidden when chat starts) -->
+                    <div id="welcome-message" class="flex flex-col items-center justify-center h-full text-center text-gray-700">
+                        <i class="fa-solid fa-robot text-[5rem]"></i>
+                        <span class="mt-4 font-bold text-xl">EDUKE BOT</span>
+                        
+                        <!-- Suggested Prompts -->
+                        <div id="suggested-prompts" class="mt-8 flex flex-wrap gap-2 text-center justify-center">
+                          <button class="suggested-btn rounded-full p-1 px-2 text-[12px] text-purple-800 border-2 border-purple-800 hover:bg-gray-200">📊 What is my attendance percentage</button>
+                          <button class="suggested-btn rounded-full p-1 px-2 text-[12px] text-blue-800 border-2 border-blue-800 hover:bg-gray-200">📚 What are my best and worst subjects</button>
+                          <button class="suggested-btn rounded-full p-1 px-2 text-[12px] text-red-800 border-2 border-red-800 hover:bg-gray-200">🏆 Show me the leaderboard</button>
+                        </div>  
+                        
+                        <div id="suggested-prompts" class="mt-3 flex flex-wrap gap-2 text-center justify-center">
+                          <!-- Evaluation-Based Suggestions -->
+                          <button class="suggested-btn rounded-full p-1 px-2 text-[12px] text-purple-800 border-2 border-purple-800 hover:bg-gray-200">📚 How can I improve my study time</button>
+                          <button class="suggested-btn rounded-full p-1 px-2 text-[12px] text-teal-800 border-2 border-teal-800 hover:bg-gray-200">💤 How can I get better sleep</button>
+                          <button class="suggested-btn rounded-full p-1 px-2 text-[12px] text-pink-800 border-2 border-pink-800 hover:bg-gray-200">🎤 How is my class participation</button>
+                          <button class="suggested-btn rounded-full p-1 px-2 text-[12px] text-gray-800 border-2 border-gray-800 hover:bg-gray-200">📅 How is my academic activity</button>
+                        </div>  
+
+                        <div id="suggested-prompts" class="mt-3 flex flex-wrap gap-2 text-center justify-center">
+                          <!-- General Study & Motivation -->
+                          <button class="suggested-btn rounded-full p-1 px-2 text-[12px] text-green-800 border-2 border-green-800 hover:bg-gray-200">🤖 What can you do</button>
+                          <button class="suggested-btn rounded-full p-1 px-2 text-[12px] text-yellow-800 border-2 border-yellow-800 hover:bg-gray-200">💪 Motivate Me</button>
+                          <button class="suggested-btn rounded-full p-1 px-2 text-[12px] text-red-800 border-2 border-red-800 hover:bg-gray-200">📖 Give me study tips</button>
+                          <button class="suggested-btn rounded-full p-1 px-2 text-[12px] text-blue-800 border-2 border-blue-800 hover:bg-gray-200">📝 Exam preparation tips</button>
+                          <button class="suggested-btn rounded-full p-1 px-2 text-[12px] text-cyan-800 border-2 border-cyan-800 hover:bg-gray-200">⏰ How to manage time effectively</button>
+                          <button class="suggested-btn rounded-full p-1 px-2 text-[12px] text-orange-800 border-2 border-orange-800 hover:bg-gray-200">😌 How to handle stress</button>
+
+                          <!-- Memory, Focus & Performance -->
+                          <button class="suggested-btn rounded-full p-1 px-2 text-[12px] text-red-800 border-2 border-red-800 hover:bg-gray-200">🧠 How to improve memory</button>
+                          <button class="suggested-btn rounded-full p-1 px-2 text-[12px] text-indigo-800 border-2 border-indigo-800 hover:bg-gray-200">😌 How to stay calm under pressure</button>
+                          <button class="suggested-btn rounded-full p-1 px-2 text-[12px] text-pink-800 border-2 border-pink-800 hover:bg-gray-200">🧘 How to improve concentration</button>
+                        </div>
+
+
+                        <!-- JavaScript to Handle Button Click -->
+                        <script>
+                            document.querySelectorAll('.suggested-btn').forEach(button => {
+                                button.addEventListener('click', function () {
+                                    const chatInput = document.getElementById('chat-input');
+                                    const sendButton = document.getElementById('send-btn'); // Updated to match your button ID
+                                    
+                                    if (chatInput && sendButton) {
+                                        chatInput.value = this.textContent; // Set input field value
+                                        chatInput.dispatchEvent(new Event('input', { bubbles: true })); // Ensure frameworks detect change
+                                        sendButton.click(); // Simulate send button click
+                                    } else {
+                                        console.error("Chat input or send button not found.");
+                                    }
+                                });
+                            });
+                        </script>
+
+
+
+
+                    </div>
+                </div>
+
+                <div class="p-3 border-t flex">
+                  <span class="inline-flex items-center px-3 text-sm text-gray-900 border-2 rounded-e-0 border-gray-900 border-e-0 rounded-s-md">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-gray-500 dark:text-gray-400" viewBox="0 0 640 512"><path d="M320 0c17.7 0 32 14.3 32 32l0 64 120 0c39.8 0 72 32.2 72 72l0 272c0 39.8-32.2 72-72 72l-304 0c-39.8 0-72-32.2-72-72l0-272c0-39.8 32.2-72 72-72l120 0 0-64c0-17.7 14.3-32 32-32zM208 384c-8.8 0-16 7.2-16 16s7.2 16 16 16l32 0c8.8 0 16-7.2 16-16s-7.2-16-16-16l-32 0zm96 0c-8.8 0-16 7.2-16 16s7.2 16 16 16l32 0c8.8 0 16-7.2 16-16s-7.2-16-16-16l-32 0zm96 0c-8.8 0-16 7.2-16 16s7.2 16 16 16l32 0c8.8 0 16-7.2 16-16s-7.2-16-16-16l-32 0zM264 256a40 40 0 1 0 -80 0 40 40 0 1 0 80 0zm152 40a40 40 0 1 0 0-80 40 40 0 1 0 0 80zM48 224l16 0 0 192-16 0c-26.5 0-48-21.5-48-48l0-96c0-26.5 21.5-48 48-48zm544 0c26.5 0 48 21.5 48 48l0 96c0 26.5-21.5 48-48 48l-16 0 0-192 16 0z"/></svg>
+                  </span>
+                  <input type="text" id="chat-input" class="chat-box rounded-e-lg border-2 text-gray-900 block flex-1 w-full text-sm border-gray-900 p-2.5 focus:border-gray-100 placeholder:text-gray-900" placeholder="Ask something...">
+                  <button id="send-btn" class="ml-3 bg-gray-800 text-white px-4 py-2 rounded-md hover:bg-gray-700">
+                    <i class="fas fa-paper-plane"></i>
+                  </button>
+                </div>
+            </div>
+        </div>
+
+        <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const chatBox = document.getElementById("chat-box");
+            const chatInput = document.getElementById("chat-input");
+            const sendBtn = document.getElementById("send-btn");
+            const welcomeMessage = document.getElementById("welcome-message");
+
+            function appendMessage(sender, message) {
+                // Hide the welcome message once chat starts
+                if (welcomeMessage) {
+                    welcomeMessage.style.display = "none";
+                }
+
+                const messageDiv = document.createElement("div");
+                messageDiv.classList.add("flex", "items-start", "space-x-2");
+
+                if (sender === "bot") {
+                    messageDiv.innerHTML = `
+                        <div class="bg-gray-200 text-gray-800 text-[13px] p-3 rounded-lg max-w-md">
+                            ${message.replace(/\n/g, "<br>")}
+                        </div>
+
+                    `;
+                } else {
+                    messageDiv.classList.add("justify-end");
+                    messageDiv.innerHTML = `
+                        <div class="bg-gray-800 text-white text-[13px] p-3 rounded-lg max-w-xs">
+                            <strong></strong> ${message}
+                        </div>
+                    `;
+                }
+
+                chatBox.appendChild(messageDiv);
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }
+
+            sendBtn.addEventListener("click", function () {
+                const query = chatInput.value.trim();
+                if (!query) return;
+
+                appendMessage("user", query);
+                chatInput.value = "";
+                
+                // Show a typing indicator
+                const typingIndicator = document.createElement("div");
+                typingIndicator.id = "typing-indicator";
+                typingIndicator.innerHTML = `<div class="text-gray-500 italic">Eduke Bot is typing...</div>`;
+                chatBox.appendChild(typingIndicator);
+                chatBox.scrollTop = chatBox.scrollHeight;
+
+                // Send query to backend
+                fetch(`?query=${encodeURIComponent(query)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        chatBox.removeChild(typingIndicator); // Remove typing indicator
+                        appendMessage("bot", data.response);
+                    })
+                    .catch(error => {
+                        chatBox.removeChild(typingIndicator);
+                        appendMessage("bot", "Oops! Something went wrong. Try again.");
+                    });
+            });
+
+            // Allow sending messages by pressing "Enter"
+            chatInput.addEventListener("keypress", function (event) {
+                if (event.key === "Enter") {
+                    sendBtn.click();
+                }
+            });
+        });
+        </script>
+
+
+      </div>
+    </main>
+
+  </div>
+
+  <!-- JavaScript to toggle sidebar visibility -->
+  <script>
+    const hamburgerButton = document.getElementById('hamburger-button');
+    const sidebar = document.getElementById('sidebar');
+    const mainContent = document.getElementById('main-content');
+
+    hamburgerButton.addEventListener('click', () => {
+      sidebar.classList.toggle('-translate-x-full');
+      // Adjust main content width when the sidebar is hidden
+      mainContent.classList.toggle('lg:w-full');
+    });
+  </script>
+
+</body>
+</html>

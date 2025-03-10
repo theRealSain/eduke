@@ -59,6 +59,7 @@ urlpatterns = [
     path('student/subject/<int:subject_id>/', views.student_subject_detail, name='student_subject_detail'), # Subject Detail
     path('student/quiz/<int:subject_id>/<int:quiz_id>/', views.student_quiz, name='student_quiz'), # Quiz
     path('student/performance/', views.student_performance, name='student_performance'),
+    path('student/eduke_bot/', views.student_eduke_bot, name='student_eduke_bot'),
 
     path('parent/login/', views.parent_login, name='parent_login'),
     path('parent/dashboard/', views.parent_dashboard, name='parent_dashboard'),
