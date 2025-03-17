@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Eduke Student</title>
+  <title>Eduke Parent</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
   <link rel="stylesheet" type="text/css" href="{% static 'main/css/style.css' %}">
@@ -46,37 +46,49 @@
           <nav class="flex-1">
             <ul class="space-y-4 px-4">
               <li>
-                <a href="{% url 'student_dashboard' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                <a href="{% url 'parent_dashboard' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
                   <i class="fa-solid fa-table-columns"></i> &nbsp;
                   Dashboard
                 </a>
               </li>
               <li>
-                <a href="{% url 'student_class' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                <a href="{% url 'parent_class' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
                   <i class="fa-solid fa-chalkboard"></i> &nbsp;
                   Your Class
                 </a>
               </li>
               <li>
-                <a href="{% url 'student_performance' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                <a href="{% url 'parent_teacher_profile' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-chalkboard-user"></i> &nbsp;
+                  Your Teacher
+                </a>
+              </li>
+              <li>
+                <a href="{% url 'parent_evaluation' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                  <i class="fa-solid fa-square-poll-vertical"></i> &nbsp;
+                  Student Evaluation
+                </a>
+              </li>
+              <li>
+                <a href="{% url 'parent_student_performance' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
                   <i class="fa-solid fa-chart-line"></i> &nbsp;
-                  Your Performance
+                  Student Performance
                 </a>
               </li>
               <li class="bg-gray-300 rounded-md">
-                <a href="#" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                <a href="" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
                   <i class="fa-solid fa-robot"></i> &nbsp;
                   Eduke Bot
                 </a>
               </li>
               <li>
-                <a href="{% url 'student_chat' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                <a href="#" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
                   <i class="fa-solid fa-comments"></i> &nbsp;
                   Eduke Chat
                 </a>
               </li>
               <li>
-                <a href="" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                <a href="{% url 'parent_profile' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
                   <i class="fa-solid fa-circle-user"></i> &nbsp;
                   Profile
                 </a>
@@ -105,7 +117,7 @@
                           </div>
                         </a>
                         <div>
-                            <span class="font-semibold text-sm">{{ student.name }}</span>
+                            <span class="font-semibold text-sm">Parent of {{ parent.student_name }}</span>
                         </div>
                     </div>
                 </div>
@@ -119,32 +131,17 @@
                         
                         <!-- Suggested Prompts -->
                         <div id="suggested-prompts" class="mt-8 flex flex-wrap gap-2 text-center justify-center">
-                          <button class="suggested-btn rounded-full p-1 px-2 text-[12px] text-purple-800 border-2 border-purple-800 hover:bg-gray-200">📊 What is my attendance percentage</button>
-                          <button class="suggested-btn rounded-full p-1 px-2 text-[12px] text-blue-800 border-2 border-blue-800 hover:bg-gray-200">📚 What are my best and worst subjects</button>
-                          <button class="suggested-btn rounded-full p-1 px-2 text-[12px] text-red-800 border-2 border-red-800 hover:bg-gray-200">🏆 Show me the leaderboard</button>
-                        </div>  
-                        
-                        <div id="suggested-prompts" class="mt-3 flex flex-wrap gap-2 text-center justify-center">
-                          <!-- Evaluation-Based Suggestions -->
-                          <button class="suggested-btn rounded-full p-1 px-2 text-[12px] text-purple-800 border-2 border-purple-800 hover:bg-gray-200">📚 How can I improve my study time</button>
-                          <button class="suggested-btn rounded-full p-1 px-2 text-[12px] text-teal-800 border-2 border-teal-800 hover:bg-gray-200">💤 How can I get better sleep</button>
-                          <button class="suggested-btn rounded-full p-1 px-2 text-[12px] text-pink-800 border-2 border-pink-800 hover:bg-gray-200">🎤 How is my class participation</button>
-                          <button class="suggested-btn rounded-full p-1 px-2 text-[12px] text-gray-800 border-2 border-gray-800 hover:bg-gray-200">📅 How is my academic activity</button>
+                            <button class="suggested-btn rounded-full p-1 px-2 text-[12px] text-purple-800 border-2 border-purple-800 hover:bg-gray-200">📊 What is my child's attendance percentage?</button>
+                            <button class="suggested-btn rounded-full p-1 px-2 text-[12px] text-blue-800 border-2 border-blue-800 hover:bg-gray-200">📚 What are my child's best and worst subjects?</button>
+                            <button class="suggested-btn rounded-full p-1 px-2 text-[12px] text-red-800 border-2 border-red-800 hover:bg-gray-200">🏆 Show me the class leaderboard</button>
                         </div>  
 
                         <div id="suggested-prompts" class="mt-3 flex flex-wrap gap-2 text-center justify-center">
-                          <!-- General Study & Motivation -->
-                          <button class="suggested-btn rounded-full p-1 px-2 text-[12px] text-green-800 border-2 border-green-800 hover:bg-gray-200">🤖 What can you do</button>
-                          <button class="suggested-btn rounded-full p-1 px-2 text-[12px] text-yellow-800 border-2 border-yellow-800 hover:bg-gray-200">💪 Motivate Me</button>
-                          <button class="suggested-btn rounded-full p-1 px-2 text-[12px] text-red-800 border-2 border-red-800 hover:bg-gray-200">📖 Give me study tips</button>
-                          <button class="suggested-btn rounded-full p-1 px-2 text-[12px] text-blue-800 border-2 border-blue-800 hover:bg-gray-200">📝 Exam preparation tips</button>
-                          <button class="suggested-btn rounded-full p-1 px-2 text-[12px] text-cyan-800 border-2 border-cyan-800 hover:bg-gray-200">⏰ How to manage time effectively</button>
-                          <button class="suggested-btn rounded-full p-1 px-2 text-[12px] text-orange-800 border-2 border-orange-800 hover:bg-gray-200">😌 How to handle stress</button>
-
-                          <!-- Memory, Focus & Performance -->
-                          <button class="suggested-btn rounded-full p-1 px-2 text-[12px] text-red-800 border-2 border-red-800 hover:bg-gray-200">🧠 How to improve memory</button>
-                          <button class="suggested-btn rounded-full p-1 px-2 text-[12px] text-indigo-800 border-2 border-indigo-800 hover:bg-gray-200">😌 How to stay calm under pressure</button>
-                          <button class="suggested-btn rounded-full p-1 px-2 text-[12px] text-pink-800 border-2 border-pink-800 hover:bg-gray-200">🧘 How to improve concentration</button>
+                            <!-- Child's Academic Performance -->
+                            <button class="suggested-btn rounded-full p-1 px-2 text-[12px] text-purple-800 border-2 border-purple-800 hover:bg-gray-200">📈 How much time does my child spend studying</button>
+                            <button class="suggested-btn rounded-full p-1 px-2 text-[12px] text-blue-800 border-2 border-blue-800 hover:bg-gray-200">🛏️ Is my child getting enough sleep?</button>
+                            <button class="suggested-btn rounded-full p-1 px-2 text-[12px] text-green-800 border-2 border-green-800 hover:bg-gray-200">📖 How is my child's class participation</button>
+                            <button class="suggested-btn rounded-full p-1 px-2 text-[12px] text-gray-800 border-2 border-gray-800 hover:bg-gray-200">📅 How is my child's academic activity</button>
                         </div>
 
 

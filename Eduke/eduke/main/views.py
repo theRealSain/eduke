@@ -4072,11 +4072,8 @@ def student_eduke_bot(request):
         ]
         learning_responses = [
             "Use mnemonic techniques, like acronyms or visualization, to remember information easily! 🧠 Mnemonics are powerful tools that help you link new information to something you already know, making it easier to recall. Visualizing concepts or creating memorable phrases can significantly boost your memory and make learning more enjoyable.",
-            
-            "Teach someone else what you've learned—it reinforces your understanding! 🎤 When you explain a topic to another person, you solidify your own knowledge. It forces you to organize and articulate your thoughts, and you may discover areas where you need to strengthen your understanding. Teaching is one of the best ways to master material.",
-            
-            "Break information into smaller chunks and review it regularly instead of cramming. 📖 Instead of overwhelming yourself with long study sessions, break your material into bite-sized pieces and review them consistently. This method improves long-term retention and makes studying less stressful. The more you review, the easier it becomes to remember.",
-            
+            "Teach someone else what you've learned—it reinforces your understanding! 🎤 When you explain a topic to another person, you solidify your own knowledge. It forces you to organize and articulate your thoughts, and you may discover areas where you need to strengthen your understanding. Teaching is one of the best ways to master material.",            
+            "Break information into smaller chunks and review it regularly instead of cramming. 📖 Instead of overwhelming yourself with long study sessions, break your material into bite-sized pieces and review them consistently. This method improves long-term retention and makes studying less stressful. The more you review, the easier it becomes to remember.",            
             "Try using spaced repetition apps to enhance long-term retention! 🔄 Spaced repetition uses algorithms to schedule reviews of material at increasing intervals, which helps you retain information for the long term. Apps like Anki or Quizlet are great for this technique and can boost your recall by ensuring you review key concepts just before you're about to forget them."
         ]
 
@@ -4978,6 +4975,310 @@ def parent_student_performance(request):
 
     print("✅ Rendering 'parent_student_performance.html' template.")
     return render(request, "parents/parent_student_performance.html", context)
+
+
+
+
+
+
+from django.shortcuts import render, redirect
+from django.http import JsonResponse
+from django.db import connection
+
+def parent_eduke_bot(request):
+    """Handles chatbot page rendering and processing chatbot queries for parents."""
+
+    # Redirect if parent is not logged in
+    if 'parent_id' not in request.session:
+        return redirect('parent_login')
+
+    parent_id = request.session.get("parent_id")
+
+    print(f"parent id: {parent_id}")
+
+    # Fetch parent and child details
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT main_parents.name AS parent_name, 
+                main_students.id AS student_id,  -- Fetch student_id
+                main_students.name AS student_name, 
+                main_students.roll_no, 
+                main_classes.class_name
+            FROM main_parents
+            LEFT JOIN main_students ON main_parents.student_id = main_students.id
+            LEFT JOIN main_classes ON main_students.class_obj_id = main_classes.id
+            WHERE main_parents.id = %s
+        """, [parent_id])
+        parent = cursor.fetchone()
+
+    if not parent:
+        return JsonResponse({"response": "Parent details not found. Please log in again."})
+
+    student_id = parent[1]  # Extract student_id
+
+    parent_details = {
+        "name": parent[0],        # Parent Name
+        "student_id": student_id, # Student ID (NEW)
+        "student_name": parent[2],  # Student Name
+        "roll_no": parent[3],  # Student Roll No
+        "class": parent[4] if parent[4] else "Not assigned"  # Class
+    }
+
+    if request.method == "GET" and "query" in request.GET:
+        query = preprocess_text(request.GET.get("query", ""))  # NLP Preprocessing
+
+        # 🔹 Capabilities
+        capability_queries = [
+            "what can you do", "how can you help me", "can you help me", "what else can you do",
+            "what are your features", "what are your capabilities", "what services do you offer",
+            "how can you assist me", "tell me your functions", "what kind of help do you provide",
+            "explain your abilities", "what tasks can you perform", "how do you work",
+            "are you useful", "why should I use you"
+        ]
+        capabilities_response = (
+            "I can help you with:\n"
+            "✔ Checking your attendance records 📅\n"
+            "✔ Viewing your marks 📊\n"
+            "✔ Viewing your quiz score 📅\n"
+            "✔ Providing study tips 📖\n"
+            "✔ Suggesting ways to improve in weak subjects 🎯\n"
+            "✔ Showing the student leaderboard 🏆\n"
+            "✔ Helping with exam preparation 📝\n"
+            "✔ Providing time management tips ⏳\n"
+            "✔ Boosting your motivation 🚀\n"
+            "✔ Reducing stress and improving focus 🌿\n"
+            "✔ Teaching memorization & learning techniques 🧠\n"
+            "✔ Answering common student queries 💡\n"
+            "✔ Increase Productivity and improving focus 🌿\n"
+            "Feel free to ask me anything! 😊"
+        )
+        if any(q in query for q in capability_queries):
+            return JsonResponse({"response": (capabilities_response)})
+
+        # 🔹 Greeting Responsesx
+        greeting_responses = {
+            "hi": f"Hello dear parent! How can I assist you regarding {parent_details['name']}’s academics today? 😊",
+            "hello": f"Hello dear parent! I’m here to help with {parent_details['name']}'s progress updates. What do you need?",
+            "hey": f"Hey! What’s on your mind regarding {parent_details['name']}’s studies? 📚",
+            "good morning": f"Good morning, dear parent! Hope you and {parent_details['name']} have a great day ahead! ☀️",
+            "good afternoon": f"Good afternoon, dear parent! Let’s check on {parent_details['name']}’s academic progress. 😊",
+            "good evening": f"Good evening, dear parent! Want to review {parent_details['name']}'s marks or attendance? 🌆",
+            "good night": f"Good night, dear parent! Make sure {parent_details['name']} gets enough rest. 🌙",
+            "what's up": f"Not much! Just here to help with {parent_details['name']}’s academic journey. 🎓",
+            "how are you": f"I'm just a chatbot, dear parent, but I feel great helping you track {parent_details['name']}’s progress! 🚀",
+            "goodbye": f"Goodbye! Stay involved in {parent_details['name']}'s learning. See you next time! 👋",
+            "bye": f"Bye! Let’s catch up on {parent_details['name']}’s progress again soon! 🎯",
+            "see you": f"See you later, dear parent! Keep supporting {parent_details['name']}’s education! 📚",
+            "take care": f"Take care, dear parent! Stay positive and keep motivating {parent_details['name']}! 🌟",
+            "thanks": f"You're welcome! I'm always here to help with {parent_details['name']}’s learning! 🚀",
+            "thank you": f"You're most welcome, dear parent! Let me know if you need more details about {parent_details['name']}’s academics. 😊"
+        }
+
+        # 🔹 Greeting Responses Handling
+        for greeting, response in greeting_responses.items():
+            if query.startswith(greeting):
+                return JsonResponse({"response": response})
+
+        # 🔹 Identity
+        identity_queries = [
+            "who are you", "what is your name", "tell me about yourself", "introduce yourself",
+            "what are you", "who created you", "who made you", "what do people call you",
+            "are you a bot", "are you human", "are you a bot", "tell me about eduke bot",
+            "what is eduke bot", "what do you do", "explain yourself"
+        ]
+        identity_responses = [
+            "I'm Eduke Bot, your friendly academic assistant! I help students track their progress, manage attendance, and improve their study habits.",
+            "Hey! I'm Eduke Bot, designed to assist you with learning, marks, and study strategies!"
+        ]
+        if any(q in query for q in identity_queries):
+            return JsonResponse({"response": random.choice(identity_responses)})
+        
+
+        # 🔹 Best & Worst Subjects Query
+        if "best and worst subjects" in query or "strongest and weakest subjects" in query:
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                    SELECT main_subjects.subject_name, main_marks.mark_percentage 
+                    FROM main_marks 
+                    JOIN main_subjects ON main_marks.subject_id = main_subjects.id
+                    WHERE main_marks.student_id = %s
+                """, [student_id])
+                marks_data = cursor.fetchall()
+
+            if marks_data:
+                best_subject = max(marks_data, key=lambda x: x[1])
+                worst_subject = min(marks_data, key=lambda x: x[1])
+
+                return JsonResponse({
+                    "response": f"Your best subject is {best_subject[0]} with {best_subject[1]}% marks. "
+                                f"Your weakest subject is {worst_subject[0]} with {worst_subject[1]}%. Keep practicing!"
+                })
+
+        
+        # 🔹 Attendance Queries
+        if "attendance" in query or "how many classes" in query:
+            with connection.cursor() as cursor:
+                cursor.execute("SELECT COUNT(*) FROM main_attendance WHERE student_id = %s", [student_id])
+                total_classes = cursor.fetchone()[0] or 0
+
+                cursor.execute("SELECT COUNT(*) FROM main_attendance WHERE student_id = %s AND status = 'present'", [student_id])
+                present_classes = cursor.fetchone()[0] or 0
+
+            if total_classes > 0:
+                attendance_percentage = (present_classes / total_classes) * 100
+                motivation = "You're doing great! Keep attending! 😊" if attendance_percentage > 75 else "Try to attend more classes to stay on track. 📚"
+                return JsonResponse({"response": f"You attended {present_classes}/{total_classes} classes ({attendance_percentage:.2f}%). {motivation}"})
+
+
+        # 🔹 Student Evaluation Query (Study, Sleep, Class Participation, Academic Activity)
+        if any(keyword in query for keyword in ["focus", "study", "improve", "stress", "concentration", "sleep", "class participation", "academic activity"]):
+            print("📌 [DEBUG] Student evaluation query detected.")
+
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                    SELECT study_time_rating, sleep_time_rating, class_participation_rating, academic_activity_rating
+                    FROM main_studentevaluation WHERE student_id = %s
+                """, [student_id])
+                evaluations = cursor.fetchall()
+
+            if evaluations:
+                # Initialize sum and count for calculating averages
+                total_study_time, total_sleep_time, total_class_participation, total_academic_activity = 0, 0, 0, 0
+                count_study_time, count_sleep_time, count_class_participation, count_academic_activity = 0, 0, 0, 0
+
+                # Process each evaluation row
+                for study_time, sleep_time, class_participation, academic_activity in evaluations:
+                    if study_time is not None:
+                        total_study_time += study_time
+                        count_study_time += 1
+                    if sleep_time is not None:
+                        total_sleep_time += sleep_time
+                        count_sleep_time += 1
+                    if class_participation is not None:
+                        total_class_participation += class_participation
+                        count_class_participation += 1
+                    if academic_activity is not None:
+                        total_academic_activity += academic_activity
+                        count_academic_activity += 1
+
+                # Calculate averages (handling NULL values)
+                avg_study_time = total_study_time / count_study_time if count_study_time > 0 else None
+                avg_sleep_time = total_sleep_time / count_sleep_time if count_sleep_time > 0 else None
+                avg_class_participation = total_class_participation / count_class_participation if count_class_participation > 0 else None
+                avg_academic_activity = total_academic_activity / count_academic_activity if count_academic_activity > 0 else None
+
+                response = None  # Default response
+
+                # Check query intent and respond specifically
+                if "study" in query or "focus" in query or "improve" in query:
+                    if avg_study_time is not None:
+                        if avg_study_time < 40:
+                            response = ("Your study time is quite low, which might be affecting your academic performance. 📚 "
+                                        "It's important to establish a structured study routine. Try setting small, achievable goals for each session, "
+                                        "and use techniques like the Pomodoro method to stay focused. Also, consider reducing distractions by keeping your study space organized "
+                                        "and free from interruptions. Over time, consistency will help you improve significantly! 🚀")
+                        elif avg_study_time < 70:
+                            response = ("You're doing a decent job with your studies, but there's room for improvement. 💡 "
+                                        "Try to analyze which subjects or topics need more focus and allocate additional time to them. "
+                                        "Studying smarter is just as important as studying harder—use active recall, note-making, and mind maps to make learning more effective. "
+                                        "Setting deadlines and rewarding yourself after completing study goals can keep you motivated. Keep pushing forward!")
+                        else:
+                            response = ("Fantastic! You're maintaining a great study routine, and it's clearly benefiting your learning. 🚀 "
+                                        "To maximize your efforts, consider teaching what you've learned to others—it strengthens your understanding. "
+                                        "Also, make sure to take short breaks to avoid burnout and refresh your mind. Keep challenging yourself with new learning strategies, "
+                                        "and don't forget to stay curious and enjoy the process of learning! 🎓")
+                    else:
+                        response = ("I don't have enough study data yet to give you feedback. 📊 "
+                                    "However, if you're looking to improve your study habits, start by tracking your daily study hours and the topics you cover. "
+                                    "Small, steady improvements will make a big difference over time!")
+
+                elif "sleep" in query:
+                    if avg_sleep_time is not None:
+                        if avg_sleep_time < 40:
+                            response = ("You're not getting enough sleep, and this could be affecting your concentration, memory, and overall health. 💤 "
+                                        "Lack of sleep can lead to decreased focus, slower cognitive function, and even increased stress levels. "
+                                        "Try to set a fixed bedtime and wake-up schedule, avoid screen time before sleeping, and create a relaxing bedtime routine. "
+                                        "Aim for at least 7-8 hours of sleep every night, as quality rest is essential for learning and brain function. 🌙")
+                        elif avg_sleep_time < 70:
+                            response = ("You're getting a moderate amount of sleep, but improving your sleep quality could enhance your energy levels and focus. 🌙 "
+                                        "Consider maintaining a regular sleep schedule, avoiding caffeine before bedtime, and ensuring that your sleeping environment is comfortable. "
+                                        "Your brain consolidates information while you sleep, so getting better rest can actually help you retain what you study more effectively!")
+                        else:
+                            response = ("You're doing an excellent job maintaining a good sleep schedule! ✅ "
+                                        "Quality sleep is one of the key factors in academic success. It helps with focus, mood regulation, and energy levels. "
+                                        "Just make sure you continue this healthy habit, and if you ever feel fatigued despite enough sleep, consider your diet and exercise routine as well. "
+                                        "Keep up the great work, and your brain will thank you!")
+                    else:
+                        response = ("I don't have enough sleep data yet, but if you're looking to improve your sleep quality, start tracking your sleep patterns. 🌙 "
+                                    "A well-rested mind is more productive and efficient, so prioritize good sleep habits!")
+
+                elif "class participation" in query:
+                    if avg_class_participation is not None:
+                        if avg_class_participation < 40:
+                            response = ("It looks like you aren't participating much in class discussions. 🎤 "
+                                        "Active participation can help you understand topics better and improve your confidence. "
+                                        "Try asking questions, sharing your thoughts, or even taking small steps like nodding and making eye contact with the teacher. "
+                                        "Engaging with the class material and your peers can make learning more interactive and enjoyable!")
+                        elif avg_class_participation < 70:
+                            response = ("You're participating fairly well in class, but there's still room to be more involved. ✨ "
+                                        "Try contributing more by answering questions, discussing ideas with classmates, and sharing your opinions on topics. "
+                                        "Even small efforts like summarizing what the teacher said in your own words can boost understanding and retention. "
+                                        "Active learning is a great way to build confidence and sharpen your thinking skills!")
+                        else:
+                            response = ("You're doing a fantastic job actively participating in class! 📖 "
+                                        "Engaging in discussions and asking questions not only helps you learn better but also makes the learning process more enjoyable. "
+                                        "Keep up the enthusiasm and continue being involved—your curiosity and effort will take you far!")
+                    else:
+                        response = ("I don't have enough class participation data yet, but remember that speaking up and engaging in discussions can improve your understanding. 🎤 "
+                                    "Start by answering simple questions, sharing your thoughts, and gradually building the confidence to express yourself more in class!")
+
+                elif "academic activity" in query:
+                    if avg_academic_activity is not None:
+                        if avg_academic_activity < 40:
+                            response = ("It seems like you're not engaging much in academic activities outside regular studies. 📊 "
+                                        "Taking part in extra learning opportunities, such as solving additional exercises, joining study groups, or participating in academic clubs, "
+                                        "can help you develop a deeper understanding of subjects. Try exploring online courses, competitions, or group discussions—they can make learning fun and effective!")
+                        elif avg_academic_activity < 70:
+                            response = ("You're doing a decent job engaging in academic activities, but pushing yourself a little further can be beneficial. 📌 "
+                                        "Consider exploring new learning resources like educational videos, books, and online practice tests. "
+                                        "Participating in academic discussions or challenging yourself with new problems can help you develop a broader perspective. "
+                                        "Keep up the momentum, and soon, you'll see improvements in your critical thinking and analytical skills!")
+                        else:
+                            response = ("You're actively engaged in academic activities, and that's a fantastic habit! 🎯 "
+                                        "Your curiosity and willingness to explore beyond textbooks are what set high achievers apart. "
+                                        "Keep challenging yourself with new learning experiences, and don't hesitate to take up leadership roles in academic projects or mentor your peers. "
+                                        "Your dedication will lead to great success!")
+                    else:
+                        response = ("I don't have enough academic activity data yet, but participating in extra learning activities can make a big difference. 📚 "
+                                    "Try joining academic clubs, taking part in discussions, or engaging in self-learning outside class—these efforts can greatly enhance your knowledge!")
+
+                else:
+                    response = ("I'm not sure how to interpret your query. Could you clarify what you're looking for? 😊")
+
+
+                return JsonResponse({"response": response})
+            else:
+                return JsonResponse({"response": "I don't have any evaluation data yet. Keep up the good work and check back later! 📊"})
+        
+
+        # 🔹 Leaderboard Query
+        if "leaderboard" in query or "top students" in query:
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                    SELECT name, AVG(mark_percentage) as avg_marks FROM main_students 
+                    JOIN main_marks ON main_students.id = main_marks.student_id
+                    GROUP BY main_students.id ORDER BY avg_marks DESC LIMIT 5
+                """)
+                leaderboard = cursor.fetchall()
+
+            leaderboard_text = "\n".join(f"{i+1}. {row[0]} - {row[1]:.2f}%" for i, row in enumerate(leaderboard))
+            return JsonResponse({"response": f"🏆 Top Performing Students:\n{leaderboard_text}\n\nKeep working hard! 💪"})
+
+
+        # 🔹 Default Response
+        return JsonResponse({"response": f"I'm here to help you track {parent_details['student_name']}'s progress, attendance, and marks! Just ask! 😊"})
+
+    return render(request, "parents/parent_eduke_bot.html", {"parent": parent_details})
 
 
 

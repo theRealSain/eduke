@@ -70,5 +70,6 @@ urlpatterns = [
     path('parent_chat/<int:user_id>/', views.parent_chat_user, name='parent_chat_user'),
     path('parent/evaluation/', views.parent_evaluation, name='parent_evaluation'),
     path('parent/student_performance/', views.parent_student_performance, name='parent_student_performance'),
+    path('parent/eduke_bot/', views.parent_eduke_bot, name='parent_eduke_bot'),
 
 ]   
