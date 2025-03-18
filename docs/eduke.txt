@@ -1,60 +1,61 @@
 eduke/
-    eduke/
-        __pycache__/
-        ...
-        ...
-        settings.py
-        ...
-        ...
-    main/
-        __pycache__/
-            ...
-            ...
-            ...
-            ...
-            ...
-            ...
-        migrations/
-            __pycache__/
-                ...
-            ...
-        static/
-            main/
-                images/
-                    image files...
-                    ...
-                    ...
-                    ...
-                    ...
-                    ...image files
-        templates/
-		admin/
-			admin_dashboard.html
-		registration/
-			institution_register.html
-		index.html
-		login.html
-        __init__.py
-        admin.py
-        apps.py
-        models.py
-        tests.py
-        urls.py
-        views.py
-    static/
-        admin/
-            css
-            img
-            js
-        main/
-	...
-	...
-	...
-    venv/
-    db.sqlite3
-    manage.py
-
-
+├─ eduke/
+│  ├─ __pycache__/
+│  ├─ __init__.py
+│  ├─ asgi.py
+│  ├─ settings.py
+│  ├─ urls.py
+│  └─ wsgi.py
+├─ main/
+│  ├─ __pycache__/
+│  ├─ migrations/
+│  ├─ static/
+│  │  └─ main/
+│  │     ├─ css/
+│  │     │  └─ style.css
+│  │     └─ images/
+│  ├─ templates/
+│  │  ├─ admin/
+│  │  ├─ class_head/
+│  │  ├─ parents/
+│  │  ├─ registration/
+│  │  ├─ students/
+│  │  ├─ subject_head/
+│  │  ├─ index.html
+│  │  └─ login.html
+│  ├─ __init__.py
+│  ├─ admin.py
+│  ├─ apps.py
+│  ├─ forms.py
+│  ├─ models.py
+│  ├─ tests.py
+│  ├─ urls.py
+│  └─ views.py
+├─ media/
+│  ├─ uploads/
+├─ ml/
+│  ├─ Eduke_FInal_training_Data.csv
+│  └─ train_model.py
+├─ static/
+│  ├─ admin/
+│  │  ├─ css/
+│  │  ├─ img/
+│  │  └─ js/
+│  └─ main/
+│     ├─ files/
+│     └─ images/
+├─ staticfiles/
+│  ├─ admin/
+│  │  ├─ css/
+│  │  ├─ img/
+│  │  └─ js/
+│  └─ main/
+│     ├─ css/
+│     │  └─ style.css
+│     └─ files/
+├─ venv/
+├─ db.sqlite3
+└─ manage.py
 
 
 

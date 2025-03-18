@@ -125,7 +125,7 @@
                   
                   <!-- Subject Selection Form -->
                   <form method="GET" action="{% url 'class_head_student_performance' student.id %}">
-                      <select name="subject_id" class="border-2 border-gray-400 rounded-lg p-2 text-gray-700" onchange="this.form.submit()">
+                      <select name="subject_id" id="subject-select" class="border-2 border-gray-400 rounded-lg p-2 text-gray-700" onchange="this.form.submit()">
                           <option value="" selected hidden>Select a Subject</option>
                           {% for subject in subjects %}
                               <option value="{{ subject.id }}" {% if subject.id == selected_subject_id %}selected{% endif %}>
@@ -189,6 +189,84 @@
                   🖨️ Print Report
               </button>
           </div>
+
+          <div class="mx-auto p-6 bg-white shadow-lg rounded-lg" id="performance-details">
+            <h2 class="text-2xl font-bold text-gray-700 text-center mb-5 uppercase">📊 Student Performance Prediction</h2>
+
+            <!-- Performance Data Section -->
+            <div class="space-y-4 mb-8">
+                <div class="flex justify-between border-b border-gray-300 pb-2">
+                    <p class="font-medium">Attendance Percentage:</p>
+                    <h4 class="text-gray-700">{{ evaluations.attendance_percentage|floatformat:2 }}%</h4>
+                </div>
+                <div class="flex justify-between border-b border-gray-300 pb-2">
+                    <p class="font-medium">Internal Marks:</p>
+                    <h4 class="text-gray-700">{{ evaluations.marks_percentage|floatformat:2 }}%</h4>
+                </div>
+                <div class="flex justify-between border-b border-gray-300 pb-2">
+                    <p class="font-medium">Study Time:</p>
+                    <h4 class="text-gray-700">{{ evaluations.study_time_rating|floatformat:2 }}%</h4>
+                </div>
+                <div class="flex justify-between border-b border-gray-300 pb-2">
+                    <p class="font-medium">Sleep Time:</p>
+                    <h4 class="text-gray-700">{{ evaluations.sleep_time_rating|floatformat:2 }}%</h4>
+                </div>
+                <div class="flex justify-between border-b border-gray-300 pb-2">
+                    <p class="font-medium">Class Participation:</p>
+                    <h4 class="text-gray-700">{{ evaluations.class_participation_rating|floatformat:2 }}%</h4>
+                </div>
+                <div class="flex justify-between">
+                    <p class="font-medium">Academic Activity:</p>
+                    <h4 class="text-gray-700">{{ evaluations.academic_activity_rating|floatformat:2 }}%</h4>
+                </div>
+            </div>
+
+            <!-- Prediction Result Section (Hidden Initially) -->
+            <div id="prediction-result" class="hidden p-2 mt-2">
+                <h3 class="text-lg font-bold text-center text-gray-700">
+                    Predicted Final Marks for <span id="selected-subject-name" class="font-bold text-purple-700"></span> is: <span id="predicted-marks" class="text-purple-700"></span>
+                </h3>
+            </div>
+
+            <!-- Prediction Button -->
+            <button id="predict-btn" class="px-6 py-2 bg-gray-800 w-full text-white font-medium rounded-md hover:bg-gray-900">
+                Predict My Final Score
+            </button>
+          </div>
+
+          <script>
+          document.addEventListener("DOMContentLoaded", function () {
+              document.getElementById("predict-btn").addEventListener("click", function () {
+                  let subjectDropdown = document.getElementById("subject-select");
+                  let predictionResultDiv = document.getElementById("prediction-result");
+
+                  if (subjectDropdown) {
+                      let selectedSubjectId = subjectDropdown.value;
+                      let selectedSubjectName = subjectDropdown.options[subjectDropdown.selectedIndex].text;
+                      document.getElementById("selected-subject-name").textContent = selectedSubjectName;
+
+                      // Send AJAX request to fetch predicted marks
+                      fetch(window.location.pathname + `?subject_id=${selectedSubjectId}`, {
+                          headers: { "X-Requested-With": "XMLHttpRequest" } // Ensure Django recognizes it as an AJAX request
+                      })
+                          .then(response => response.json())
+                          .then(data => {
+                              if (data.predicted_marks !== null) {
+                                  document.getElementById("predicted-marks").textContent = data.predicted_marks + "%";
+                              } else {
+                                  document.getElementById("predicted-marks").textContent = "N/A";
+                              }
+
+                              // Ensure the div is visible
+                              predictionResultDiv.classList.remove("hidden", "opacity-0");
+                              predictionResultDiv.classList.add("block");
+                          })
+                          .catch(error => console.error("Error fetching predicted marks:", error));
+                  }
+              });
+          });
+          </script>
+
         </div>
 
         <!-- JavaScript -->

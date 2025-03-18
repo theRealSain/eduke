@@ -64,6 +64,12 @@
                 </a>
               </li>
               <li>
+                <a href="{% url 'student_prediction' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
+                    <i class="fa-solid fa-fire-flame-curved"></i> &nbsp;
+                    Score Prediction
+                </a>
+              </li>
+              <li>
                 <a href="{% url 'student_eduke_bot' %}" class="flex items-center p-2 rounded-md hover:bg-[#e8c7ff]">
                   <i class="fa-solid fa-robot"></i> &nbsp;
                   Eduke Bot
@@ -124,7 +130,7 @@
               <!-- Cartoon PNG Image positioned at the bottom-right corner -->
               <img src="{% static 'main/images/subject.png' %}" alt="Cartoon" class="absolute bottom-0 right-0 w-[150px] transform translate-x-4 translate-y-4 opacity-80 group-hover:opacity-100 transition-opacity duration-300" />
             </a>
-            <a href="" class="block relative group">
+            <a href="{% url 'student_prediction' %}" class="block relative group">
               <div class="bg-white p-6 rounded-lg shadow-lg pt-[15px] pl-[15px]">
                 <h3 class="text-2xl font-bold text-gray-800 uppercase mb-[20px]">SCORE PREDICTION</h3>
                 <p class="font-semibold text-purple-700 text-[20px]">View Score Predictions</p>

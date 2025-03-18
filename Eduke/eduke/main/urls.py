@@ -60,6 +60,7 @@ urlpatterns = [
     path('student/quiz/<int:subject_id>/<int:quiz_id>/', views.student_quiz, name='student_quiz'), # Quiz
     path('student/performance/', views.student_performance, name='student_performance'),
     path('student/eduke_bot/', views.student_eduke_bot, name='student_eduke_bot'),
+    path('student/prediction/', views.student_prediction, name='student_prediction'),
 
     path('parent/login/', views.parent_login, name='parent_login'),
     path('parent/dashboard/', views.parent_dashboard, name='parent_dashboard'),
@@ -71,5 +72,8 @@ urlpatterns = [
     path('parent/evaluation/', views.parent_evaluation, name='parent_evaluation'),
     path('parent/student_performance/', views.parent_student_performance, name='parent_student_performance'),
     path('parent/eduke_bot/', views.parent_eduke_bot, name='parent_eduke_bot'),
+    path('parent/prediction/', views.parent_prediction, name='parent_prediction'),
+
+    path('api/predict_marks/', views.predict_marks, name='predict_marks'),
 
 ]   

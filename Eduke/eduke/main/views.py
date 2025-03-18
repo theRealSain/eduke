@@ -22,6 +22,11 @@ from decimal import Decimal, ROUND_HALF_UP
 import random
 import re
 from textblob import TextBlob
+import joblib
+import numpy as np
+from django.conf import settings
+from ml.predict import predict_performance
+
 
 # Index page
 def index(request):
@@ -1577,6 +1582,11 @@ def class_head_students(request):
 
 
 
+import json
+from django.shortcuts import render, redirect
+from django.db import connection
+from ml.predict import predict_performance  # Importing the prediction function
+
 def class_head_student_performance(request, student_id):
     # Retrieve the class_id from session
     class_id = request.session.get('class_id')
@@ -1585,16 +1595,17 @@ def class_head_student_performance(request, student_id):
         print("[ERROR] No class_id found in session. Redirecting to class_head login.")
         return redirect('class_head_login')
 
-    subject_id = request.GET.get('subject_id')  # Get the selected subject from query params
+    subject_id = request.GET.get('subject_id')  # Get selected subject from query params
     print(f"\n[INFO] Class Head Student Performance View Loaded for Student ID: {student_id}")
     if subject_id:
         print(f"[INFO] Selected Subject ID: {subject_id}")
 
     student_data = {}
     evaluations = {}
-    quiz_percentage = 0  # Default value to avoid None issues
+    quiz_percentage = 0  
     subjects = []
     selected_subject_name = None
+    predicted_marks = None  # Placeholder for predicted marks
 
     try:
         with connection.cursor() as cursor:
@@ -1609,8 +1620,8 @@ def class_head_student_performance(request, student_id):
 
             if row:
                 student_data = {
-                    "id": row[0],  # ✅ Corrected: Student ID
-                    "name": row[1],  # ✅ Student Name
+                    "id": row[0],
+                    "name": row[1],
                     "roll_no": row[2],
                     "class_name": row[3],
                     "email": row[4] if row[4] else "--",
@@ -1629,17 +1640,15 @@ def class_head_student_performance(request, student_id):
                 """, [student_data["class_id"]])
                 subjects = [{"id": row[0], "name": row[1]} for row in cursor.fetchall()]
 
-            # Get the name of the selected subject
             selected_subject_name = next((s["name"] for s in subjects if str(s["id"]) == subject_id), None)
-
             if selected_subject_name:
                 print(f"[DEBUG] Selected Subject: {selected_subject_name} (ID: {subject_id})")
             else:
                 print("[WARNING] Selected subject not found in student's class subjects.")
 
         # Fetch student evaluation details for the selected subject
-        if subject_id:
-            print(f"[DEBUG] Fetching evaluation data for subject: {selected_subject_name} (ID: {subject_id})...")
+        if subject_id and selected_subject_name:
+            print(f"[DEBUG] Fetching evaluation data for {selected_subject_name} (ID: {subject_id})...")
             with connection.cursor() as cursor:
                 cursor.execute("""
                     SELECT marks_percentage, attendance_percentage,
@@ -1660,11 +1669,27 @@ def class_head_student_performance(request, student_id):
                         "academic_activity_rating": round(row[5] or 0, 2),
                     }
                     print(f"[DEBUG] Evaluation Data: {evaluations}")
+
+                    # Call prediction model
+                    print("[DEBUG] Calling prediction function...")
+                    predicted_marks = predict_performance(
+                        evaluations["attendance_percentage"],
+                        evaluations["marks_percentage"],
+                        evaluations["class_participation_rating"],
+                        evaluations["academic_activity_rating"],
+                        evaluations["sleep_time_rating"],
+                        evaluations["study_time_rating"]
+                    )
+
+                    # Ensure predicted marks is a float or None
+                    predicted_marks = round(float(predicted_marks), 2) if predicted_marks is not None else None
+                    print(f"[DEBUG] Predicted Marks: {predicted_marks}")
+
                 else:
                     print(f"[WARNING] No evaluation data found for {selected_subject_name}.")
-        
+
         # Fetch quiz performance for the selected subject
-        if subject_id:
+        if subject_id and selected_subject_name:
             print(f"[DEBUG] Fetching quiz performance for {selected_subject_name} (ID: {subject_id})...")
             with connection.cursor() as cursor:
                 cursor.execute("""
@@ -1684,7 +1709,7 @@ def class_head_student_performance(request, student_id):
                 else:
                     print(f"[WARNING] No quiz data found for {selected_subject_name}.")
 
-        # Prepare data for Graph
+        # Prepare data for Graph (ensure all values are numeric)
         graph_data = [
             float(evaluations.get("marks_percentage", 0)),
             float(evaluations.get("attendance_percentage", 0)),
@@ -1692,24 +1717,32 @@ def class_head_student_performance(request, student_id):
             float(evaluations.get("sleep_time_rating", 0)),
             float(evaluations.get("class_participation_rating", 0)),
             float(evaluations.get("academic_activity_rating", 0)),
-            float(quiz_percentage)
+            float(quiz_percentage),
+            float(predicted_marks) if predicted_marks is not None else 0  # Ensure numeric value for predicted marks
         ]
 
     except Exception as e:
         print(f"[ERROR] An error occurred: {e}")
-        return redirect('error_page')  # Redirect to an error page if needed
+        return redirect('error_page')  
 
     context = {
-        "student": student_data,  # ✅ Now contains `id`
+        "student": student_data,
         "evaluations": evaluations,
         "quiz_percentage": quiz_percentage,
         "subjects": subjects,
         "selected_subject_id": int(subject_id) if subject_id else None,
-        "graph_data": json.dumps(graph_data)  # ✅ Ensure JSON-safe format
+        "predicted_marks": predicted_marks,  # Include predicted marks in context
+        "graph_data": json.dumps(graph_data)  
     }
+
+    # Check if the request is an AJAX request
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({"predicted_marks": predicted_marks})
 
     print("[INFO] Final Context Data Prepared for Rendering.")
     return render(request, "class_head/class_head_student_performance.html", context)
+
+
 
 
 
@@ -3051,105 +3084,159 @@ def subject_head_evaluation(request):
 
 
 
+import json
+from django.shortcuts import render, redirect
+from django.http import JsonResponse
+from django.db import connection
+from ml.predict import predict_performance  # Import the performance prediction function
+
 def subject_head_students(request, student_id):
+    # Retrieve the subject_id from session
     subject_id = request.session.get('subject_id')
 
     if not subject_id:
-        print("❌ Subject ID not found in session. Redirecting to login.")
+        print("[ERROR] No subject_id found in session. Redirecting to subject_head login.")
         return redirect('subject_head_login')
 
-    with connection.cursor() as cursor:
-        # Fetch student details
-        cursor.execute("""
-            SELECT s.name, s.roll_no, c.class_name, s.email 
-            FROM main_students s
-            LEFT JOIN main_classes c ON s.class_obj_id = c.id
-            WHERE s.id = %s
-        """, [student_id])
-        student = cursor.fetchone()
+    print(f"\n[INFO] Subject Head Student Performance View Loaded for Student ID: {student_id}")
+    print(f"[INFO] Viewing for Subject ID: {subject_id}")
 
-        if not student:
-            return redirect('subject_head_dashboard')
+    student_data = {}
+    evaluations = {}
+    quiz_percentage = 0
+    predicted_marks = None
+    subject_name = "Unknown Subject"  # Default in case of error
 
-        student_data = {
-            "name": student[0],
-            "roll_no": student[1],
-            "class_name": student[2] if student[2] else "N/A",
-            "email": student[3] if student[3] else "N/A"
-        }
+    try:
+        with connection.cursor() as cursor:
+            # Fetch subject name from subject_id
+            cursor.execute("""
+                SELECT subject_name FROM main_subjects WHERE id = %s
+            """, [subject_id])
+            row = cursor.fetchone()
+            
+            if row:
+                subject_name = row[0]
+                print(f"[INFO] Subject Name Retrieved: {subject_name}")
+            else:
+                print("[ERROR] Subject not found for given ID.")
 
-        # Fetch evaluation details
-        cursor.execute("""
-            SELECT study_time_rating, sleep_time_rating, class_participation_rating, 
-                   academic_activity_rating, attendance_percentage, marks_percentage
-            FROM main_studentevaluation
-            WHERE student_id = %s AND subject_id = %s
-        """, [student_id, subject_id])
-        evaluation = cursor.fetchone()
+            # Fetch student details
+            cursor.execute("""
+                SELECT s.id, s.name, s.roll_no, c.class_name, s.email, c.id AS class_id
+                FROM main_students s
+                JOIN main_classes c ON s.class_obj_id = c.id
+                WHERE s.id = %s
+            """, [student_id])
+            row = cursor.fetchone()
 
-        evaluations = {
-            "study_time_rating": round(evaluation[0], 2) if evaluation and evaluation[0] is not None else "--",
-            "sleep_time_rating": round(evaluation[1], 2) if evaluation and evaluation[1] is not None else "--",
-            "class_participation_rating": round(evaluation[2], 2) if evaluation and evaluation[2] is not None else "--",
-            "academic_activity_rating": round(evaluation[3], 2) if evaluation and evaluation[3] is not None else "--",
-            "attendance_percentage": round(evaluation[4], 2) if evaluation and evaluation[4] is not None else "--",
-            "marks_percentage": round(evaluation[5], 2) if evaluation and evaluation[5] is not None else "--",
-        }
+            if row:
+                student_data = {
+                    "id": row[0],
+                    "name": row[1],
+                    "roll_no": row[2],
+                    "class_name": row[3],
+                    "email": row[4] if row[4] else "--",
+                    "class_id": row[5]
+                }
+                print(f"[DEBUG] Student Details: {student_data}")
+            else:
+                print("[ERROR] Student not found.")
+                return redirect('subject_head_dashboard')
 
-        # Calculate attendance percentage
-        cursor.execute("SELECT COUNT(*) FROM main_attendance WHERE student_id = %s AND subject_id = %s", [student_id, subject_id])
-        total_attendance = cursor.fetchone()[0] or 0
+        # Fetch student evaluation details for the subject
+        print(f"[DEBUG] Fetching evaluation data for Subject ID: {subject_id}...")
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT marks_percentage, attendance_percentage,
+                       study_time_rating, sleep_time_rating, 
+                       class_participation_rating, academic_activity_rating
+                FROM main_studentevaluation
+                WHERE student_id = %s AND subject_id = %s
+            """, [student_id, subject_id])
+            row = cursor.fetchone()
 
-        cursor.execute("SELECT COUNT(*) FROM main_attendance WHERE student_id = %s AND subject_id = %s AND status = 'present'", [student_id, subject_id])
-        present_attendance = cursor.fetchone()[0] or 0
+            if row:
+                evaluations = {
+                    "marks_percentage": round(row[0] or 0, 2),
+                    "attendance_percentage": round(row[1] or 0, 2),
+                    "study_time_rating": round(row[2] or 0, 2),
+                    "sleep_time_rating": round(row[3] or 0, 2),
+                    "class_participation_rating": round(row[4] or 0, 2),
+                    "academic_activity_rating": round(row[5] or 0, 2),
+                }
+                print(f"[DEBUG] Evaluation Data: {evaluations}")
 
-        attendance_percentage = round((present_attendance / total_attendance) * 100, 2) if total_attendance > 0 else "--"
+                # Call prediction model
+                print("[DEBUG] Calling prediction function...")
+                predicted_marks = predict_performance(
+                    evaluations["attendance_percentage"],
+                    evaluations["marks_percentage"],
+                    evaluations["class_participation_rating"],
+                    evaluations["academic_activity_rating"],
+                    evaluations["sleep_time_rating"],
+                    evaluations["study_time_rating"]
+                )
 
-        # Fetch marks percentage
-        cursor.execute("SELECT mark_percentage FROM main_marks WHERE student_id = %s AND subject_id = %s", [student_id, subject_id])
-        marks_percentage = cursor.fetchone()
-        marks_percentage = marks_percentage[0] if marks_percentage and marks_percentage[0] is not None else "--"
+                # Ensure predicted marks is a float or None
+                predicted_marks = round(float(predicted_marks), 2) if predicted_marks is not None else None
+                print(f"[DEBUG] Predicted Marks: {predicted_marks}")
 
-        # Calculate quiz performance percentage
-        cursor.execute("""
-            SELECT COUNT(*) FROM main_quizresponse r
-            JOIN main_quizquestions q ON r.question_id = q.id
-            JOIN main_quizzes mq ON q.quiz_id = mq.id
-            WHERE r.student_id = %s AND mq.subject_id = %s
-        """, [student_id, subject_id])
-        total_quizzes = cursor.fetchone()[0] or 0
+            else:
+                print("[WARNING] No evaluation data found.")
 
-        cursor.execute("""
-            SELECT COUNT(*) FROM main_quizresponse r
-            JOIN main_quizquestions q ON r.question_id = q.id
-            JOIN main_quizzes mq ON q.quiz_id = mq.id
-            WHERE r.student_id = %s AND mq.subject_id = %s AND r.student_response = q.correct_option
-        """, [student_id, subject_id])
-        correct_quizzes = cursor.fetchone()[0] or 0
+        # Fetch quiz performance for the subject
+        print(f"[DEBUG] Fetching quiz performance for Subject ID: {subject_id}...")
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT COUNT(*) AS total_attempted,
+                       SUM(CASE WHEN q.correct_option = r.student_response THEN 1 ELSE 0 END) AS correct_answers
+                FROM main_quizresponse r
+                JOIN main_quizquestions q ON r.question_id = q.id
+                JOIN main_quizzes mq ON q.quiz_id = mq.id
+                WHERE r.student_id = %s AND mq.subject_id = %s
+            """, [student_id, subject_id])
+            row = cursor.fetchone()
 
-        quiz_percentage = round((correct_quizzes / total_quizzes) * 100, 2) if total_quizzes > 0 else "--"
+            if row:
+                total_attempted, correct_answers = row[0], row[1] or 0
+                quiz_percentage = round((correct_answers / total_attempted) * 100, 2) if total_attempted > 0 else 0
+                print(f"[DEBUG] Quiz Performance: Attempted = {total_attempted}, Correct = {correct_answers}, Percentage = {quiz_percentage}%")
+            else:
+                print("[WARNING] No quiz data found.")
 
-    # Prepare graph data
-    graph_data = [
-        marks_percentage if marks_percentage != "--" else 0,
-        attendance_percentage if attendance_percentage != "--" else 0,
-        evaluations["study_time_rating"] if evaluations["study_time_rating"] != "--" else 0,
-        evaluations["sleep_time_rating"] if evaluations["sleep_time_rating"] != "--" else 0,
-        evaluations["class_participation_rating"] if evaluations["class_participation_rating"] != "--" else 0,
-        evaluations["academic_activity_rating"] if evaluations["academic_activity_rating"] != "--" else 0,
-        quiz_percentage if quiz_percentage != "--" else 0
-    ]
+        # Prepare data for Graph (ensure all values are numeric)
+        graph_data = [
+            float(evaluations.get("marks_percentage", 0)),
+            float(evaluations.get("attendance_percentage", 0)),
+            float(evaluations.get("study_time_rating", 0)),
+            float(evaluations.get("sleep_time_rating", 0)),
+            float(evaluations.get("class_participation_rating", 0)),
+            float(evaluations.get("academic_activity_rating", 0)),
+            float(quiz_percentage),
+            float(predicted_marks) if predicted_marks is not None else 0  # Ensure numeric value for predicted marks
+        ]
+
+    except Exception as e:
+        print(f"[ERROR] An error occurred: {e}")
+        return redirect('error_page')  
 
     context = {
         "student": student_data,
         "evaluations": evaluations,
-        "attendance_percentage": attendance_percentage,
-        "marks_percentage": marks_percentage,
         "quiz_percentage": quiz_percentage,
-        "graph_data": json.dumps(graph_data)  # Ensure JSON formatting
+        "predicted_marks": predicted_marks,  # Include predicted marks in context
+        "graph_data": json.dumps(graph_data),
+        "subject_name": subject_name  # Pass subject name to the template
     }
 
-    return render(request, 'subject_head/subject_head_students.html', context)
+    # Check if the request is an AJAX request
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({"predicted_marks": predicted_marks})
+
+    print("[INFO] Final Context Data Prepared for Rendering.")
+    return render(request, "subject_head/subject_head_students.html", context)
+
 
 
 
@@ -4297,6 +4384,117 @@ def student_eduke_bot(request):
 
 
 
+import json
+from django.http import JsonResponse
+from django.shortcuts import render, redirect
+from django.db import connection
+from ml.predict import predict_performance  # Import the prediction function
+
+def student_prediction(request):
+    if 'student_id' not in request.session:
+        print("\033[91m[DEBUG] Redirecting to student login (no student_id in session).\033[0m")
+        return JsonResponse({"error": "Unauthorized access"}, status=403) if request.headers.get("X-Requested-With") == "XMLHttpRequest" else redirect('student_login')
+
+    student_id = request.session['student_id']
+    selected_subject_id = request.GET.get('subject_id')  
+    is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"  
+
+    print(f"\033[96m[DEBUG] Student ID:\033[0m {student_id}, \033[96mSelected Subject ID:\033[0m {selected_subject_id}")
+
+    try:
+        with connection.cursor() as cursor:
+            # Fetch student details
+            print("\033[94m[DEBUG] Fetching student details...\033[0m")
+            cursor.execute("""
+                SELECT s.name, s.roll_no, s.email, c.class_name 
+                FROM main_students s 
+                LEFT JOIN main_classes c ON s.class_obj_id = c.id
+                WHERE s.id = %s
+            """, [student_id])
+            student = cursor.fetchone()
+
+            if not student:
+                print("\033[91m[ERROR] Student not found! Redirecting to login.\033[0m")
+                return JsonResponse({"error": "Student not found"}, status=404) if is_ajax else redirect("student_login")
+
+            student_name, roll_no, email, class_name = student
+
+            # Fetch subjects for dropdown
+            print("\033[94m[DEBUG] Fetching subjects for dropdown...\033[0m")
+            cursor.execute("""
+                SELECT id, subject_name FROM main_subjects 
+                WHERE class_obj_id = (SELECT class_obj_id FROM main_students WHERE id = %s)
+            """, [student_id])
+            subjects = cursor.fetchall()
+            subjects_list = [{"id": sub[0], "name": sub[1]} for sub in subjects]
+
+            # Default values
+            study_time = sleep_time = class_participation = academic_activity = attendance_percentage = marks_percentage = 0
+            predicted_marks = None  # Initialize predicted marks as None
+
+            # Fetch evaluation details if subject is selected
+            if selected_subject_id:
+                print(f"\033[94m[DEBUG] Fetching evaluation data for subject ID: {selected_subject_id}\033[0m")
+                cursor.execute("""
+                    SELECT study_time_rating, sleep_time_rating, class_participation_rating, 
+                           academic_activity_rating, attendance_percentage, marks_percentage
+                    FROM main_studentevaluation
+                    WHERE student_id = %s AND subject_id = %s
+                """, [student_id, selected_subject_id])
+                evaluation = cursor.fetchone()
+
+                if evaluation:
+                    # Replace None values with 0 using a list comprehension
+                    evaluation = [val if val is not None else 0 for val in evaluation]
+                    study_time, sleep_time, class_participation, academic_activity, attendance_percentage, marks_percentage = evaluation
+
+                    # Call prediction model
+                    print("\033[94m[DEBUG] Calling mark prediction model...\033[0m")
+                    predicted_marks = predict_performance(
+                        attendance_percentage, marks_percentage, class_participation, 
+                        academic_activity, sleep_time, study_time
+                    )
+
+                    print(f"\033[92m[DEBUG] Predicted Marks: {predicted_marks}\033[0m")
+
+            # Prepare student data dictionary
+            student_data = {
+                "name": student_name,
+                "roll_no": roll_no,
+                "email": email,
+                "class_name": class_name if class_name else "N/A",
+                "study_time_rating": study_time,
+                "sleep_time_rating": sleep_time,
+                "class_participation_rating": class_participation,
+                "academic_activity_rating": academic_activity,
+                "attendance_percentage": attendance_percentage,
+                "internal_marks": marks_percentage,
+                "predicted_marks": predicted_marks  # Add predicted marks
+            }
+
+            # If AJAX request, return JSON response
+            if is_ajax:
+                return JsonResponse({
+                    "predicted_marks": predicted_marks if predicted_marks is not None else "N/A"
+                })
+
+    except Exception as e:
+        print(f"\033[91m[ERROR] Exception occurred: {e}\033[0m")
+        return JsonResponse({"error": str(e)}, status=500) if is_ajax else redirect("student_login")
+
+    print("\033[94m[DEBUG] Rendering student_prediction.html with student data and subjects.\033[0m")
+    return render(
+        request, 
+        "students/student_prediction.html", 
+        {
+            "student_data": student_data,
+            "subjects": subjects_list,
+            "selected_subject_id": selected_subject_id
+        }
+    )
+
+
+
 ######################################################################################################################
 
 def parent_login(request):
@@ -4842,8 +5040,6 @@ def parent_evaluation(request):
 
 
 from decimal import Decimal, ROUND_HALF_UP
-from django.shortcuts import render, redirect
-from django.db import connection
 
 def parent_student_performance(request):
     print("🔹 Starting parent_student_performance view...")
@@ -4978,12 +5174,6 @@ def parent_student_performance(request):
 
 
 
-
-
-
-from django.shortcuts import render, redirect
-from django.http import JsonResponse
-from django.db import connection
 
 def parent_eduke_bot(request):
     """Handles chatbot page rendering and processing chatbot queries for parents."""
@@ -5281,7 +5471,187 @@ def parent_eduke_bot(request):
     return render(request, "parents/parent_eduke_bot.html", {"parent": parent_details})
 
 
+import json
+from django.http import JsonResponse
+from django.shortcuts import render, redirect
+from django.db import connection
+from ml.predict import predict_performance  # Import the prediction function
+
+def parent_prediction(request):
+    print("🔹 Starting parent_prediction view...")
+
+    if 'parent_id' not in request.session:
+        print("❌ Parent ID not found in session. Redirecting to login.")
+        return JsonResponse({"error": "Unauthorized access"}, status=403) if request.headers.get("X-Requested-With") == "XMLHttpRequest" else redirect('parent_login')
+
+    parent_id = request.session['parent_id']
+    selected_subject_id = request.GET.get('subject_id')
+    is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
+
+    print(f"📌 Parent ID: {parent_id}, 📌 Selected Subject ID: {selected_subject_id}")
+
+    try:
+        with connection.cursor() as cursor:
+            # Fetch student's details associated with the parent
+            print("🔎 Fetching student details linked to the parent...")
+            cursor.execute("""
+                SELECT s.id, s.name, s.roll_no, s.email, c.class_name 
+                FROM main_students s
+                INNER JOIN main_parents p ON p.student_id = s.id
+                LEFT JOIN main_classes c ON s.class_obj_id = c.id
+                WHERE p.id = %s
+            """, [parent_id])
+            student = cursor.fetchone()
+
+            if not student:
+                print("❌ No student found for this parent. Redirecting to login.")
+                return JsonResponse({"error": "Student not found"}, status=404) if is_ajax else redirect("parent_login")
+
+            student_id, student_name, roll_no, email, class_name = student
+
+            print(f"""
+                🎓 Student Details:
+                - Student ID: {student_id}
+                - Name: {student_name}
+                - Roll No: {roll_no}
+                - Email: {email}
+                - Class Name: {class_name if class_name else "N/A"}
+            """)
+
+            # Fetch subjects for dropdown
+            print("📘 Fetching subjects for dropdown...")
+            cursor.execute("""
+                SELECT id, subject_name FROM main_subjects 
+                WHERE class_obj_id = (SELECT class_obj_id FROM main_students WHERE id = %s)
+            """, [student_id])
+            subjects = cursor.fetchall()
+            subjects_list = [{"id": sub[0], "name": sub[1]} for sub in subjects]
+
+            print(f"📚 Subjects Linked to Student: {subjects_list}")
+
+            # Default values
+            study_time = sleep_time = class_participation = academic_activity = attendance_percentage = marks_percentage = 0
+            predicted_marks = None  # Initialize predicted marks as None
+
+            # Fetch evaluation details if subject is selected
+            if selected_subject_id:
+                print(f"📊 Fetching evaluation data for subject ID: {selected_subject_id}")
+                cursor.execute("""
+                    SELECT study_time_rating, sleep_time_rating, class_participation_rating, 
+                           academic_activity_rating, attendance_percentage, marks_percentage
+                    FROM main_studentevaluation
+                    WHERE student_id = %s AND subject_id = %s
+                """, [student_id, selected_subject_id])
+                evaluation = cursor.fetchone()
+
+                if evaluation:
+                    evaluation = [val if val is not None else 0 for val in evaluation]
+                    study_time, sleep_time, class_participation, academic_activity, attendance_percentage, marks_percentage = evaluation
+
+                    print(f"""
+                        📊 Evaluation Data:
+                        - Study Time Rating: {study_time}
+                        - Sleep Time Rating: {sleep_time}
+                        - Class Participation Rating: {class_participation}
+                        - Academic Activity Rating: {academic_activity}
+                        - Attendance Percentage: {attendance_percentage}
+                        - Internal Marks: {marks_percentage}
+                    """)
+
+                    # Call prediction model
+                    print("🧠 Calling mark prediction model...")
+                    predicted_marks = predict_performance(
+                        attendance_percentage, marks_percentage, class_participation, 
+                        academic_activity, sleep_time, study_time
+                    )
+                    print(f"✅ Predicted Marks: {predicted_marks}")
+
+            # Prepare student data dictionary
+            student_data = {
+                "name": student_name,
+                "roll_no": roll_no,
+                "email": email,
+                "class_name": class_name if class_name else "N/A",
+                "study_time_rating": study_time,
+                "sleep_time_rating": sleep_time,
+                "class_participation_rating": class_participation,
+                "academic_activity_rating": academic_activity,
+                "attendance_percentage": attendance_percentage,
+                "internal_marks": marks_percentage,
+                "predicted_marks": predicted_marks
+            }
+
+            # Print final student data for debugging
+            print(f"📌 Final Student Data: {json.dumps(student_data, indent=4)}")
+
+            # If AJAX request, return JSON response
+            if is_ajax:
+                return JsonResponse({
+                    "predicted_marks": predicted_marks if predicted_marks is not None else "N/A"
+                })
+
+    except Exception as e:
+        print(f"❌ Exception occurred: {e}")
+        return JsonResponse({"error": str(e)}, status=500) if is_ajax else redirect("parent_login")
+
+    print("🔹 Rendering parent_prediction.html with student data and subjects.")
+    return render(
+        request, 
+        "parents/parent_prediction.html", 
+        {
+            "student_data": student_data,
+            "subjects": subjects_list,
+            "selected_subject_id": selected_subject_id
+        }
+    )
+
+
 
 ######################################################################################################################
 
 
+
+
+# 🚀 Load Trained Model & Scaler
+MODEL_PATH = os.path.join(settings.BASE_DIR, 'ml', 'final_model.pkl')
+SCALER_PATH = os.path.join(settings.BASE_DIR, 'ml', 'scaler.pkl')
+
+# ✅ Check if files exist before loading
+if os.path.exists(MODEL_PATH) and os.path.exists(SCALER_PATH):
+    model = joblib.load(MODEL_PATH)
+    scaler = joblib.load(SCALER_PATH)
+else:
+    model = None
+    scaler = None
+    print(f"Error: Model or Scaler file missing. Check {MODEL_PATH} and {SCALER_PATH}.")
+
+@csrf_exempt
+def predict_marks(request):
+    if request.method == "POST":
+        if model is None or scaler is None:
+            return JsonResponse({"error": "Model or scaler not found. Retrain and save them."}, status=500)
+
+        try:
+            # 📌 Parse JSON Request
+            data = json.loads(request.body)
+            sleep_time = float(data["sleep_time_rating"])
+            study_time = float(data["study_time_rating"])
+            class_participation = float(data["class_participation_rating"])
+            academic_activity = float(data["academic_activity_rating"])
+            attendance = float(data["attendance_percentage"])
+            internal_marks = float(data["internal_marks"])
+
+            # 📌 Scale Input Data
+            input_data = np.array([[sleep_time, study_time, class_participation,
+                                    academic_activity, attendance, internal_marks]])
+            input_scaled = scaler.transform(input_data)
+
+            # 📌 Predict Final Marks
+            predicted_marks = model.predict(input_scaled)[0]
+
+            return JsonResponse({"predicted_final_marks": round(predicted_marks, 2)})
+        
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=400)
+
+    return JsonResponse({"message": "Send a POST request with student data."})

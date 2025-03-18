@@ -140,6 +140,10 @@ tbody{
         display: none !important;
     }
 
+    #performance-details {
+        display: none !important;
+    }
+
     #content-wrapper {
         height: auto !important;
         max-height: none !important;
