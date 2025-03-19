@@ -109,9 +109,10 @@
                 
                 <!-- Selected User Info -->
                 <div class="flex font-bold items-center p-4 rounded-lg transition w-full bg-gray-200">
-                    <div class="w-12 h-12 text-white flex items-center justify-center rounded-full text-lg font-bold
+                    <div class="w-12 h-12 text-white flex items-center justify-center rounded-full text-lg font-bold 
                         {% if selected_user_role == 'student' %} bg-[#0093ff] 
-                        {% elif selected_user_role == 'class_head' %} bg-[#3a0065] 
+                        {% elif selected_user_role == 'class_head' %} bg-[#3a0065]
+                        {% elif selected_user_role == 'subject_head' %} bg-[#7f00db]
                         {% elif selected_user_role == 'parent' %} bg-[#008152]{% endif %}">
                         {{ selected_user_name|first|upper }}
                     </div>
@@ -127,7 +128,7 @@
                 </div>
 
                 <!-- Chat History -->
-                <div id="message-container" class="bg-white p-4 w-full space-y-4 h-[600px] overflow-y-auto mt-[5px]">
+                <div id="message-container" class="bg-white p-4 w-full space-y-4 h-[380px] overflow-y-auto mt-[5px]">
                     {% for message in messages %}
                     <div class="flex {% if message.1 == logged_in_user_id %}justify-end{% else %}justify-start{% endif %}">
                         <div class="{% if message.1 == logged_in_user_id %}

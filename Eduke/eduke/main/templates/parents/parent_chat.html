@@ -125,7 +125,7 @@
                           <a href="{% url 'parent_chat_user' user.0 %}" class="flex items-center p-4 bg-gray-200 rounded-lg hover:bg-gray-300 transition w-full">
                               <div class="w-12 h-12 text-white flex items-center justify-center rounded-full text-lg font-bold
                                   {% if user.2 == "class_head" %} bg-[#3a0065]
-                                  {% elif user.2 == "subject_head" %} bg-[#7f00db] 
+                                  {% elif user.2 == "subject_head" %} bg-[#7f00db]
                                   {% endif %}">
                                   {{ user.1|first|upper }}
                               </div>
@@ -154,7 +154,7 @@
                                 {% if user.1 == 'class_head' %} bg-[#3a0065] 
                                 {% elif user.1 == 'subject_head' %} bg-[#7f00db] 
                                 {% endif %}">
-                                {{ user.1|first|upper }}
+                                {{ user.2|first|upper }}
                             </div>
                             <div class="ml-4">
                                 <p class="font-bold text-lg chat-name">{{ user.2 }}</p>

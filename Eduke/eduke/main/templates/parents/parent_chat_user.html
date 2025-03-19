@@ -129,7 +129,7 @@
             </div>
 
             <!-- Chat History -->
-            <div id="message-container" class="bg-white p-4 w-full space-y-4 h-[600px] overflow-y-auto mt-[5px]">
+            <div id="message-container" class="bg-white p-4 w-full space-y-4 h-[380px] overflow-y-auto mt-[5px]">
                 {% for message in messages %}
                 <div class="flex {% if message.1 == logged_in_user_id %}justify-end{% else %}justify-start{% endif %}">
                     <div class="{% if message.1 == logged_in_user_id %}

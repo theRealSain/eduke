@@ -116,7 +116,7 @@
                             <table class="w-full table-auto border-collapse bg-white shadow-md rounded-lg">
                                 <thead class="sticky top-0 bg-gray-100 text-left text-sm font-medium border-b">
                                     <tr class="bg-[#f2d7ff] text-left text-sm font-medium border-b">
-                                        <th class="py-3 px-4 text-center">Student ID</th>
+                                        <th class="py-3 px-4 text-center">Student Roll No</th>
                                         <th class="py-3 px-4 text-center">Name</th>
                                         <th class="py-3 px-4 text-center">Email</th>
                                     </tr>
@@ -124,7 +124,7 @@
                                 <tbody>
                                     {% for student in students %}
                                     <tr>
-                                        <td class="py-3 px-4 text-center border-b shadow-md">{{ student.id }}</td>
+                                        <td class="py-3 px-4 text-center border-b shadow-md">{{ student.roll_no }}</td>
                                         <td class="py-3 px-4 text-center border-b shadow-md">{{ student.email }}</td>
                                         <td class="py-3 px-4 text-center border-b shadow-md">{{ student.name }}</td>
                                     </tr>

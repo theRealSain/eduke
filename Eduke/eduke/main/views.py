@@ -1361,31 +1361,33 @@ def class_head_profile(request):
 
 
 def class_head_chat(request):
+    """Handles the chat functionality for the class head."""
+    
     # Retrieve the class_id from session
     class_id = request.session.get('class_id')
 
-    # If class_id is not found in session, redirect to login
+    # Redirect to login if class_id is not found in session
     if not class_id:
         return redirect('class_head_login')
 
-    # Retrieve the class head using the class_id
+    # Retrieve class head details
     class_head = Classes.objects.get(id=class_id)
-    class_head_user = class_head.user  # Fetch the associated user for the class head
+    class_head_user = class_head.user  # Associated user for the class head
 
-    # Fetch distinct users (subject heads, students, and parents) who can message the logged-in class head
+    # Fetch users who have interacted with the class head
     with connection.cursor() as cursor:
-        cursor.execute(""" 
+        cursor.execute("""
             SELECT DISTINCT u.id, u.role, 
-                   CASE
-                       WHEN u.role = 'subject_head' THEN s.subject_head
-                       WHEN u.role = 'student' THEN st.name
-                       WHEN u.role = 'parent' THEN 
-                           CASE
-                               WHEN p.student_id IS NOT NULL THEN 
-                                   (SELECT st.name FROM main_students AS st WHERE st.roll_no = p.student_id)
-                               ELSE p.name
-                           END
-                   END AS user_name
+                CASE 
+                    WHEN u.role = 'subject_head' THEN s.subject_head
+                    WHEN u.role = 'student' THEN st.name
+                    WHEN u.role = 'parent' THEN 
+                        CASE 
+                            WHEN p.student_id IS NOT NULL THEN 
+                                (SELECT st.name FROM main_students AS st WHERE st.id = p.student_id)
+                            ELSE p.name 
+                        END 
+                END AS user_name
             FROM main_chat AS chat
             JOIN main_users AS u ON (chat.sender_id = u.id OR chat.receiver_id = u.id)
             LEFT JOIN main_subjects AS s ON s.user_id = u.id AND u.role = 'subject_head'
@@ -1398,48 +1400,54 @@ def class_head_chat(request):
 
         involved_users = cursor.fetchall()
 
-        # Debug print to check the data structure
-        print("Involved Users:", involved_users)
+        # Beautified debug output
+        print("\n📌 **Involved Users:**")
+        for user in involved_users:
+            print(f"🔹 ID: {user[0]} | Role: {user[1]} | Name: {user[2]}")
+        print("======================================\n")
 
-        # Fetch all students, parents, and subject heads for the class
+        # Fetch all users (subject heads, students, parents) for the class
         cursor.execute("""
             SELECT u.id, u.role, 
-                   CASE
-                       WHEN u.role = 'subject_head' THEN s.subject_head
-                       WHEN u.role = 'student' THEN st.name
-                       WHEN u.role = 'parent' THEN 
-                           CASE
-                               WHEN p.student_id IS NOT NULL THEN 
-                                   (SELECT st.name FROM main_students AS st WHERE st.roll_no = p.student_id)
-                               ELSE p.name
-                           END
-                   END AS user_name
+                CASE 
+                    WHEN u.role = 'subject_head' THEN s.subject_head
+                    WHEN u.role = 'student' THEN st.name
+                    WHEN u.role = 'parent' THEN linked_st.name  -- Always show linked student name for parents
+                END AS user_name
             FROM main_users AS u
             LEFT JOIN main_subjects AS s ON s.user_id = u.id AND u.role = 'subject_head'
             LEFT JOIN main_students AS st ON st.user_id = u.id AND u.role = 'student'
             LEFT JOIN main_parents AS p ON p.user_id = u.id AND u.role = 'parent'
+            LEFT JOIN main_students AS linked_st ON linked_st.id = p.student_id  -- Always fetch student's name for parents
             WHERE u.role IN ('subject_head', 'student', 'parent')
             AND (
                 st.class_obj_id = %s OR 
-                p.student_id IN (SELECT roll_no FROM main_students WHERE class_obj_id = %s) OR
+                linked_st.class_obj_id = %s OR  -- Ensures parents are included based on their child's class
                 s.class_obj_id = %s
             )
             ORDER BY user_name;
         """, [class_id, class_id, class_id])
 
+
+
+
         all_users_for_class = cursor.fetchall()
 
-        # Debug print to check the data structure
-        print("All Users for Class:", all_users_for_class)
+        # Beautified debug output
+        print("\n📌 **All Users for Class:**")
+        for user in all_users_for_class:
+            print(f"🔹 ID: {user[0]} | Role: {user[1]} | Name: {user[2]}")
+        print("======================================\n")
 
-    # Add users to context for rendering
+    # Prepare context for rendering
     context = {
         'class_head': class_head,
         'involved_users': involved_users,
-        'all_users_for_class': all_users_for_class,  # New section for class heads to send messages
+        'all_users_for_class': all_users_for_class,  # Users the class head can message
     }
 
     return render(request, "class_head/class_head_chat.html", context)
+
 
 
 
@@ -1450,48 +1458,53 @@ def class_head_chat_user(request, user_id):
         return redirect('class_head_login')
 
     # Fetch the actual user_id from main_users table based on the session user_id (class_head_id)
+    logged_in_user_id = None
     with connection.cursor() as cursor:
         cursor.execute("SELECT user_id FROM main_classes WHERE id = %s", [class_head_id])
         logged_in_user = cursor.fetchone()
         if logged_in_user:
             logged_in_user_id = logged_in_user[0]  # Corrected user ID
-            print(f"Logged-in User ID: {logged_in_user_id}")
+
+    if not logged_in_user_id:
+        return redirect('class_head_login')  # Prevents further errors
 
     # Initialize the user name and role
-    selected_user_name = None
-    selected_user_role = None
+    selected_user_name = "Unknown"
+    selected_user_role = "Unknown"
 
     # Fetch the selected user's name and role
     with connection.cursor() as cursor:
         cursor.execute("SELECT name FROM main_students WHERE user_id = %s", [user_id])
         student_name = cursor.fetchone()
-        if student_name:
+        if student_name and student_name[0]:
             selected_user_name = student_name[0]
             selected_user_role = 'Student'
         else:
             cursor.execute("SELECT student_id FROM main_parents WHERE user_id = %s", [user_id])
             parent_student_roll_no = cursor.fetchone()
-            if parent_student_roll_no:
-                cursor.execute("SELECT name FROM main_students WHERE roll_no = %s", [parent_student_roll_no[0]])
+            if parent_student_roll_no and parent_student_roll_no[0]:
+                cursor.execute("SELECT name FROM main_students WHERE id = %s", [parent_student_roll_no[0]])
                 student_name_for_parent = cursor.fetchone()
-                if student_name_for_parent:
+                if student_name_for_parent and student_name_for_parent[0]:
                     selected_user_name = f"Parent of {student_name_for_parent[0]}"
                     selected_user_role = 'Parent'
             else:
                 cursor.execute("SELECT subject_head FROM main_subjects WHERE user_id = %s", [user_id])
                 subject_head_name = cursor.fetchone()
-                if subject_head_name:
+                if subject_head_name and subject_head_name[0]:
                     selected_user_name = subject_head_name[0]
                     selected_user_role = 'Subject Head'
                 else:
                     cursor.execute("SELECT role FROM main_users WHERE id = %s", [user_id])
                     selected_user = cursor.fetchone()
-                    selected_user_role = selected_user[0] if selected_user else 'Unknown'
-                    selected_user_name = selected_user_role.capitalize()
+                    if selected_user and selected_user[0]:
+                        selected_user_role = selected_user[0]
+                        selected_user_name = selected_user_role.capitalize()
 
     print(f"Chatting with {selected_user_name} ({selected_user_role})")
 
     # Fetch messages between logged-in user and selected user
+    messages = []
     with connection.cursor() as cursor:
         cursor.execute(""" 
             SELECT message, sender_id, receiver_id, created_at 
@@ -1500,14 +1513,14 @@ def class_head_chat_user(request, user_id):
             OR (sender_id = %s AND receiver_id = %s) 
             ORDER BY created_at;
         """, [user_id, logged_in_user_id, logged_in_user_id, user_id])  
-        messages = cursor.fetchall()
+        messages = cursor.fetchall() or []  # Prevent NoneType errors
 
     print(f"Messages fetched between {logged_in_user_id} and {user_id}")
 
     # Handle message sending
     if request.method == 'POST':
-        message_text = request.POST.get('message')
-        if message_text.strip():  # Ensure message is not empty
+        message_text = request.POST.get('message', '').strip()
+        if message_text:
             with connection.cursor() as cursor:
                 cursor.execute(""" 
                     INSERT INTO main_chat (sender_id, receiver_id, message, created_at) 
@@ -1520,9 +1533,10 @@ def class_head_chat_user(request, user_id):
         'selected_user_name': selected_user_name,
         'selected_user_role': selected_user_role,
         'messages': messages,
-        'logged_in_user_id': logged_in_user_id,  # Pass correct sender ID
+        'logged_in_user_id': logged_in_user_id,
     }
     return render(request, 'class_head/class_head_chat_user.html', context)
+
 
 
 
@@ -2012,10 +2026,10 @@ def subject_head_chat(request):
     # Ensure subject head is logged in
     subject_id = request.session.get('subject_id')
     if not subject_id:
-        print("DEBUG: No subject_id found in session. Redirecting to login.")
+        print("\n[DEBUG] Authentication Error: No subject_id found in session. Redirecting to login.\n")
         return redirect('subject_head_login')
 
-    print(f"DEBUG: Logged in subject_id: {subject_id}")
+    print(f"\n[DEBUG] Logged-in Subject Head ID: {subject_id}\n")
 
     # Fetch user_id and class_id for the logged-in subject head
     with connection.cursor() as cursor:
@@ -2023,11 +2037,11 @@ def subject_head_chat(request):
         subject_data = cursor.fetchone()
 
     if not subject_data:
-        print(f"DEBUG: No user data found for subject_id {subject_id}.")
+        print(f"\n[DEBUG] Data Fetch Error: No user data found for subject_id {subject_id}. Redirecting to login.\n")
         return redirect('subject_head_login')
 
     subject_user_id, class_id = subject_data
-    print(f"DEBUG: Retrieved subject_user_id: {subject_user_id}, class_obj_id: {class_id}")
+    print(f"[DEBUG] Retrieved Subject User ID: {subject_user_id} | Class ID: {class_id}\n")
 
     # Fetch users involved in chat
     with connection.cursor() as cursor:
@@ -2047,7 +2061,7 @@ def subject_head_chat(request):
         LEFT JOIN main_subjects s ON u.id = s.user_id AND u.role = 'subject_head'
         LEFT JOIN main_students st ON u.id = st.user_id AND u.role = 'student'
         LEFT JOIN main_parents p ON u.id = p.user_id AND u.role = 'parent'
-        LEFT JOIN main_students st2 ON p.student_id = st2.roll_no AND u.role = 'parent'
+        LEFT JOIN main_students st2 ON p.student_id = st2.id AND u.role = 'parent'
         WHERE u.id IN (
             SELECT DISTINCT sender_id FROM main_chat WHERE receiver_id = %s
             UNION
@@ -2057,9 +2071,12 @@ def subject_head_chat(request):
 
         chat_users = [{'id': row[0], 'role': row[1], 'name': row[2] or 'Unknown'} for row in cursor.fetchall()]
 
-    print(f"DEBUG: Retrieved users involved in chat: {chat_users}")
+    print(f"[DEBUG] Users Involved in Chat ({len(chat_users)} found):")
+    for user in chat_users:
+        print(f"    - ID: {user['id']}, Role: {user['role']}, Name: {user['name']}")
+    print("\n")
 
-    # Fetch users the subject head can send messages to (students, parents, class head, other subject heads)
+    # Fetch users the subject head can send messages to
     with connection.cursor() as cursor:
         cursor.execute("""
             SELECT u.id, u.role, 
@@ -2075,7 +2092,7 @@ def subject_head_chat(request):
         FROM main_users u
         LEFT JOIN main_students st ON u.id = st.user_id AND u.role = 'student' AND st.class_obj_id = %s
         LEFT JOIN main_parents p ON u.id = p.user_id AND u.role = 'parent'  
-        LEFT JOIN main_students st2 ON p.student_id = st2.roll_no AND u.role = 'parent' AND st2.class_obj_id = %s
+        LEFT JOIN main_students st2 ON p.student_id = st2.id AND u.role = 'parent' AND st2.class_obj_id = %s
         LEFT JOIN main_classes c ON u.id = c.user_id AND u.role = 'class_head' AND c.id = %s
         LEFT JOIN main_subjects s ON u.id = s.user_id AND u.role = 'subject_head' AND s.class_obj_id = %s
         WHERE (st.class_obj_id IS NOT NULL OR st2.class_obj_id IS NOT NULL OR c.id IS NOT NULL OR (s.class_obj_id IS NOT NULL AND u.id != %s));
@@ -2083,7 +2100,10 @@ def subject_head_chat(request):
 
         message_users = [{'id': row[0], 'role': row[1], 'name': row[2] or 'Unknown'} for row in cursor.fetchall()]
 
-    print(f"DEBUG: Retrieved users the subject head can send messages to: {message_users}")
+    print(f"[DEBUG] Users Available for Messaging ({len(message_users)} found):")
+    for user in message_users:
+        print(f"    - ID: {user['id']}, Role: {user['role']}, Name: {user['name']}")
+    print("\n")
 
     return render(request, 'subject_head/subject_head_chat.html', {'chat_users': chat_users, 'message_users': message_users})
 
@@ -2128,7 +2148,7 @@ def subject_head_chat_user(request, user_id):
         LEFT JOIN main_subjects s ON u.id = s.user_id AND u.role = 'subject_head'
         LEFT JOIN main_students st ON u.id = st.user_id AND u.role = 'student'
         LEFT JOIN main_parents p ON u.id = p.user_id AND u.role = 'parent'
-        LEFT JOIN main_students st2 ON p.student_id = st2.roll_no AND u.role = 'parent'
+        LEFT JOIN main_students st2 ON p.student_id = st2.id AND u.role = 'parent'
         WHERE u.id = %s
         """, [user_id])
 

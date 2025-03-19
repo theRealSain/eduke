@@ -1,0 +1,11 @@
+delete class:
+    delete students
+    delete announcements
+    delete messages from the user id of that deleted class
+        delete subjects
+            delete attendance
+            delete marks
+            set the fields study_time_rating, sleep_time_rating, class_participation_rating, academic_activity_rating, attendance_percentage, marks_percentage NULL
+            delete quiz, quiz responses, quiz questions
+    delete parents of students in the class
+    delete all users under the deleted class

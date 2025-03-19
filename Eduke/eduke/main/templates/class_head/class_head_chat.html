@@ -91,9 +91,9 @@
             <h2 class="text-2xl font-bold text-[#4f0074] ml-3 mb-5">
                 <i class="fa-solid fa-comments"></i> Eduke Chat
             </h2>
-
+  
             <h3 class="text-[20px] font-semibold mb-3 ml-3">Recent Chats</h3>
-
+  
             <ul id="chat-list" class="space-y-3">
                 <!-- Subject Heads -->
                 {% for user in involved_users %}
@@ -111,7 +111,7 @@
                         </li>
                     {% endif %}
                 {% endfor %}
-
+  
                 <!-- Students -->
                 {% for user in involved_users %}
                     {% if user.1 == 'student' %}
@@ -128,7 +128,7 @@
                         </li>
                     {% endif %}
                 {% endfor %}
-
+  
                 <!-- Parents (Show student's name instead of parent's) -->
                 {% for user in involved_users %}
                     {% if user.1 == 'parent' %}
@@ -146,11 +146,11 @@
                     {% endif %}
                 {% endfor %}
             </ul>
-
+  
             <h3 class="text-[20px] font-semibold mb-3 mt-[30px] ml-3">Suggested users</h3>
-
+  
             <h4 class="text-[15px] font-semibold mb-3 ml-3">Subject Heads:</h4>
-
+  
             <ul id="chat-list" class="space-y-3">
                 {% for user in all_users_for_class %}
                     {% if user.1 == 'subject_head' %}
@@ -168,9 +168,9 @@
                     {% endif %}
                 {% endfor %}
             </ul>
-
+  
             <h4 class="text-[15px] font-semibold mb-3 ml-3 mt-5">Students:</h4>
-
+  
             <ul id="chat-list" class="space-y-3">
                 {% for user in all_users_for_class %}
                     {% if user.1 == 'student' %}
@@ -188,9 +188,9 @@
                     {% endif %}
                 {% endfor %}
             </ul>
-
+  
             <h4 class="text-[15px] font-semibold mb-3 ml-3 mt-5">Parents:</h4>
-
+  
             <ul id="chat-list" class="space-y-3">
                 {% for user in all_users_for_class %}
                     {% if user.1 == 'parent' %}
@@ -209,8 +209,8 @@
                 {% endfor %}
             </ul>
           </div>
-
-        </div>
+  
+        </div> 
         
       </div>
     </main>
