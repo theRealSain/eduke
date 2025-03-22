@@ -17,6 +17,10 @@ urlpatterns = [
     path('admin/student/<int:student_id>/', views.admin_student_performance, name='admin_student_performance'), # Admin student detail
     path('admin/profile/', views.admin_profile, name='admin_profile'),
     path('admin/logout/', views.logout, name='logout'),  # Admin logout
+
+    path('admin/class/delete/<int:class_id>/', views.delete_class, name='admin_class_delete'),
+    path('admin/subject/delete/<int:subject_id>/', views.delete_subject, name='admin_subject_delete'),
+    path("admin/student/delete/<int:student_id>/", views.delete_student, name="admin_student_delete"),
     
     path('upload_classes/', views.upload_classes, name='upload_classes'),
     path('upload_subjects/', views.upload_subjects, name='upload_subjects'),

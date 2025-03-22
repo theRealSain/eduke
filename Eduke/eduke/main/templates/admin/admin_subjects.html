@@ -195,7 +195,7 @@
                         </thead>
                         <tbody class="divide-y divide-gray-300">
                             {% for subject in subjects %}
-                            <tr data-subject-id="{{ subject.id }}">
+                            <tr data-subject-id="{{ subject.0 }}">
                                 <form method="POST" action="{% url 'admin_subject_edit' subject.0 %}">
                                     {% csrf_token %}
                                     <td class="p-3 text-center subject-name">
@@ -243,6 +243,31 @@
                     </table>
 
                     <script>
+                        document.querySelectorAll('.delete-btn').forEach((button) => {
+                            button.addEventListener('click', function () {
+                                const row = button.closest('tr');
+                                const subjectId = row.dataset.subjectId; // Get the subject ID from the row
+
+                                // Show confirmation dialog
+                                if (confirm("Are you sure you want to delete this subject?")) {
+                                    // Create a form dynamically to submit the delete request
+                                    const form = document.createElement('form');
+                                    form.method = 'POST';
+                                    form.action = `/admin/subject/delete/${subjectId}/`; // Replace with your actual delete URL
+
+                                    // Add CSRF token
+                                    const csrfInput = document.createElement('input');
+                                    csrfInput.type = 'hidden';
+                                    csrfInput.name = 'csrfmiddlewaretoken';
+                                    csrfInput.value = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+                                    form.appendChild(csrfInput);
+                                    document.body.appendChild(form);
+                                    form.submit();
+                                }
+                            });
+                        });
+                        
                         document.querySelectorAll('.edit-btn').forEach((button) => {
                             button.addEventListener('click', function() {
                                 const row = button.closest('tr');

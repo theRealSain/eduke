@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm
 from .models import Institution, Classes, Subjects, Students
+from django.core.validators import RegexValidator
 
 class InstitutionRegisterForm(forms.ModelForm):
     class Meta:
@@ -241,6 +242,7 @@ class AddStudentForm(forms.ModelForm):
 
     roll_no = forms.CharField(
         max_length=20,
+        validators=[RegexValidator(r'^[a-zA-Z0-9\-]+$', message="Only letters, numbers, and hyphens allowed.")],
         widget=forms.TextInput(attrs={
             'class': 'w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#4f0074] focus:outline-none',
             'placeholder': 'Enter Roll Number'})

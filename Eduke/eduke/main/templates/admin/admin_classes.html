@@ -187,15 +187,15 @@
                                 <form method="POST" action="{% url 'admin_class_edit' class.id %}">
                                     {% csrf_token %}
                                     <td class="p-3 text-center class-name">
-                                        <input type="text" name="class_name" value="{{ class.class_name }}" class="hidden input-field p-2 rounded-md">
+                                        <input type="text" name="class_name" value="{{ class.class_name }}" class="hidden input-field p-2 rounded-md border border-gray-300">
                                         <span class="display-field">{{ class.class_name }}</span>
                                     </td>
                                     <td class="p-3 text-center class-head">
-                                        <input type="text" name="class_head" value="{{ class.class_head }}" class="hidden input-field p-2 rounded-md">
+                                        <input type="text" name="class_head" value="{{ class.class_head }}" class="hidden input-field p-2 rounded-md border border-gray-300">
                                         <span class="display-field">{{ class.class_head }}</span>
                                     </td>
                                     <td class="p-3 text-center email">
-                                        <input type="email" name="email" value="{{ class.email }}" class="hidden input-field p-2 rounded-md">
+                                        <input type="email" name="email" value="{{ class.email }}" class="hidden input-field p-2 rounded-md border border-gray-300">
                                         <span class="display-field"><a href="mailto:{{ class.email }}" class="text-purple-700 hover:underline">{{ class.email }}</a></span>
                                     </td>
                                     <td class="p-3 text-center">
@@ -228,6 +228,33 @@
 
 
                     <script>
+
+                    document.querySelectorAll('.delete-btn').forEach((button) => {
+                        button.addEventListener('click', function () {
+                            const row = button.closest('tr');
+                            const classId = row.dataset.classId; // Get the class ID from the row
+
+                            // Show confirmation dialog
+                            if (confirm("Are you sure you want to delete this class?")) {
+                                // Create a form dynamically to submit the delete request
+                                const form = document.createElement('form');
+                                form.method = 'POST';
+                                form.action = `/admin/class/delete/${classId}/`; // Replace with your actual delete URL
+
+                                // Add CSRF token
+                                const csrfInput = document.createElement('input');
+                                csrfInput.type = 'hidden';
+                                csrfInput.name = 'csrfmiddlewaretoken';
+                                csrfInput.value = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+                                form.appendChild(csrfInput);
+                                document.body.appendChild(form);
+                                form.submit();
+                            }
+                        });
+                    });
+
+
                     document.querySelectorAll('.edit-btn').forEach((button) => {
                         button.addEventListener('click', function() {
                             const row = button.closest('tr');

@@ -9,3 +9,21 @@ delete class:
             delete quiz, quiz responses, quiz questions
     delete parents of students in the class
     delete all users under the deleted class
+
+
+
+main_announcements
+main_attendance
+main_chat
+main_classes
+main_institution
+main_marks
+main_parents
+main_quizquestions
+main_quizresponse
+main_quizzes
+main_studentevaluation
+main_students
+main_studymaterials
+main_subjects
+main_users
