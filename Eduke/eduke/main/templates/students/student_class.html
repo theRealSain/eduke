@@ -180,22 +180,22 @@
                 </div>
 
                 <!-- Students Table -->
-                <table class="min-w-full table-auto border-collapse mt-[30px]">
+                <table class="w-full border-collapse rounded-xl overflow-hidden">
                   <thead>
-                    <tr class="bg-[#4f0074] text-white">
-                      <th class="p-3 border-b text-center mx-auto">Roll No</th>
-                      <th class="p-3 border-b text-center mx-auto">Name</th>
-                      <th class="p-3 border-b text-center mx-auto">Class</th>
-                      <th class="p-3 border-b text-center mx-auto">Information</th>
+                    <tr class="bg-gray-800 text-white text-left">
+                      <th class="p-3 text-center">Roll No</th>
+                      <th class="p-3 text-center">Name</th>
+                      <th class="p-3 text-center">Class</th>
+                      <th class="p-3 text-center">Information</th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody class="divide-y divide-gray-300">
                     {% for student in students %}
                     <tr>
-                      <td class="px-4 py-2 text-center border-b-2 border-b-gray-300 bg-gray-200">{{ student.roll_no }}</td>
-                      <td class="px-4 py-2 text-center border-b-2 border-b-gray-300 bg-gray-200">{{ student.name }}</td>
-                      <td class="px-4 py-2 text-center border-b-2 border-b-gray-300 bg-gray-200">{{ class_name }}</td>
-                      <td class="px-4 py-2 text-center border-b-2 border-b-gray-300 bg-gray-200">Details</td>
+                      <td class="p-3 text-center">{{ student.roll_no }}</td>
+                      <td class="p-3 text-center">{{ student.name }}</td>
+                      <td class="p-3 text-center">{{ class_name }}</td>
+                      <td class="p-3 text-center">Details</td>
                     </tr>
                     {% empty %}
                     <tr>

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3307
--- Generation Time: Mar 10, 2025 at 07:47 AM
+-- Generation Time: Mar 30, 2025 at 11:25 AM
 -- Server version: 9.1.0
 -- PHP Version: 8.2.12
 
@@ -346,7 +346,12 @@ INSERT INTO `django_migrations` (`id`, `app`, `name`, `applied`) VALUES
 (47, 'main', '0032_remove_studentevaluation_quiz_percentage', '2025-02-23 12:29:02.320365'),
 (48, 'main', '0033_rename_homework_completion_rating_studentevaluation_class_performance_rating', '2025-02-23 12:31:20.471846'),
 (49, 'main', '0034_rename_class_performance_rating_studentevaluation_class_participation_rating', '2025-02-23 12:50:11.006540'),
-(50, 'main', '0035_rename_assignment_rating_studentevaluation_academic_activity_rating', '2025-02-23 12:52:32.379361');
+(50, 'main', '0035_rename_assignment_rating_studentevaluation_academic_activity_rating', '2025-02-23 12:52:32.379361'),
+(51, 'main', '0036_auto_20250320_1246', '2025-03-20 07:17:09.405782'),
+(52, 'main', '0037_alter_announcements_id_alter_attendance_id_and_more', '2025-03-22 05:19:18.868641'),
+(53, 'main', '0038_alter_students_roll_no', '2025-03-22 05:20:35.492631'),
+(54, 'main', '0039_auto_20250323_1236', '2025-03-23 07:06:39.955965'),
+(55, 'main', '0040_auto_20250323_1240', '2025-03-23 07:10:12.625290');
 
 -- --------------------------------------------------------
 
@@ -373,7 +378,7 @@ INSERT INTO `django_session` (`session_key`, `session_data`, `expire_date`) VALU
 ('q2ry82ujy4xq0ubcekh7gjv27mmg3dkm', 'e30:1tbITs:iCq2XiI3lYkOS59VwFcfcfL3j2lOhn_KcFnK5fUGh6c', '2025-02-07 12:08:12.871277'),
 ('q663wz1plma1getb4y9gh3cxg8sa74yl', 'eyJ0ZWFjaGVyX2lkIjozfQ:1tbAhP:jrYiLIlKpvJjC8qWeaYEh0TyA7l_dr6t_ct2L3D6syg', '2025-02-07 03:49:39.794741'),
 ('s8bg8ppi7ld6bqexoeg4padni4qucqo6', 'eyJjbGFzc19oZWFkX2lkIjoxM30:1teAX7:4BgPYk55nnCIw1fMWIP3kj9QzQ7b9Ll-UfJUSznFPxg', '2025-02-15 10:15:25.661351'),
-('wjfbsupjeu0kkfc8ehxfmwh81u2hcrax', 'eyJzdHVkZW50X2lkIjoyMX0:1tr9gN:FQWWEnrYZiVzkmge0rE6E0DC1H54K4yNfdv-_5RAToM', '2025-03-23 05:58:39.964156'),
+('vlr8b57ebhnph935i0hp4aga5dbzlmav', '.eJyrVipILErNK4nPTFGyMjHRUUrOSSwuBvOMLXWUikuTslKTIbJGxkB-SWkKXLV5LQCHrBRg:1twz25:PfUGLl2zRqImg4uC_fXzFWVpZBl0wEQxhTtKPict8dg', '2025-04-08 07:49:09.168728'),
 ('xuiiy8d7orowqcmqn7wm0xlov7tttahu', 'e30:1tbZMi:Alo1mi87tOh2qUhsmwP8J5rkP9E8ZaqbzrNyep7wJrg', '2025-02-08 06:09:56.751798');
 
 -- --------------------------------------------------------
@@ -383,10 +388,10 @@ INSERT INTO `django_session` (`session_key`, `session_data`, `expire_date`) VALU
 --
 
 CREATE TABLE `main_announcements` (
-  `id` int NOT NULL,
+  `id` bigint NOT NULL,
   `message` longtext NOT NULL,
   `created_at` datetime(6) NOT NULL,
-  `class_obj_id` int NOT NULL
+  `class_obj_id` bigint NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
@@ -396,11 +401,11 @@ CREATE TABLE `main_announcements` (
 --
 
 CREATE TABLE `main_attendance` (
-  `id` int NOT NULL,
+  `id` bigint NOT NULL,
   `attendance_date` date NOT NULL,
   `status` varchar(10) NOT NULL,
-  `student_id` int NOT NULL,
-  `subject_id` int NOT NULL,
+  `student_id` bigint NOT NULL,
+  `subject_id` bigint NOT NULL,
   `created_at` datetime(6) NOT NULL,
   `hour` smallint UNSIGNED NOT NULL
 ) ;
@@ -410,40 +415,10 @@ CREATE TABLE `main_attendance` (
 --
 
 INSERT INTO `main_attendance` (`id`, `attendance_date`, `status`, `student_id`, `subject_id`, `created_at`, `hour`) VALUES
-(1, '2025-02-22', 'absent', 21, 9, '2025-02-22 19:35:29.000000', 1),
-(2, '2025-02-22', 'present', 22, 9, '2025-02-22 19:35:29.000000', 1),
-(3, '2025-02-22', 'present', 33, 9, '2025-02-22 19:35:29.000000', 1),
-(4, '2025-02-22', 'absent', 34, 9, '2025-02-22 19:35:29.000000', 1),
-(5, '2025-02-22', 'present', 35, 9, '2025-02-22 19:35:29.000000', 1),
-(6, '2025-02-22', 'present', 21, 9, '2025-02-22 19:45:42.000000', 2),
-(7, '2025-02-22', 'present', 22, 9, '2025-02-22 19:45:42.000000', 2),
-(8, '2025-02-22', 'present', 33, 9, '2025-02-22 19:45:42.000000', 2),
-(9, '2025-02-22', 'present', 34, 9, '2025-02-22 19:45:42.000000', 2),
-(10, '2025-02-22', 'present', 35, 9, '2025-02-22 19:45:42.000000', 2),
-(11, '2025-03-06', 'absent', 21, 9, '2025-02-22 20:00:39.000000', 1),
-(12, '2025-03-06', 'present', 22, 9, '2025-02-22 20:00:39.000000', 1),
-(13, '2025-03-06', 'present', 33, 9, '2025-02-22 20:00:39.000000', 1),
-(15, '2025-03-06', 'present', 35, 9, '2025-02-22 20:00:39.000000', 1),
-(16, '2025-02-25', 'present', 21, 9, '2025-02-23 10:05:07.000000', 1),
-(17, '2025-02-25', 'present', 22, 9, '2025-02-23 10:05:07.000000', 1),
-(18, '2025-02-25', 'present', 33, 9, '2025-02-23 10:05:07.000000', 1),
-(19, '2025-02-25', 'present', 34, 9, '2025-02-23 10:05:07.000000', 1),
-(20, '2025-02-25', 'present', 35, 9, '2025-02-23 10:05:07.000000', 1),
-(21, '2025-02-23', 'present', 21, 9, '2025-02-23 10:06:12.000000', 1),
-(22, '2025-02-23', 'present', 22, 9, '2025-02-23 10:06:12.000000', 1),
-(23, '2025-02-23', 'present', 33, 9, '2025-02-23 10:06:12.000000', 1),
-(24, '2025-02-23', 'present', 34, 9, '2025-02-23 10:06:12.000000', 1),
-(25, '2025-02-23', 'present', 35, 9, '2025-02-23 10:06:12.000000', 1),
-(26, '2025-02-26', 'present', 21, 9, '2025-02-26 13:34:32.000000', 1),
-(27, '2025-02-26', 'present', 22, 9, '2025-02-26 13:34:32.000000', 1),
-(28, '2025-02-26', 'present', 33, 9, '2025-02-26 13:34:32.000000', 1),
-(29, '2025-02-26', 'present', 34, 9, '2025-02-26 13:34:32.000000', 1),
-(30, '2025-02-26', 'present', 35, 9, '2025-02-26 13:34:32.000000', 1),
-(31, '2025-02-23', 'present', 21, 14, '2025-03-01 09:51:46.000000', 2),
-(32, '2025-02-23', 'present', 22, 14, '2025-03-01 09:51:46.000000', 2),
-(33, '2025-02-23', 'present', 33, 14, '2025-03-01 09:51:46.000000', 2),
-(34, '2025-02-23', 'present', 34, 14, '2025-03-01 09:51:46.000000', 2),
-(35, '2025-02-23', 'present', 35, 14, '2025-03-01 09:51:46.000000', 2);
+(40, '2025-03-19', 'present', 47, 23, '2025-03-23 12:45:38.000000', 1),
+(41, '2025-03-18', 'present', 47, 23, '2025-03-23 12:45:51.000000', 1),
+(42, '2025-03-21', 'present', 47, 23, '2025-03-23 12:46:01.000000', 1),
+(43, '2025-03-27', 'absent', 47, 23, '2025-03-23 12:46:11.000000', 1);
 
 -- --------------------------------------------------------
 
@@ -452,12 +427,19 @@ INSERT INTO `main_attendance` (`id`, `attendance_date`, `status`, `student_id`, 
 --
 
 CREATE TABLE `main_chat` (
-  `id` int NOT NULL,
+  `id` bigint NOT NULL,
   `message` longtext NOT NULL,
-  `receiver_id` int NOT NULL,
-  `sender_id` int NOT NULL,
+  `receiver_id` bigint NOT NULL,
+  `sender_id` bigint NOT NULL,
   `created_at` datetime(6) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `main_chat`
+--
+
+INSERT INTO `main_chat` (`id`, `message`, `receiver_id`, `sender_id`, `created_at`) VALUES
+(87, 'hii', 167, 166, '2025-03-25 13:16:43.000000');
 
 -- --------------------------------------------------------
 
@@ -466,13 +448,13 @@ CREATE TABLE `main_chat` (
 --
 
 CREATE TABLE `main_classes` (
-  `id` int NOT NULL,
-  `institution_id` int NOT NULL,
+  `id` bigint NOT NULL,
+  `institution_id` bigint NOT NULL,
   `class_head` varchar(255) NOT NULL,
   `class_name` varchar(255) NOT NULL,
   `email` varchar(254) NOT NULL,
   `password` varchar(255) NOT NULL,
-  `user_id` int NOT NULL
+  `user_id` bigint NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
@@ -480,12 +462,7 @@ CREATE TABLE `main_classes` (
 --
 
 INSERT INTO `main_classes` (`id`, `institution_id`, `class_head`, `class_name`, `email`, `password`, `user_id`) VALUES
-(20, 9, 'Sain', 'MCA', 'sainsaburajpnc@gmail.com', 'ssss', 77),
-(21, 9, 'Abin', 'BCA', 'abinsaburaj2000@gmail.com', 'aaaa', 78),
-(22, 9, 'Jasmine', 'B. Com', 'jasmine@example.com', 'jjjj', 87),
-(23, 9, 'Geo B', 'MBA', 'geo@example.com', 'gggg', 88),
-(28, 9, 'John Doe', 'MA HRM', 'john.doe@example.com', '12345678', 123),
-(29, 9, 'Jane Smith', 'BA English', 'jane.smith@example.com', '87654321', 124);
+(39, 9, 'John Doe', 'MCA', 'john@example.com', 'jjjj', 166);
 
 -- --------------------------------------------------------
 
@@ -494,7 +471,7 @@ INSERT INTO `main_classes` (`id`, `institution_id`, `class_head`, `class_name`, 
 --
 
 CREATE TABLE `main_institution` (
-  `institution_id` int NOT NULL,
+  `institution_id` bigint NOT NULL,
   `email` varchar(254) NOT NULL,
   `institution_name` varchar(255) NOT NULL,
   `password` varchar(255) NOT NULL
@@ -506,7 +483,8 @@ CREATE TABLE `main_institution` (
 
 INSERT INTO `main_institution` (`institution_id`, `email`, `institution_name`, `password`) VALUES
 (9, 'sainsaburaj@depaul.edu.in', 'De Paul Institute of Science and Technology', 'dddd'),
-(10, 'stc@example.com', 'STC THRISSUR', 'ssss');
+(15, 'stc@example.com', 'STC THRISSUR', 'ssss'),
+(16, 'aloy@example.com', 'St Aloysius', 'aaaa');
 
 -- --------------------------------------------------------
 
@@ -515,10 +493,10 @@ INSERT INTO `main_institution` (`institution_id`, `email`, `institution_name`, `
 --
 
 CREATE TABLE `main_marks` (
-  `id` int NOT NULL,
+  `id` bigint NOT NULL,
   `mark_percentage` double NOT NULL,
-  `student_id` int NOT NULL,
-  `subject_id` int NOT NULL
+  `student_id` bigint NOT NULL,
+  `subject_id` bigint NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
@@ -526,16 +504,7 @@ CREATE TABLE `main_marks` (
 --
 
 INSERT INTO `main_marks` (`id`, `mark_percentage`, `student_id`, `subject_id`) VALUES
-(32, 50, 21, 9),
-(33, 60, 22, 9),
-(34, 90, 33, 9),
-(35, 50, 34, 9),
-(36, 70, 35, 9),
-(37, 80, 21, 14),
-(38, 50, 22, 14),
-(39, 30, 33, 14),
-(40, 70, 34, 14),
-(41, 60, 35, 14);
+(44, 85, 47, 23);
 
 -- --------------------------------------------------------
 
@@ -544,11 +513,11 @@ INSERT INTO `main_marks` (`id`, `mark_percentage`, `student_id`, `subject_id`) V
 --
 
 CREATE TABLE `main_parents` (
-  `id` int NOT NULL,
+  `id` bigint NOT NULL,
   `password` varchar(255) NOT NULL,
   `name` varchar(255) DEFAULT NULL,
-  `student_id` int NOT NULL,
-  `user_id` int NOT NULL
+  `student_id` bigint NOT NULL,
+  `user_id` bigint NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
@@ -556,12 +525,7 @@ CREATE TABLE `main_parents` (
 --
 
 INSERT INTO `main_parents` (`id`, `password`, `name`, `student_id`, `user_id`) VALUES
-(18, '1001', 'Franco', 21, 82),
-(19, '1002', NULL, 22, 84),
-(20, '1003', NULL, 23, 86),
-(30, '9001', 'Joseph', 33, 118),
-(31, '9002', NULL, 34, 120),
-(32, 'jjjj', NULL, 35, 126);
+(44, '1001', NULL, 47, 169);
 
 -- --------------------------------------------------------
 
@@ -570,27 +534,15 @@ INSERT INTO `main_parents` (`id`, `password`, `name`, `student_id`, `user_id`) V
 --
 
 CREATE TABLE `main_quizquestions` (
-  `id` int NOT NULL,
+  `id` bigint NOT NULL,
   `question` longtext NOT NULL,
   `option_a` varchar(255) NOT NULL,
   `option_b` varchar(255) NOT NULL,
   `option_c` varchar(255) NOT NULL,
   `option_d` varchar(255) NOT NULL,
   `correct_option` varchar(1) NOT NULL,
-  `quiz_id` int NOT NULL
+  `quiz_id` bigint NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
---
--- Dumping data for table `main_quizquestions`
---
-
-INSERT INTO `main_quizquestions` (`id`, `question`, `option_a`, `option_b`, `option_c`, `option_d`, `correct_option`, `quiz_id`) VALUES
-(4, 'dkucnsidichso sd chisuc osidvho sdcjsp dvj?', 'a', 'b', 'c', 'd', 'C', 3),
-(5, 'ius dfsd sidfuos diu sdho cpco dsfis cpo?', 'h', 'i', 'o', 'p', 'B', 3),
-(6, 'iusf isfd aisd pos kdcpos djfp sc?', 'c', 'u', 'r', 'l', 'A', 3),
-(7, 'Which of the following is a type of supervised learning algorithm?', 'K-Means', 'Decision Trees', 'DBSCAN', 'PCA', 'B', 4),
-(8, 'In a neural network, what is the role of the activation function?', 'To prevent overfitting', 'To update weights during training', 'To introduce non-linearity in the model', ' To calculate the loss function', 'C', 4),
-(9, 'Which of the following is true for a Random Forest model?', 'It uses a single decision tree to make predictions', 'It can handle both regression and classification problems', 'It works only with numerical data', 'It is not an ensemble learning method', 'B', 4);
 
 -- --------------------------------------------------------
 
@@ -599,23 +551,11 @@ INSERT INTO `main_quizquestions` (`id`, `question`, `option_a`, `option_b`, `opt
 --
 
 CREATE TABLE `main_quizresponse` (
-  `id` int NOT NULL,
+  `id` bigint NOT NULL,
   `student_response` varchar(1) DEFAULT NULL,
-  `question_id` int NOT NULL,
-  `student_id` int NOT NULL
+  `question_id` bigint NOT NULL,
+  `student_id` bigint NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
---
--- Dumping data for table `main_quizresponse`
---
-
-INSERT INTO `main_quizresponse` (`id`, `student_response`, `question_id`, `student_id`) VALUES
-(5, 'C', 4, 21),
-(6, 'D', 5, 21),
-(7, 'A', 6, 21),
-(8, 'B', 7, 21),
-(9, 'A', 8, 21),
-(10, 'B', 9, 21);
 
 -- --------------------------------------------------------
 
@@ -624,19 +564,11 @@ INSERT INTO `main_quizresponse` (`id`, `student_response`, `question_id`, `stude
 --
 
 CREATE TABLE `main_quizzes` (
-  `id` int NOT NULL,
+  `id` bigint NOT NULL,
   `name` varchar(255) NOT NULL,
-  `class_obj_id` int DEFAULT NULL,
-  `subject_id` int NOT NULL
+  `class_obj_id` bigint DEFAULT NULL,
+  `subject_id` bigint NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
---
--- Dumping data for table `main_quizzes`
---
-
-INSERT INTO `main_quizzes` (`id`, `name`, `class_obj_id`, `subject_id`) VALUES
-(3, 'iuadsfh s sdiu hisdv isudvh  sudh vusdh', 20, 9),
-(4, 'Machine Learning Test', 20, 9);
 
 -- --------------------------------------------------------
 
@@ -645,15 +577,15 @@ INSERT INTO `main_quizzes` (`id`, `name`, `class_obj_id`, `subject_id`) VALUES
 --
 
 CREATE TABLE `main_studentevaluation` (
-  `id` int NOT NULL,
+  `id` bigint NOT NULL,
   `study_time_rating` double DEFAULT NULL,
   `sleep_time_rating` double DEFAULT NULL,
   `class_participation_rating` double DEFAULT NULL,
   `academic_activity_rating` double DEFAULT NULL,
   `attendance_percentage` double DEFAULT NULL,
   `marks_percentage` double DEFAULT NULL,
-  `student_id` int NOT NULL,
-  `subject_id` int NOT NULL
+  `student_id` bigint NOT NULL,
+  `subject_id` bigint NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
@@ -661,18 +593,7 @@ CREATE TABLE `main_studentevaluation` (
 --
 
 INSERT INTO `main_studentevaluation` (`id`, `study_time_rating`, `sleep_time_rating`, `class_participation_rating`, `academic_activity_rating`, `attendance_percentage`, `marks_percentage`, `student_id`, `subject_id`) VALUES
-(20, 54, 20, 82, 50, 66.66667, 50, 21, 9),
-(21, NULL, NULL, 28, 52.5, 100, 60, 22, 9),
-(22, 89.5, 97.5, 29, 100, 100, 90, 33, 9),
-(23, NULL, NULL, 26.5, 51.5, 80, 50, 34, 9),
-(24, NULL, NULL, 28, 51.5, 100, 70, 35, 9),
-(25, 51.5, 25, 51, 91.5, 100, 80, 21, 14),
-(26, NULL, NULL, 47, 79.5, 100, 50, 22, 14),
-(27, NULL, NULL, 52, 84, 100, 30, 33, 14),
-(28, NULL, NULL, 51, 86, 100, 70, 34, 14),
-(29, NULL, NULL, 53.5, 89, 100, 60, 35, 14),
-(30, 53, 24, NULL, NULL, NULL, NULL, 21, 8),
-(31, 51.5, 23, NULL, NULL, NULL, NULL, 21, 13);
+(34, 71, 73.5, 90, 98, 75, 85, 47, 23);
 
 -- --------------------------------------------------------
 
@@ -681,12 +602,12 @@ INSERT INTO `main_studentevaluation` (`id`, `study_time_rating`, `sleep_time_rat
 --
 
 CREATE TABLE `main_students` (
-  `id` int NOT NULL,
-  `roll_no` int NOT NULL,
+  `id` bigint NOT NULL,
+  `roll_no` varchar(50) NOT NULL,
   `password` varchar(255) NOT NULL,
-  `class_obj_id` int DEFAULT NULL,
+  `class_obj_id` bigint DEFAULT NULL,
   `name` varchar(255) NOT NULL,
-  `user_id` int NOT NULL,
+  `user_id` bigint NOT NULL,
   `email` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
@@ -695,12 +616,7 @@ CREATE TABLE `main_students` (
 --
 
 INSERT INTO `main_students` (`id`, `roll_no`, `password`, `class_obj_id`, `name`, `user_id`, `email`) VALUES
-(21, 1001, '1001', 20, 'Freddy Franco', 81, 'foniyad777@intady.com'),
-(22, 1002, '1002', 20, 'Harry', 83, 'haricey441@minduls.com'),
-(23, 1003, '1003', 21, 'Kevin', 85, 'kibaxak448@intady.com'),
-(33, 9001, 'aaaa', 20, 'Albert Joseph', 117, 'albert@example.com'),
-(34, 9002, 'bbbb', 20, 'Bob Ben', 119, 'bob@example.com'),
-(35, 9003, 'jjjj', 20, 'Joms', 125, 'joms@example.com');
+(47, 'MCA-1001', '1001', 39, 'Jack White', 168, 'jack@example.com');
 
 -- --------------------------------------------------------
 
@@ -709,20 +625,13 @@ INSERT INTO `main_students` (`id`, `roll_no`, `password`, `class_obj_id`, `name`
 --
 
 CREATE TABLE `main_studymaterials` (
-  `id` int NOT NULL,
+  `id` bigint NOT NULL,
   `file_url` longtext,
   `created_at` datetime(6) NOT NULL,
-  `class_obj_id` int NOT NULL,
-  `subject_id` int NOT NULL,
+  `class_obj_id` bigint NOT NULL,
+  `subject_id` bigint NOT NULL,
   `announcement` longtext
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
---
--- Dumping data for table `main_studymaterials`
---
-
-INSERT INTO `main_studymaterials` (`id`, `file_url`, `created_at`, `class_obj_id`, `subject_id`, `announcement`) VALUES
-(7, 'media/uploads/EDUKE PLANT UML CODES.docx', '2025-02-26 13:32:30.151455', 20, 9, 'Hello...');
 
 -- --------------------------------------------------------
 
@@ -731,13 +640,13 @@ INSERT INTO `main_studymaterials` (`id`, `file_url`, `created_at`, `class_obj_id
 --
 
 CREATE TABLE `main_subjects` (
-  `id` int NOT NULL,
-  `class_obj_id` int NOT NULL,
+  `id` bigint NOT NULL,
+  `class_obj_id` bigint NOT NULL,
   `email` varchar(254) NOT NULL,
   `password` varchar(255) NOT NULL,
   `subject_head` varchar(255) NOT NULL,
   `subject_name` varchar(255) NOT NULL,
-  `user_id` int NOT NULL
+  `user_id` bigint NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
@@ -745,11 +654,7 @@ CREATE TABLE `main_subjects` (
 --
 
 INSERT INTO `main_subjects` (`id`, `class_obj_id`, `email`, `password`, `subject_head`, `subject_name`, `user_id`) VALUES
-(8, 20, 'beseyic831@intady.com', 'bbbb', 'Bessy', 'Big Data Analysis', 79),
-(9, 20, 'sainsaburaj382002@gmail.com', 'jjjj', 'Jack Jones', 'Machine Learning', 80),
-(10, 22, 'reenu@example.com', 'rrrr', 'Reenu', 'Business Management', 89),
-(13, 20, 'kein@example.com', 'kkkk', 'Kein', 'Computer Networks', 121),
-(14, 20, 'emily@example.com', 'eeee', 'Emily', 'Operating System', 122);
+(23, 39, 'ava@example.com', 'aaaa', 'Ava Miller', 'Computer Fundamentals', 167);
 
 -- --------------------------------------------------------
 
@@ -758,7 +663,7 @@ INSERT INTO `main_subjects` (`id`, `class_obj_id`, `email`, `password`, `subject
 --
 
 CREATE TABLE `main_users` (
-  `id` int NOT NULL,
+  `id` bigint NOT NULL,
   `role` varchar(20) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
@@ -767,29 +672,10 @@ CREATE TABLE `main_users` (
 --
 
 INSERT INTO `main_users` (`id`, `role`) VALUES
-(77, 'class_head'),
-(78, 'class_head'),
-(79, 'subject_head'),
-(80, 'subject_head'),
-(81, 'student'),
-(82, 'parent'),
-(83, 'student'),
-(84, 'parent'),
-(85, 'student'),
-(86, 'parent'),
-(87, 'class_head'),
-(88, 'class_head'),
-(89, 'subject_head'),
-(117, 'student'),
-(118, 'parent'),
-(119, 'student'),
-(120, 'parent'),
-(121, 'subject_head'),
-(122, 'subject_head'),
-(123, 'class_head'),
-(124, 'class_head'),
-(125, 'student'),
-(126, 'parent');
+(166, 'class_head'),
+(167, 'subject_head'),
+(168, 'student'),
+(169, 'parent');
 
 --
 -- Indexes for dumped tables
@@ -865,23 +751,23 @@ ALTER TABLE `django_session`
 --
 ALTER TABLE `main_announcements`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `main_announcements_class_obj_id_0d0d9d96_fk_main_classes_id` (`class_obj_id`);
+  ADD KEY `main_announcements_class_obj_id_0d0d9d96_fk` (`class_obj_id`);
 
 --
 -- Indexes for table `main_attendance`
 --
 ALTER TABLE `main_attendance`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `main_attendance_student_id_07549adf_fk_main_students_id` (`student_id`),
-  ADD KEY `main_attendance_subject_id_723a5c64_fk_main_subjects_id` (`subject_id`);
+  ADD KEY `main_attendance_student_id_07549adf_fk` (`student_id`),
+  ADD KEY `main_attendance_subject_id_723a5c64_fk` (`subject_id`);
 
 --
 -- Indexes for table `main_chat`
 --
 ALTER TABLE `main_chat`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `main_chat_receiver_id_ddcb21d3_fk_main_users_id` (`receiver_id`),
-  ADD KEY `main_chat_sender_id_1824ffc2_fk_main_users_id` (`sender_id`);
+  ADD KEY `main_chat_receiver_id_ddcb21d3_fk` (`receiver_id`),
+  ADD KEY `main_chat_sender_id_1824ffc2_fk` (`sender_id`);
 
 --
 -- Indexes for table `main_classes`
@@ -889,8 +775,8 @@ ALTER TABLE `main_chat`
 ALTER TABLE `main_classes`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `email` (`email`),
-  ADD KEY `main_classes_institution_id_5083f29a_fk_main_inst` (`institution_id`),
-  ADD KEY `main_classes_user_id_06af4a09_fk_main_users_id` (`user_id`);
+  ADD KEY `main_classes_institution_id_5083f29a_fk` (`institution_id`),
+  ADD KEY `main_classes_user_id_06af4a09_fk` (`user_id`);
 
 --
 -- Indexes for table `main_institution`
@@ -904,47 +790,47 @@ ALTER TABLE `main_institution`
 --
 ALTER TABLE `main_marks`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `main_marks_student_id_46d8b040_fk_main_students_id` (`student_id`),
-  ADD KEY `main_marks_subject_id_cd277d76_fk_main_subjects_id` (`subject_id`);
+  ADD KEY `main_marks_student_id_46d8b040_fk` (`student_id`),
+  ADD KEY `main_marks_subject_id_cd277d76_fk` (`subject_id`);
 
 --
 -- Indexes for table `main_parents`
 --
 ALTER TABLE `main_parents`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `main_parents_user_id_faa417c1_fk_main_users_id` (`user_id`),
-  ADD KEY `main_parents_student_id_eb1d3ba3_fk_main_students_id` (`student_id`);
+  ADD KEY `main_parents_user_id_faa417c1_fk` (`user_id`),
+  ADD KEY `main_parents_student_id_fk` (`student_id`);
 
 --
 -- Indexes for table `main_quizquestions`
 --
 ALTER TABLE `main_quizquestions`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `main_quizquestions_quiz_id_bddb7bdd_fk_main_quizzes_id` (`quiz_id`);
+  ADD KEY `main_quizquestions_quiz_id_bddb7bdd_fk` (`quiz_id`);
 
 --
 -- Indexes for table `main_quizresponse`
 --
 ALTER TABLE `main_quizresponse`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `main_quizresponse_question_id_b2fe2eec_fk_main_quizquestions_id` (`question_id`),
-  ADD KEY `main_quizresponse_student_id_c1a777b9_fk_main_students_id` (`student_id`);
+  ADD KEY `main_quizresponse_question_id_b2fe2eec_fk` (`question_id`),
+  ADD KEY `main_quizresponse_student_id_c1a777b9_fk` (`student_id`);
 
 --
 -- Indexes for table `main_quizzes`
 --
 ALTER TABLE `main_quizzes`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `main_quizzes_class_obj_id_10b981c4_fk_main_classes_id` (`class_obj_id`),
-  ADD KEY `main_quizzes_subject_id_025453ee_fk_main_subjects_id` (`subject_id`);
+  ADD KEY `main_quizzes_class_obj_id_10b981c4_fk` (`class_obj_id`),
+  ADD KEY `main_quizzes_subject_id_025453ee_fk` (`subject_id`);
 
 --
 -- Indexes for table `main_studentevaluation`
 --
 ALTER TABLE `main_studentevaluation`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `main_studentevaluation_student_id_a595bb53_fk_main_students_id` (`student_id`),
-  ADD KEY `main_studentevaluation_subject_id_58110765_fk_main_subjects_id` (`subject_id`);
+  ADD KEY `main_studentevaluation_student_id_a595bb53_fk` (`student_id`),
+  ADD KEY `main_studentevaluation_subject_id_58110765_fk` (`subject_id`);
 
 --
 -- Indexes for table `main_students`
@@ -953,16 +839,16 @@ ALTER TABLE `main_students`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `roll_no` (`roll_no`),
   ADD UNIQUE KEY `email` (`email`),
-  ADD KEY `main_students_class_obj_id_fe626842_fk_main_classes_id` (`class_obj_id`),
-  ADD KEY `main_students_user_id_8b7ccf0c_fk_main_users_id` (`user_id`);
+  ADD KEY `main_students_user_id_8b7ccf0c_fk` (`user_id`),
+  ADD KEY `main_students_class_obj_id_fk` (`class_obj_id`);
 
 --
 -- Indexes for table `main_studymaterials`
 --
 ALTER TABLE `main_studymaterials`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `main_studymaterials_class_obj_id_fa6c87bb_fk_main_classes_id` (`class_obj_id`),
-  ADD KEY `main_studymaterials_subject_id_4af51e55_fk_main_subjects_id` (`subject_id`);
+  ADD KEY `main_studymaterials_class_obj_id_fa6c87bb_fk` (`class_obj_id`),
+  ADD KEY `main_studymaterials_subject_id_4af51e55_fk` (`subject_id`);
 
 --
 -- Indexes for table `main_subjects`
@@ -970,8 +856,8 @@ ALTER TABLE `main_studymaterials`
 ALTER TABLE `main_subjects`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `email` (`email`),
-  ADD KEY `main_subjects_class_obj_id_bacc0ce4_fk_main_classes_id` (`class_obj_id`),
-  ADD KEY `main_subjects_user_id_79302367_fk_main_users_id` (`user_id`);
+  ADD KEY `main_subjects_class_obj_id_bacc0ce4_fk` (`class_obj_id`),
+  ADD KEY `main_subjects_user_id_79302367_fk` (`user_id`);
 
 --
 -- Indexes for table `main_users`
@@ -1029,97 +915,97 @@ ALTER TABLE `django_content_type`
 -- AUTO_INCREMENT for table `django_migrations`
 --
 ALTER TABLE `django_migrations`
-  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=51;
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=56;
 
 --
 -- AUTO_INCREMENT for table `main_announcements`
 --
 ALTER TABLE `main_announcements`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `main_attendance`
 --
 ALTER TABLE `main_attendance`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `main_chat`
 --
 ALTER TABLE `main_chat`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=79;
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=88;
 
 --
 -- AUTO_INCREMENT for table `main_classes`
 --
 ALTER TABLE `main_classes`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=30;
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=40;
 
 --
 -- AUTO_INCREMENT for table `main_institution`
 --
 ALTER TABLE `main_institution`
-  MODIFY `institution_id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `institution_id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
 
 --
 -- AUTO_INCREMENT for table `main_marks`
 --
 ALTER TABLE `main_marks`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=42;
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=45;
 
 --
 -- AUTO_INCREMENT for table `main_parents`
 --
 ALTER TABLE `main_parents`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=34;
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=45;
 
 --
 -- AUTO_INCREMENT for table `main_quizquestions`
 --
 ALTER TABLE `main_quizquestions`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- AUTO_INCREMENT for table `main_quizresponse`
 --
 ALTER TABLE `main_quizresponse`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT for table `main_quizzes`
 --
 ALTER TABLE `main_quizzes`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `main_studentevaluation`
 --
 ALTER TABLE `main_studentevaluation`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=32;
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=35;
 
 --
 -- AUTO_INCREMENT for table `main_students`
 --
 ALTER TABLE `main_students`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=37;
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=48;
 
 --
 -- AUTO_INCREMENT for table `main_studymaterials`
 --
 ALTER TABLE `main_studymaterials`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `main_subjects`
 --
 ALTER TABLE `main_subjects`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
 
 --
 -- AUTO_INCREMENT for table `main_users`
 --
 ALTER TABLE `main_users`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=129;
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=170;
 
 --
 -- Constraints for dumped tables
@@ -1156,90 +1042,90 @@ ALTER TABLE `auth_user_user_permissions`
 -- Constraints for table `main_announcements`
 --
 ALTER TABLE `main_announcements`
-  ADD CONSTRAINT `main_announcements_class_obj_id_0d0d9d96_fk_main_classes_id` FOREIGN KEY (`class_obj_id`) REFERENCES `main_classes` (`id`);
+  ADD CONSTRAINT `main_announcements_class_obj_id_0d0d9d96_fk` FOREIGN KEY (`class_obj_id`) REFERENCES `main_classes` (`id`);
 
 --
 -- Constraints for table `main_attendance`
 --
 ALTER TABLE `main_attendance`
-  ADD CONSTRAINT `main_attendance_student_id_07549adf_fk_main_students_id` FOREIGN KEY (`student_id`) REFERENCES `main_students` (`id`),
-  ADD CONSTRAINT `main_attendance_subject_id_723a5c64_fk_main_subjects_id` FOREIGN KEY (`subject_id`) REFERENCES `main_subjects` (`id`);
+  ADD CONSTRAINT `main_attendance_student_id_07549adf_fk` FOREIGN KEY (`student_id`) REFERENCES `main_students` (`id`),
+  ADD CONSTRAINT `main_attendance_subject_id_723a5c64_fk` FOREIGN KEY (`subject_id`) REFERENCES `main_subjects` (`id`);
 
 --
 -- Constraints for table `main_chat`
 --
 ALTER TABLE `main_chat`
-  ADD CONSTRAINT `main_chat_receiver_id_ddcb21d3_fk_main_users_id` FOREIGN KEY (`receiver_id`) REFERENCES `main_users` (`id`),
-  ADD CONSTRAINT `main_chat_sender_id_1824ffc2_fk_main_users_id` FOREIGN KEY (`sender_id`) REFERENCES `main_users` (`id`);
+  ADD CONSTRAINT `main_chat_receiver_id_ddcb21d3_fk` FOREIGN KEY (`receiver_id`) REFERENCES `main_users` (`id`),
+  ADD CONSTRAINT `main_chat_sender_id_1824ffc2_fk` FOREIGN KEY (`sender_id`) REFERENCES `main_users` (`id`);
 
 --
 -- Constraints for table `main_classes`
 --
 ALTER TABLE `main_classes`
-  ADD CONSTRAINT `main_classes_institution_id_5083f29a_fk_main_inst` FOREIGN KEY (`institution_id`) REFERENCES `main_institution` (`institution_id`),
-  ADD CONSTRAINT `main_classes_user_id_06af4a09_fk_main_users_id` FOREIGN KEY (`user_id`) REFERENCES `main_users` (`id`);
+  ADD CONSTRAINT `main_classes_institution_id_5083f29a_fk` FOREIGN KEY (`institution_id`) REFERENCES `main_institution` (`institution_id`),
+  ADD CONSTRAINT `main_classes_user_id_06af4a09_fk` FOREIGN KEY (`user_id`) REFERENCES `main_users` (`id`);
 
 --
 -- Constraints for table `main_marks`
 --
 ALTER TABLE `main_marks`
-  ADD CONSTRAINT `main_marks_student_id_46d8b040_fk_main_students_id` FOREIGN KEY (`student_id`) REFERENCES `main_students` (`id`),
-  ADD CONSTRAINT `main_marks_subject_id_cd277d76_fk_main_subjects_id` FOREIGN KEY (`subject_id`) REFERENCES `main_subjects` (`id`);
+  ADD CONSTRAINT `main_marks_student_id_46d8b040_fk` FOREIGN KEY (`student_id`) REFERENCES `main_students` (`id`),
+  ADD CONSTRAINT `main_marks_subject_id_cd277d76_fk` FOREIGN KEY (`subject_id`) REFERENCES `main_subjects` (`id`);
 
 --
 -- Constraints for table `main_parents`
 --
 ALTER TABLE `main_parents`
-  ADD CONSTRAINT `main_parents_student_id_eb1d3ba3_fk_main_students_id` FOREIGN KEY (`student_id`) REFERENCES `main_students` (`id`),
-  ADD CONSTRAINT `main_parents_user_id_faa417c1_fk_main_users_id` FOREIGN KEY (`user_id`) REFERENCES `main_users` (`id`);
+  ADD CONSTRAINT `main_parents_student_id_fk` FOREIGN KEY (`student_id`) REFERENCES `main_students` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `main_parents_user_id_faa417c1_fk` FOREIGN KEY (`user_id`) REFERENCES `main_users` (`id`);
 
 --
 -- Constraints for table `main_quizquestions`
 --
 ALTER TABLE `main_quizquestions`
-  ADD CONSTRAINT `main_quizquestions_quiz_id_bddb7bdd_fk_main_quizzes_id` FOREIGN KEY (`quiz_id`) REFERENCES `main_quizzes` (`id`);
+  ADD CONSTRAINT `main_quizquestions_quiz_id_bddb7bdd_fk` FOREIGN KEY (`quiz_id`) REFERENCES `main_quizzes` (`id`);
 
 --
 -- Constraints for table `main_quizresponse`
 --
 ALTER TABLE `main_quizresponse`
-  ADD CONSTRAINT `main_quizresponse_question_id_b2fe2eec_fk_main_quizquestions_id` FOREIGN KEY (`question_id`) REFERENCES `main_quizquestions` (`id`),
-  ADD CONSTRAINT `main_quizresponse_student_id_c1a777b9_fk_main_students_id` FOREIGN KEY (`student_id`) REFERENCES `main_students` (`id`);
+  ADD CONSTRAINT `main_quizresponse_question_id_b2fe2eec_fk` FOREIGN KEY (`question_id`) REFERENCES `main_quizquestions` (`id`),
+  ADD CONSTRAINT `main_quizresponse_student_id_c1a777b9_fk` FOREIGN KEY (`student_id`) REFERENCES `main_students` (`id`);
 
 --
 -- Constraints for table `main_quizzes`
 --
 ALTER TABLE `main_quizzes`
-  ADD CONSTRAINT `main_quizzes_class_obj_id_10b981c4_fk_main_classes_id` FOREIGN KEY (`class_obj_id`) REFERENCES `main_classes` (`id`),
-  ADD CONSTRAINT `main_quizzes_subject_id_025453ee_fk_main_subjects_id` FOREIGN KEY (`subject_id`) REFERENCES `main_subjects` (`id`);
+  ADD CONSTRAINT `main_quizzes_class_obj_id_10b981c4_fk` FOREIGN KEY (`class_obj_id`) REFERENCES `main_classes` (`id`),
+  ADD CONSTRAINT `main_quizzes_subject_id_025453ee_fk` FOREIGN KEY (`subject_id`) REFERENCES `main_subjects` (`id`);
 
 --
 -- Constraints for table `main_studentevaluation`
 --
 ALTER TABLE `main_studentevaluation`
-  ADD CONSTRAINT `main_studentevaluation_student_id_a595bb53_fk_main_students_id` FOREIGN KEY (`student_id`) REFERENCES `main_students` (`id`),
-  ADD CONSTRAINT `main_studentevaluation_subject_id_58110765_fk_main_subjects_id` FOREIGN KEY (`subject_id`) REFERENCES `main_subjects` (`id`);
+  ADD CONSTRAINT `main_studentevaluation_student_id_a595bb53_fk` FOREIGN KEY (`student_id`) REFERENCES `main_students` (`id`),
+  ADD CONSTRAINT `main_studentevaluation_subject_id_58110765_fk` FOREIGN KEY (`subject_id`) REFERENCES `main_subjects` (`id`);
 
 --
 -- Constraints for table `main_students`
 --
 ALTER TABLE `main_students`
-  ADD CONSTRAINT `main_students_class_obj_id_fe626842_fk_main_classes_id` FOREIGN KEY (`class_obj_id`) REFERENCES `main_classes` (`id`),
-  ADD CONSTRAINT `main_students_user_id_8b7ccf0c_fk_main_users_id` FOREIGN KEY (`user_id`) REFERENCES `main_users` (`id`);
+  ADD CONSTRAINT `main_students_class_obj_id_fk` FOREIGN KEY (`class_obj_id`) REFERENCES `main_classes` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `main_students_user_id_8b7ccf0c_fk` FOREIGN KEY (`user_id`) REFERENCES `main_users` (`id`);
 
 --
 -- Constraints for table `main_studymaterials`
 --
 ALTER TABLE `main_studymaterials`
-  ADD CONSTRAINT `main_studymaterials_class_obj_id_fa6c87bb_fk_main_classes_id` FOREIGN KEY (`class_obj_id`) REFERENCES `main_classes` (`id`),
-  ADD CONSTRAINT `main_studymaterials_subject_id_4af51e55_fk_main_subjects_id` FOREIGN KEY (`subject_id`) REFERENCES `main_subjects` (`id`);
+  ADD CONSTRAINT `main_studymaterials_class_obj_id_fa6c87bb_fk` FOREIGN KEY (`class_obj_id`) REFERENCES `main_classes` (`id`),
+  ADD CONSTRAINT `main_studymaterials_subject_id_4af51e55_fk` FOREIGN KEY (`subject_id`) REFERENCES `main_subjects` (`id`);
 
 --
 -- Constraints for table `main_subjects`
 --
 ALTER TABLE `main_subjects`
-  ADD CONSTRAINT `main_subjects_class_obj_id_bacc0ce4_fk_main_classes_id` FOREIGN KEY (`class_obj_id`) REFERENCES `main_classes` (`id`),
-  ADD CONSTRAINT `main_subjects_user_id_79302367_fk_main_users_id` FOREIGN KEY (`user_id`) REFERENCES `main_users` (`id`);
+  ADD CONSTRAINT `main_subjects_class_obj_id_bacc0ce4_fk` FOREIGN KEY (`class_obj_id`) REFERENCES `main_classes` (`id`),
+  ADD CONSTRAINT `main_subjects_user_id_79302367_fk` FOREIGN KEY (`user_id`) REFERENCES `main_users` (`id`);
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

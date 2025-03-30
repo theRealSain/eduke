@@ -99,42 +99,44 @@
         
         <!-- Student Chat Container -->
         <div id="content-wrapper" class="p-6 space-y-6 w-full">
-          <div class="bg-white p-4 rounded-lg shadow-md h-[750px] overflow-y-auto" id="scrollbar-off">
-              <h2 class="text-2xl font-bold text-[#4f0074] ml-3 mb-5"><i class="fa-solid fa-comments"></i> Eduke Chat</h2>
-              <!-- Dropdown for search results -->
-              <ul id="search-dropdown" class="hidden space-y-2 bg-white shadow-lg rounded-lg mt-2 w-[99%] mx-auto border"></ul>
-
+          <h2 class="text-2xl text-gray-800 uppercase font-bold">💬 Eduke Chat</h2>
+          <div class="bg-white p-4 rounded-lg shadow-md overflow-y-auto" id="scrollbar-off">
               <h3 class="text-[20px] font-semibold mb-3 ml-3">Recent Chats</h3>
 
               <ul id="chat-list" class="space-y-3">
-                  {% for class_head in class_heads %}
-                      <li class="chat-item ml-3 mr-3">
-                          <a href="{% url 'student_chat_user' class_head.0 %}" class="flex items-center p-4 bg-gray-200 rounded-lg hover:bg-gray-300 transition w-full">
-                              <div class="w-12 h-12 bg-[#3a0065] text-white flex items-center justify-center rounded-full text-lg font-bold">
-                                  {{ class_head.1|first|upper }}
-                              </div>
-                              <div class="ml-4">
-                                  <p class="font-bold text-lg chat-name">{{ class_head.1 }}</p>
-                                  <p class="text-sm text-gray-500">Class Head</p>
-                              </div>
-                          </a>
-                      </li>
-                  {% endfor %}
+                {% if class_heads or subject_heads %}
+                    {% for class_head in class_heads %}
+                        <li class="chat-item ml-3 mr-3">
+                            <a href="{% url 'student_chat_user' class_head.0 %}" class="flex items-center p-4 bg-gray-200 rounded-lg hover:bg-gray-300 transition w-full">
+                                <div class="w-12 h-12 bg-[#3a0065] text-white flex items-center justify-center rounded-full text-lg font-bold">
+                                    {{ class_head.1|first|upper }}
+                                </div>
+                                <div class="ml-4">
+                                    <p class="font-bold text-lg chat-name">{{ class_head.1 }}</p>
+                                    <p class="text-sm text-gray-500">Class Head</p>
+                                </div>
+                            </a>
+                        </li>
+                    {% endfor %}
 
-                  {% for subject_head in subject_heads %}
-                      <li class="chat-item ml-3 mr-3">
-                          <a href="{% url 'student_chat_user' subject_head.0 %}" class="flex items-center p-4 bg-gray-200 rounded-lg hover:bg-gray-300 transition w-full">
-                              <div class="w-12 h-12 bg-[#7f00db] text-white flex items-center justify-center rounded-full text-lg font-bold">
-                                  {{ subject_head.1|first|upper }}
-                              </div>
-                              <div class="ml-4">
-                                  <p class="font-bold text-lg chat-name">{{ subject_head.1 }}</p>
-                                  <p class="text-sm text-gray-500">Subject Head</p>
-                              </div>
-                          </a>
-                      </li>
-                  {% endfor %}
+                    {% for subject_head in subject_heads %}
+                        <li class="chat-item ml-3 mr-3">
+                            <a href="{% url 'student_chat_user' subject_head.0 %}" class="flex items-center p-4 bg-gray-200 rounded-lg hover:bg-gray-300 transition w-full">
+                                <div class="w-12 h-12 bg-[#7f00db] text-white flex items-center justify-center rounded-full text-lg font-bold">
+                                    {{ subject_head.1|first|upper }}
+                                </div>
+                                <div class="ml-4">
+                                    <p class="font-bold text-lg chat-name">{{ subject_head.1 }}</p>
+                                    <p class="text-sm text-gray-500">Subject Head</p>
+                                </div>
+                            </a>
+                        </li>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted text-center bg-gray-100 p-10">No recent chats!</p>
+                {% endif %}
               </ul>
+
               
               <h3 class="text-[20px] font-semibold mb-3 mt-[30px] ml-3">Suggested Users</h3>
 

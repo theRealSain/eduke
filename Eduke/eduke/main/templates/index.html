@@ -8,6 +8,14 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <link rel="icon" href="{% static 'main/images/logobase_white.png' %}">
+
+    <style>
+        /* Hide scrollbar for all browsers */
+        body::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
+
 </head>
 <body class="bg-gray-100">
     <!-- Header Section -->
@@ -16,7 +24,7 @@
             <div class="flex items-center">
                 <img src="{% static 'main/images/logo_text_long.png' %}" alt="Eduke Logo" class="h-[70px] mr-3">
             </div>
-            <nav class="space-x-4 hidden sm:block">
+            <nav class="space-x-4 hidden sm:block mr-[50px]">
                 <a href="#description" class="hover:underline">Description</a>
                 <a href="#users" class="hover:underline">Users</a>
                 <a href="#features" class="hover:underline">Features</a>
@@ -37,7 +45,7 @@
                     Designed for students, teachers, and parents, Eduke simplifies the educational journey <br>
                     by providing tailored solutions for every need.
                 </p>
-                <a href="{% url 'login' %}" class="mt-6 inline-block bg-[#4f0074] text-white px-6 py-3 rounded shadow-md hover:bg-[#4f0074] transition duration-300">
+                <a href="{% url 'login' %}" class="mt-6 inline-block bg-[#4f0074] text-white px-6 py-3 rounded shadow-md hover:bg-[#670098] transition duration-300">
                     Get Started
                 </a>
             </div>
@@ -50,7 +58,7 @@
             <h3 class="text-3xl font-bold text-[#4f0074] mb-6">About Eduke</h3>
             <p class="text-[1.1rem] mx-auto text-gray-600 leading-relaxed text-justify w-3/4 text-center">
                 Eduke is an innovative academic assistant designed to simplify the educational journey for students, teachers, and parents alike. 
-                By leveraging the power of AI, Eduke provides tools for attendance management, academic performance tracking, and instant support via an AI-driven chatbot. 
+                By leveraging the power of AI, Eduke provides tools for attendance management, academic performance tracking, and instant support via a chatbot. 
                 Our goal is to foster an engaging and effective learning environment that evolves alongside the needs of our users. 
                 With Eduke, teachers can efficiently manage their classrooms, parents can stay updated on their child’s progress, 
                 and students can access tailored guidance to achieve their academic goals. Eduke is more than a tool; it’s a partner in education.
@@ -63,35 +71,35 @@
         <div class="container mx-auto p-[100px] md:p-[50px] sm:p-[10px]">
             <h3 class="text-3xl font-bold text-center text-gray-800 mb-8">Users of the System</h3>
             <div class="grid grid-cols-1 md:grid-cols-5 gap-8">
-                <div class="p-6 bg-white rounded-lg shadow-lg text-center flex flex-col justify-between h-full">
+                <div class="px-6 pt-6 pb-10 bg-white rounded-xl shadow-[4px_4px_30px_rgba(0,0,0,0.3)] text-center flex flex-col justify-between h-full">
                     <img src="{% static 'main/images/admin.png' %}" alt="Admin" class="w-3/4 mx-auto mb-4">
                     <h4 class="text-xl font-semibold mb-4">Admin</h4>
                     <p class="text-gray-600">Oversee system operations, manage user roles, and maintain a seamless experience for all users.</p>
-                    <a href="{% url 'login' %}" class="text-violet-900 hover:text-black mt-4 inline-block self-center">Admin Login</a>
+                    <a href="{% url 'login' %}" class="bg-[#4f0074] text-white px-3 py-1 rounded-md hover:bg-[#670098] mt-4 inline-block self-center">Admin Login</a>
                 </div>
-                <div class="p-6 bg-white rounded-lg shadow-lg text-center flex flex-col justify-between h-full">
+                <div class="px-6 pt-6 pb-10 bg-white rounded-xl shadow-[4px_4px_30px_rgba(0,0,0,0.3)] text-center flex flex-col justify-between h-full">
                     <img src="{% static 'main/images/students.png' %}" alt="Student" class="w-3/4 mx-auto mb-4">
                     <h4 class="text-xl font-semibold mb-4">Students</h4>
                     <p class="text-gray-600">Access study materials, view attendance records, and get personalized insights for academic growth.</p>
-                    <a href="{% url 'student_login' %}" class="text-violet-900 hover:text-black mt-4 inline-block self-center">Student Login</a>
+                    <a href="{% url 'student_login' %}" class="bg-[#4f0074] text-white px-3 py-1 rounded-md hover:bg-[#670098] mt-4 inline-block self-center">Student Login</a>
                 </div>
-                <div class="p-6 bg-white rounded-lg shadow-lg text-center flex flex-col justify-between h-full">
+                <div class="px-6 pt-6 pb-10 bg-white rounded-xl shadow-[4px_4px_30px_rgba(0,0,0,0.3)] text-center flex flex-col justify-between h-full">
                     <img src="{% static 'main/images/class_head.png' %}" alt="Teacher" class="w-3/4 mx-auto mb-4">
                     <h4 class="text-xl font-semibold mb-4">Class Head</h4>
                     <p class="text-gray-600">Manage students and subjects, and provide feedback to students and parents.</p>
-                    <a href="{% url 'class_head_login' %}" class="text-violet-900 hover:text-black mt-4 inline-block self-center">Class Login</a>
+                    <a href="{% url 'class_head_login' %}" class="bg-[#4f0074] text-white px-3 py-1 rounded-md hover:bg-[#670098] mt-4 inline-block self-center">Class Login</a>
                 </div>
-                <div class="p-6 bg-white rounded-lg shadow-lg text-center flex flex-col justify-between h-full">
+                <div class="px-6 pt-6 pb-10 bg-white rounded-xl shadow-[4px_4px_30px_rgba(0,0,0,0.3)] text-center flex flex-col justify-between h-full">
                     <img src="{% static 'main/images/sub_head.png' %}" alt="Teacher" class="w-3/4 mx-auto mb-4">
                     <h4 class="text-xl font-semibold mb-4">Subject Head</h4>
                     <p class="text-gray-600">Manage attendance, evaluate performance, and provide feedback to students and parents.</p>
-                    <a href="{% url 'subject_head_login' %}" class="text-violet-900 hover:text-black mt-4 inline-block self-center">Subject Login</a>
+                    <a href="{% url 'subject_head_login' %}" class="bg-[#4f0074] text-white px-3 py-1 rounded-md hover:bg-[#670098] mt-4 inline-block self-center">Subject Login</a>
                 </div>
-                <div class="p-6 bg-white rounded-lg shadow-lg text-center flex flex-col justify-between h-full">
+                <div class="px-6 pt-6 pb-10 bg-white rounded-xl shadow-[4px_4px_30px_rgba(0,0,0,0.3)] text-center flex flex-col justify-between h-full">
                     <img src="{% static 'main/images/parents.png' %}" alt="Parent" class="w-3/4 mx-auto mb-4">
                     <h4 class="text-xl font-semibold mb-4">Parents</h4>
                     <p class="text-gray-600">Monitor your child's performance, attendance, and communicate with teachers seamlessly.</p>
-                    <a href="{% url 'parent_login' %}" class="text-violet-900 hover:text-black mt-4 inline-block self-center">Parent Login</a>
+                    <a href="{% url 'parent_login' %}" class="bg-[#4f0074] text-white px-3 py-1 rounded-md hover:bg-[#670098] mt-4 inline-block self-center">Parent Login</a>
                 </div>
             </div>
         </div>
@@ -105,22 +113,27 @@
     <!-- Features Section -->
     <section id="features" class="py-16">
         <div class="container mx-auto p-[100px] md:p-[50px] sm:p-[10px]">
-            <h3 class="text-3xl font-bold text-center text-[#4f0074] mb-8">Features</h3>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div class="p-6 bg-white rounded-lg shadow-md text-center">
+            <h3 class="text-3xl font-bold text-center text-[#4f0074] mb-8">Key Features</h3>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div class="p-6 bg-white rounded-lg shadow-[4px_4px_30px_rgba(0,0,0,0.3)] text-center">
                     <img src="{% static 'main/images/attendance.png' %}" alt="Attendance Management" class="w-1/2 mx-auto mb-4">
                     <h4 class="text-xl font-semibold mb-4">Attendance Management</h4>
                     <p class="text-gray-600">Efficiently track and manage attendance for each subject.</p>
                 </div>
-                <div class="p-6 bg-white rounded-lg shadow-md text-center">
+                <div class="p-6 bg-white rounded-xl shadow-[4px_4px_30px_rgba(0,0,0,0.3)] text-center">
                     <img src="{% static 'main/images/evaluation.png' %}" alt="Marks & Evaluation" class="w-1/2 mx-auto mb-4">
                     <h4 class="text-xl font-semibold mb-4">Marks & Evaluation</h4>
                     <p class="text-gray-600">Monitor student progress with detailed evaluations and grade records.</p>
                 </div>
-                <div class="p-6 bg-white rounded-lg shadow-md text-center">
+                <div class="p-6 bg-white rounded-xl shadow-[4px_4px_30px_rgba(0,0,0,0.3)] text-center">
                     <img src="{% static 'main/images/chatbot.png' %}" alt="AI Chatbot" class="w-1/2 mx-auto mb-4">
-                    <h4 class="text-xl font-semibold mb-4">AI Chatbot</h4>
+                    <h4 class="text-xl font-semibold mb-4">Eduke Bot</h4>
                     <p class="text-gray-600">Get instant academic assistance and personalized insights.</p>
+                </div>
+                <div class="p-6 bg-white rounded-xl shadow-[4px_4px_30px_rgba(0,0,0,0.3)] text-center">
+                    <img src="{% static 'main/images/prediction.png' %}" alt="AI Chatbot" class="w-1/2 mx-auto mb-4">
+                    <h4 class="text-xl font-semibold mb-4">Score Prediction</h4>
+                    <p class="text-gray-600">Predict future scores based on past performance and trends.</p>
                 </div>
             </div>
         </div>

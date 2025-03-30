@@ -87,15 +87,12 @@
         
         <!-- Dashboard Content -->
         <div id="content-wrapper" class="p-6 space-y-6 w-full">
-          <div class="bg-white p-4 rounded-lg shadow-md w-full h-[750px] overflow-y-auto" id="scrollbar-off">
-            <h2 class="text-2xl font-bold text-[#4f0074] ml-3 mb-5">
-                <i class="fa-solid fa-comments"></i> Eduke Chat
-            </h2>
-  
+          <h2 class="text-2xl text-gray-800 uppercase font-bold">💬 Eduke Chat</h2>
+          <div class="bg-white p-4 rounded-lg shadow-md w-full overflow-y-auto" id="scrollbar-off">
             <h3 class="text-[20px] font-semibold mb-3 ml-3">Recent Chats</h3>
   
             <ul id="chat-list" class="space-y-3">
-                <!-- Subject Heads -->
+              {% if involved_users %}
                 {% for user in involved_users %}
                     {% if user.1 == 'subject_head' %}
                         <li class="chat-item ml-3 mr-3">
@@ -145,6 +142,10 @@
                         </li>
                     {% endif %}
                 {% endfor %}
+
+              {% else %}
+                        <p class="text-muted text-center bg-gray-100 p-10">No recent chats!</p>
+              {% endif %}
             </ul>
   
             <h3 class="text-[20px] font-semibold mb-3 mt-[30px] ml-3">Suggested users</h3>
@@ -166,6 +167,9 @@
                       </a>
                     </li>
                     {% endif %}
+                
+                {% empty %}
+                      <p class="text-muted text-center bg-gray-100 p-10">No suggested users available.</p>
                 {% endfor %}
             </ul>
   
@@ -186,6 +190,9 @@
                       </a>
                     </li>
                     {% endif %}
+
+                {% empty %}
+                      <p class="text-muted text-center bg-gray-100 p-10">No suggested users available.</p>
                 {% endfor %}
             </ul>
   
@@ -206,6 +213,9 @@
                       </a>
                     </li>
                     {% endif %}
+
+                {% empty %}
+                      <p class="text-muted text-center bg-gray-100 p-10">No suggested users available.</p>
                 {% endfor %}
             </ul>
           </div>

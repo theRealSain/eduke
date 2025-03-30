@@ -151,7 +151,7 @@
               <!-- Cartoon PNG Image positioned at the bottom-right corner -->
               <img src="{% static 'main/images/chat.png' %}" alt="Cartoon" class="absolute bottom-0 right-0 w-[150px] transform translate-x-4 translate-y-4 opacity-80 group-hover:opacity-100 transition-opacity duration-300" />
             </a>
-            <a href="" class="block relative group">
+            <a href="{% url 'subject_head_evaluation' %}" class="block relative group">
               <div class="bg-white p-6 rounded-lg shadow-lg pt-[15px] pl-[15px]">
                 <h3 class="text-2xl font-bold text-gray-800 uppercase mb-[20px]">EVALUATION</h3>
                 <p class="font-semibold text-purple-700 text-[20px]">Evaluate your students</p>

@@ -69,6 +69,11 @@ def send_account_creation_email(email, password, role, name, institution_email):
 
 
 # Institution Registration
+from django.contrib import messages
+from django.shortcuts import render, redirect
+from .forms import InstitutionRegisterForm
+from .models import Institution
+
 def register_institution(request):
     if request.method == 'POST':
         form = InstitutionRegisterForm(request.POST)
@@ -77,25 +82,30 @@ def register_institution(request):
             email = form.cleaned_data['email']
             password = form.cleaned_data['password']
 
-            # Check if the email already exists
+            # Debugging: Print if email exists
             if Institution.objects.filter(email=email).exists():
-                form.add_error('email', 'An institution with this email already exists.')
+                print("DEBUG: Institution already exists!")  # Check if this prints
+                messages.error(request, 'An institution with this email already exists.', extra_tags="reg_error_unique")
+                return render(request, 'registration/institution_register.html', {'form': form})  # Stay on same page
             else:
                 try:
-                    # Create the institution
                     Institution.objects.create(
                         institution_name=institution_name,
                         email=email,
-                        password=password  # Store plain password here
+                        password=password  # Storing plain password
                     )
-                    messages.success(request, 'Institution registered successfully! Please log in.')
+                    messages.success(request, 'Institution registered successfully! Please log in.', extra_tags="reg_success")
                     return redirect('login')
                 except Exception as e:
-                    form.add_error(None, 'An error occurred while saving the data. Please try again.')
+                    print("DEBUG: Error while saving:", e)  # Debugging
+                    messages.error(request, 'An error occurred while saving the data. Please try again.', extra_tags="reg_error_unique")
+    
     else:
         form = InstitutionRegisterForm()
 
     return render(request, 'registration/institution_register.html', {'form': form})
+
+
 
 # Institution Login
 def login_view(request):
@@ -116,9 +126,9 @@ def login_view(request):
                 # Redirect to the admin dashboard
                 return redirect('admin_dashboard')  # Adjust the URL name accordingly
             except Institution.DoesNotExist:
-                messages.error(request, 'Invalid email or password.')
+                messages.error(request, 'Invalid email or password.', extra_tags="login_error")
         else:
-            messages.error(request, 'Please correct the errors below.')
+            messages.error(request, 'Please correct the errors.', extra_tags="login_error")
     else:
         form = LoginForm()
 
@@ -1282,9 +1292,9 @@ def class_head_login(request):
                     request.session['class_id'] = class_id  # Store class_id in session
                     return redirect('class_head_dashboard')  # Redirect to the dashboard
                 else:
-                    messages.error(request, 'Invalid credentials or access restricted.')
+                    messages.error(request, 'Invalid credentials', extra_tags="ch_login_error")
             else:
-                messages.error(request, 'No Class Head found with this email.')
+                messages.error(request, 'No Class Head found with this email!', extra_tags="ch_no_email")
 
     return render(request, 'class_head/class_head_login.html', {'form': form})
 
@@ -1873,9 +1883,9 @@ def subject_head_login(request):
                     request.session['subject_id'] = subject_id  # Store subject_id in session
                     return redirect('subject_head_dashboard')  # Redirect to subject head dashboard
                 else:
-                    messages.error(request, 'Invalid credentials or access restricted.')
+                    messages.error(request, 'Invalid credentials!', extra_tags="sh_login_error")
             else:
-                messages.error(request, 'No Subject Head found with this email.')
+                messages.error(request, 'No Subject Head found with this email!', extra_tags="sh_no_email")
 
     return render(request, 'subject_head/subject_head_login.html', {'form': form})
 
@@ -3365,7 +3375,7 @@ def student_login(request):
                 request.session['student_id'] = student[0]  # Save student ID in session
                 return redirect('student_dashboard')
             else:
-                messages.error(request, 'Invalid roll number or password.')
+                messages.error(request, 'Invalid Roll number or Password!', extra_tags="st_login_error")
 
     return render(request, 'students/student_login.html', {'form': form})
 
@@ -4597,20 +4607,14 @@ def student_prediction(request):
 ######################################################################################################################
 
 def parent_login(request):
-    print("🔹 Parent login view called.")
-
     form = ParentLoginForm()
 
     if request.method == "POST":
-        print("🔹 POST request received.")
-
         form = ParentLoginForm(request.POST)
 
         if form.is_valid():
-            print("✅ Form is valid.")
             roll_no = form.cleaned_data.get("roll_no")
             password = form.cleaned_data.get("password")
-            print(f"🔹 Received Roll No: {roll_no}, Password: {password}")
 
             # Validate credentials with raw SQL query
             with connection.cursor() as cursor:
@@ -4622,20 +4626,14 @@ def parent_login(request):
                     WHERE s.roll_no = %s AND p.password = %s AND u.role = 'parent'
                 """, [roll_no, password])
                 parent = cursor.fetchone()
-                print(f"🔹 Query Result: {parent}")
 
             if parent:
                 # Save the parent ID in session
                 request.session['parent_id'] = parent[0]
-                print(f"✅ Session Created: parent_id = {request.session.get('parent_id')}")
-                messages.success(request, "Login successful.")
-                print("🔹 Redirecting to parent_dashboard...")
                 return redirect('parent_dashboard')  # Redirect to parent dashboard
             else:
-                print("❌ Invalid credentials.")
-                messages.error(request, "Invalid roll number or password.")
+                messages.error(request, "Invalid Roll number or Password!", extra_tags="p_login_error")
 
-    print("🔹 Rendering login page again.")
     return render(request, 'parents/parent_login.html', {'form': form})
     
 
@@ -5399,8 +5397,8 @@ def parent_eduke_bot(request):
                 worst_subject = min(marks_data, key=lambda x: x[1])
 
                 return JsonResponse({
-                    "response": f"Your best subject is {best_subject[0]} with {best_subject[1]}% marks. "
-                                f"Your weakest subject is {worst_subject[0]} with {worst_subject[1]}%. Keep practicing!"
+                    "response": f"Your child's best subject is {best_subject[0]} with {best_subject[1]}% marks. "
+                                f"Your child's weakest subject is {worst_subject[0]} with {worst_subject[1]}%. Keep practicing!"
                 })
 
         
@@ -5415,8 +5413,8 @@ def parent_eduke_bot(request):
 
             if total_classes > 0:
                 attendance_percentage = (present_classes / total_classes) * 100
-                motivation = "You're doing great! Keep attending! 😊" if attendance_percentage > 75 else "Try to attend more classes to stay on track. 📚"
-                return JsonResponse({"response": f"You attended {present_classes}/{total_classes} classes ({attendance_percentage:.2f}%). {motivation}"})
+                motivation = "Your child is doing great! Keep attending! 😊" if attendance_percentage > 75 else "Try to attend more classes to stay on track. 📚"
+                return JsonResponse({"response": f"Your child attended {present_classes}/{total_classes} classes ({attendance_percentage:.2f}%). {motivation}"})
 
 
         # 🔹 Student Evaluation Query (Study, Sleep, Class Participation, Academic Activity)
@@ -5462,17 +5460,17 @@ def parent_eduke_bot(request):
                 if "study" in query or "focus" in query or "improve" in query:
                     if avg_study_time is not None:
                         if avg_study_time < 40:
-                            response = ("Your study time is quite low, which might be affecting your academic performance. 📚 "
+                            response = ("Your child's study time is quite low, which might be affecting your academic performance. 📚 "
                                         "It's important to establish a structured study routine. Try setting small, achievable goals for each session, "
                                         "and use techniques like the Pomodoro method to stay focused. Also, consider reducing distractions by keeping your study space organized "
                                         "and free from interruptions. Over time, consistency will help you improve significantly! 🚀")
                         elif avg_study_time < 70:
-                            response = ("You're doing a decent job with your studies, but there's room for improvement. 💡 "
+                            response = ("Your child is doing a decent job with your studies, but there's room for improvement. 💡 "
                                         "Try to analyze which subjects or topics need more focus and allocate additional time to them. "
                                         "Studying smarter is just as important as studying harder—use active recall, note-making, and mind maps to make learning more effective. "
                                         "Setting deadlines and rewarding yourself after completing study goals can keep you motivated. Keep pushing forward!")
                         else:
-                            response = ("Fantastic! You're maintaining a great study routine, and it's clearly benefiting your learning. 🚀 "
+                            response = ("Fantastic! Your child is maintaining a great study routine, and it's clearly benefiting your learning. 🚀 "
                                         "To maximize your efforts, consider teaching what you've learned to others—it strengthens your understanding. "
                                         "Also, make sure to take short breaks to avoid burnout and refresh your mind. Keep challenging yourself with new learning strategies, "
                                         "and don't forget to stay curious and enjoy the process of learning! 🎓")
@@ -5484,16 +5482,16 @@ def parent_eduke_bot(request):
                 elif "sleep" in query:
                     if avg_sleep_time is not None:
                         if avg_sleep_time < 40:
-                            response = ("You're not getting enough sleep, and this could be affecting your concentration, memory, and overall health. 💤 "
+                            response = ("Your child is not getting enough sleep, and this could be affecting your concentration, memory, and overall health. 💤 "
                                         "Lack of sleep can lead to decreased focus, slower cognitive function, and even increased stress levels. "
                                         "Try to set a fixed bedtime and wake-up schedule, avoid screen time before sleeping, and create a relaxing bedtime routine. "
                                         "Aim for at least 7-8 hours of sleep every night, as quality rest is essential for learning and brain function. 🌙")
                         elif avg_sleep_time < 70:
-                            response = ("You're getting a moderate amount of sleep, but improving your sleep quality could enhance your energy levels and focus. 🌙 "
+                            response = ("Your child getting a moderate amount of sleep, but improving your sleep quality could enhance your energy levels and focus. 🌙 "
                                         "Consider maintaining a regular sleep schedule, avoiding caffeine before bedtime, and ensuring that your sleeping environment is comfortable. "
                                         "Your brain consolidates information while you sleep, so getting better rest can actually help you retain what you study more effectively!")
                         else:
-                            response = ("You're doing an excellent job maintaining a good sleep schedule! ✅ "
+                            response = ("Your child doing an excellent job maintaining a good sleep schedule! ✅ "
                                         "Quality sleep is one of the key factors in academic success. It helps with focus, mood regulation, and energy levels. "
                                         "Just make sure you continue this healthy habit, and if you ever feel fatigued despite enough sleep, consider your diet and exercise routine as well. "
                                         "Keep up the great work, and your brain will thank you!")
@@ -5504,17 +5502,17 @@ def parent_eduke_bot(request):
                 elif "class participation" in query:
                     if avg_class_participation is not None:
                         if avg_class_participation < 40:
-                            response = ("It looks like you aren't participating much in class discussions. 🎤 "
+                            response = ("It looks like your child isn't participating much in class discussions. 🎤 "
                                         "Active participation can help you understand topics better and improve your confidence. "
                                         "Try asking questions, sharing your thoughts, or even taking small steps like nodding and making eye contact with the teacher. "
                                         "Engaging with the class material and your peers can make learning more interactive and enjoyable!")
                         elif avg_class_participation < 70:
-                            response = ("You're participating fairly well in class, but there's still room to be more involved. ✨ "
+                            response = ("Your child is participating fairly well in class, but there's still room to be more involved. ✨ "
                                         "Try contributing more by answering questions, discussing ideas with classmates, and sharing your opinions on topics. "
                                         "Even small efforts like summarizing what the teacher said in your own words can boost understanding and retention. "
                                         "Active learning is a great way to build confidence and sharpen your thinking skills!")
                         else:
-                            response = ("You're doing a fantastic job actively participating in class! 📖 "
+                            response = ("Your child is doing a fantastic job actively participating in class! 📖 "
                                         "Engaging in discussions and asking questions not only helps you learn better but also makes the learning process more enjoyable. "
                                         "Keep up the enthusiasm and continue being involved—your curiosity and effort will take you far!")
                     else:
@@ -5524,16 +5522,16 @@ def parent_eduke_bot(request):
                 elif "academic activity" in query:
                     if avg_academic_activity is not None:
                         if avg_academic_activity < 40:
-                            response = ("It seems like you're not engaging much in academic activities outside regular studies. 📊 "
+                            response = ("It seems like your child is not engaging much in academic activities outside regular studies. 📊 "
                                         "Taking part in extra learning opportunities, such as solving additional exercises, joining study groups, or participating in academic clubs, "
                                         "can help you develop a deeper understanding of subjects. Try exploring online courses, competitions, or group discussions—they can make learning fun and effective!")
                         elif avg_academic_activity < 70:
-                            response = ("You're doing a decent job engaging in academic activities, but pushing yourself a little further can be beneficial. 📌 "
+                            response = ("Your child is doing a decent job engaging in academic activities, but pushing yourself a little further can be beneficial. 📌 "
                                         "Consider exploring new learning resources like educational videos, books, and online practice tests. "
                                         "Participating in academic discussions or challenging yourself with new problems can help you develop a broader perspective. "
                                         "Keep up the momentum, and soon, you'll see improvements in your critical thinking and analytical skills!")
                         else:
-                            response = ("You're actively engaged in academic activities, and that's a fantastic habit! 🎯 "
+                            response = ("Your child is actively engaged in academic activities, and that's a fantastic habit! 🎯 "
                                         "Your curiosity and willingness to explore beyond textbooks are what set high achievers apart. "
                                         "Keep challenging yourself with new learning experiences, and don't hesitate to take up leadership roles in academic projects or mentor your peers. "
                                         "Your dedication will lead to great success!")

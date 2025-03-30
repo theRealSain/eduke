@@ -11,15 +11,15 @@ class InstitutionRegisterForm(forms.ModelForm):
         # Add widgets to customize the form appearance
         widgets = {
             'institution_name': forms.TextInput(attrs={
-                'class': 'border border-gray-400 rounded-lg p-2 w-full mb-4 focus:outline-none focus:ring-2 focus:ring-[#4f0074]',
+                'class': 'border border-gray-400 rounded-lg p-2 w-full mb-4',
                 'placeholder': 'Institution Name'
             }),
             'email': forms.EmailInput(attrs={
-                'class': 'border border-gray-400 rounded-lg p-2 w-full mb-4 focus:outline-none focus:ring-2 focus:ring-[#4f0074]',
+                'class': 'border border-gray-400 rounded-lg p-2 w-full mb-4',
                 'placeholder': 'Email Address'
             }),
             'password': forms.PasswordInput(attrs={
-                'class': 'border border-gray-400 rounded-lg p-2 w-full mb-4 focus:outline-none focus:ring-2 focus:ring-[#4f0074]',
+                'class': 'border border-gray-400 rounded-lg p-2 w-full mb-4',
                 'placeholder': 'Password'
             }),
         }
@@ -36,13 +36,13 @@ class InstitutionRegisterForm(forms.ModelForm):
 class LoginForm(forms.Form):
     email = forms.EmailField(
         widget=forms.EmailInput(attrs={
-            'class': 'border border-gray-400 rounded-lg p-2 w-full mb-4 focus:outline-none focus:ring-2 focus:ring-[#4f0074]',
+            'class': 'border border-gray-400 rounded-lg p-2 w-full mb-4',
             'placeholder': 'Email Address'
         })
     )
     password = forms.CharField(
         widget=forms.PasswordInput(attrs={
-            'class': 'border border-gray-400 rounded-lg p-2 w-full mb-4 focus:outline-none focus:ring-2 focus:ring-[#4f0074]',
+            'class': 'border border-gray-400 rounded-lg p-2 w-full mb-4',
             'placeholder': 'Password'
         })
     )
@@ -51,7 +51,7 @@ class LoginForm(forms.Form):
 class ClassHeadLoginForm(forms.Form):
     email = forms.EmailField(
         widget=forms.EmailInput(attrs={
-            'class': 'block w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#4f0074] focus:outline-none',
+            'class': 'block w-full px-4 py-3 rounded-lg border border-gray-400',
             'placeholder': 'Enter your email',
             'id': 'email',
         }),
@@ -59,7 +59,7 @@ class ClassHeadLoginForm(forms.Form):
     )
     password = forms.CharField(
         widget=forms.PasswordInput(attrs={
-            'class': 'block w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#4f0074] focus:outline-none',
+            'class': 'block w-full px-4 py-3 rounded-lg border border-gray-400',
             'placeholder': 'Enter your password',
             'id': 'password',
         }),
@@ -69,7 +69,7 @@ class ClassHeadLoginForm(forms.Form):
 class SubjectHeadLoginForm(forms.Form):
     email = forms.EmailField(
         widget=forms.EmailInput(attrs={
-            'class': 'block w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#4f0074] focus:outline-none',
+            'class': 'block w-full px-4 py-3 rounded-lg border border-gray-400',
             'placeholder': 'Enter your email',
             'id': 'email',
         }),
@@ -77,7 +77,7 @@ class SubjectHeadLoginForm(forms.Form):
     )
     password = forms.CharField(
         widget=forms.PasswordInput(attrs={
-            'class': 'block w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#4f0074] focus:outline-none',
+            'class': 'block w-full px-4 py-3 rounded-lg border border-gray-400',
             'placeholder': 'Enter your password',
             'id': 'password',
         }),
@@ -88,7 +88,7 @@ class StudentLoginForm(forms.Form):
     roll_no = forms.CharField(
         max_length=20,
         widget=forms.TextInput(attrs={
-            'class': 'block w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#4f0074] focus:outline-none',
+            'class': 'block w-full px-4 py-3 rounded-lg border border-gray-400',
             'placeholder': 'Enter your Roll No.',
             'id': 'roll_no',
         }),
@@ -96,8 +96,8 @@ class StudentLoginForm(forms.Form):
     )
     password = forms.CharField(
         widget=forms.PasswordInput(attrs={
-            'class': 'block w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#4f0074] focus:outline-none',
-            'placeholder': 'Enter your Password',
+            'class': 'block w-full px-4 py-3 rounded-lg border border-gray-400',
+            'placeholder': 'Enter your password',
             'id': 'password',
         }),
         label="Password"
@@ -107,14 +107,14 @@ class ParentLoginForm(forms.Form):
     roll_no = forms.CharField(
         max_length=20,
         widget=forms.TextInput(attrs={
-            'class': 'block w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#4f0074] focus:outline-none',
-            'placeholder': 'Enter your Roll No.',
+            'class': 'block w-full px-4 py-3 rounded-lg border border-gray-400',
+            'placeholder': 'Enter Student Roll No.',
             'id': 'roll_no',
         }),
         label="Roll No."
     )
     password = forms.CharField(widget=forms.PasswordInput(attrs={
-        'class': 'block w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#4f0074] focus:outline-none',
+        'class': 'block w-full px-4 py-3 rounded-lg border border-gray-400',
         'placeholder': 'Enter your password',
         'id': 'password'
     }))
