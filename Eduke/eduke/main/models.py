@@ -50,24 +50,21 @@ class Parents(models.Model):
     name = models.CharField(max_length=255, null=True, blank=True)
     user = models.ForeignKey(Users, on_delete=models.CASCADE)
 
-class Marks(models.Model):
-    id = models.BigAutoField(primary_key=True)
-    student = models.ForeignKey(Students, on_delete=models.CASCADE)
-    subject = models.ForeignKey(Subjects, on_delete=models.CASCADE)
-    mark_percentage = models.FloatField()
-
 class Attendance(models.Model):
-    STATUS_CHOICES = [
-        ('present', 'Present'),
-        ('absent', 'Absent'),
-    ]
+    class StatusChoices(models.TextChoices):
+        PRESENT = 'present', 'Present'
+        ABSENT = 'absent', 'Absent'
 
     id = models.BigAutoField(primary_key=True)
     attendance_date = models.DateField()
     hour = models.PositiveSmallIntegerField()
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES)
-    student = models.ForeignKey(Students, on_delete=models.CASCADE)
-    subject = models.ForeignKey(Subjects, on_delete=models.CASCADE)
+    status = models.CharField(
+        max_length=10, 
+        choices=StatusChoices.choices,
+        default=StatusChoices.PRESENT
+    )
+    student = models.ForeignKey('Students', on_delete=models.CASCADE)
+    subject = models.ForeignKey('Subjects', on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
 
 class StudentEvaluation(models.Model):

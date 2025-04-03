@@ -3,7 +3,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from .forms import InstitutionRegisterForm, LoginForm, ClassHeadLoginForm, SubjectHeadLoginForm, StudentLoginForm, ParentLoginForm, AddClassForm, AddSubjectForm, AddStudentForm, ClassUploadForm, SubjectUploadForm, StudentUploadForm
-from .models import Institution, Classes, Subjects, Students, Users, Parents, Chat, Announcements, Marks, Attendance, StudentEvaluation, QuizResponse
+from .models import Institution, Classes, Subjects, Students, Users, Parents, Chat, Announcements, Attendance, StudentEvaluation, QuizResponse
 from django.db import IntegrityError, transaction
 from django.db import connection
 from django.core.exceptions import ObjectDoesNotExist
@@ -2510,27 +2510,7 @@ def subject_head_marks(request):
                             try:
                                 mark_value = float(mark_value)  # Convert to float safely
 
-                                # ✅ Step 1: Check if the record exists in `main_marks`
-                                cursor.execute("""
-                                    SELECT id FROM main_marks WHERE student_id = %s AND subject_id = %s
-                                """, [student_id, subject_data['id']])
-                                mark_record = cursor.fetchone()
-
-                                if mark_record:
-                                    # ✅ Step 2: If exists, UPDATE `main_marks`
-                                    cursor.execute("""
-                                        UPDATE main_marks 
-                                        SET mark_percentage = %s 
-                                        WHERE student_id = %s AND subject_id = %s
-                                    """, [mark_value, student_id, subject_data['id']])
-                                else:
-                                    # ✅ Step 3: If not exists, INSERT into `main_marks`
-                                    cursor.execute("""
-                                        INSERT INTO main_marks (mark_percentage, student_id, subject_id)
-                                        VALUES (%s, %s, %s)
-                                    """, [mark_value, student_id, subject_data['id']])
-
-                                # ✅ Step 4: Check if the record exists in `main_studentevaluation`
+                                # ✅ Step 1: Check if the record exists in `main_studentevaluation`
                                 cursor.execute("""
                                     SELECT id FROM main_studentevaluation
                                     WHERE student_id = %s AND subject_id = %s
@@ -2538,14 +2518,14 @@ def subject_head_marks(request):
                                 evaluation = cursor.fetchone()
 
                                 if evaluation:
-                                    # ✅ Step 5: If exists, UPDATE `main_studentevaluation`
+                                    # ✅ Step 2: If exists, UPDATE `main_studentevaluation`
                                     cursor.execute("""
                                         UPDATE main_studentevaluation 
                                         SET marks_percentage = %s
                                         WHERE student_id = %s AND subject_id = %s
                                     """, [mark_value, student_id, subject_data['id']])
                                 else:
-                                    # ✅ Step 6: If not exists, INSERT into `main_studentevaluation`
+                                    # ✅ Step 3: If not exists, INSERT into `main_studentevaluation`
                                     cursor.execute("""
                                         INSERT INTO main_studentevaluation (student_id, subject_id, marks_percentage)
                                         VALUES (%s, %s, %s)
@@ -2568,9 +2548,9 @@ def subject_head_marks(request):
                 for student in students:
                     student_id = student[0]
 
-                    # Fetch marks for each student
+                    # Fetch marks for each student from `main_studentevaluation`
                     cursor.execute("""
-                        SELECT mark_percentage FROM main_marks 
+                        SELECT marks_percentage FROM main_studentevaluation 
                         WHERE student_id = %s AND subject_id = %s
                     """, [student_id, subject_data['id']])
                     mark = cursor.fetchone()
@@ -2590,6 +2570,7 @@ def subject_head_marks(request):
         'subject': subject_data,
         'students': student_list
     })
+
 
 
 
@@ -2661,6 +2642,11 @@ def download_marks_template(request, subject_id):
 
 
 
+import openpyxl
+from django.shortcuts import redirect
+from django.contrib import messages
+from django.db import connection, transaction
+
 def upload_marks(request):
     if request.method == "POST" and request.FILES.get("file"):
         excel_file = request.FILES["file"]
@@ -2697,7 +2683,7 @@ def upload_marks(request):
 
             rows_processed = 0
 
-            # Start transaction for atomic inserts/updates
+            # Start transaction for atomic updates
             with transaction.atomic():
                 for row in ws.iter_rows(min_row=2, values_only=True):
                     row_values = [cell for cell in row if cell is not None]  # Remove None values
@@ -2726,24 +2712,7 @@ def upload_marks(request):
 
                         student_id = student_data[0]
 
-                        # Try updating existing marks in main_marks
-                        cursor.execute("""
-                            UPDATE main_marks 
-                            SET mark_percentage = %s 
-                            WHERE student_id = %s AND subject_id = %s
-                        """, [mark_percentage, student_id, subject_id])
-
-                        if cursor.rowcount > 0:
-                            print(f"🔄 Updated marks for Roll No {roll_no}: {mark_percentage}%")
-                        else:
-                            # If no update, insert new marks
-                            cursor.execute("""
-                                INSERT INTO main_marks (student_id, subject_id, mark_percentage) 
-                                VALUES (%s, %s, %s)
-                            """, [student_id, subject_id, mark_percentage])
-                            print(f"🆕 Inserted marks for Roll No {roll_no}: {mark_percentage}%")
-
-                        # Now update main_studentevaluation for the same student and subject
+                        # Update or insert marks into main_studentevaluation
                         cursor.execute("""
                             UPDATE main_studentevaluation 
                             SET marks_percentage = %s 
@@ -2753,7 +2722,6 @@ def upload_marks(request):
                         if cursor.rowcount > 0:
                             print(f"🔄 Updated StudentEvaluation for Roll No {roll_no}: {mark_percentage}%")
                         else:
-                            # If no update, insert new record
                             cursor.execute("""
                                 INSERT INTO main_studentevaluation (student_id, subject_id, marks_percentage) 
                                 VALUES (%s, %s, %s)
@@ -2774,6 +2742,7 @@ def upload_marks(request):
     print("❌ No file uploaded or invalid request method.")
     messages.error(request, "Please upload a valid Excel file.")
     return redirect("subject_head_marks")
+
 
 
 

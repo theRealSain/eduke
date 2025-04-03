@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3307
--- Generation Time: Mar 30, 2025 at 11:25 AM
+-- Generation Time: Mar 30, 2025 at 12:01 PM
 -- Server version: 9.1.0
 -- PHP Version: 8.2.12
 
@@ -351,7 +351,9 @@ INSERT INTO `django_migrations` (`id`, `app`, `name`, `applied`) VALUES
 (52, 'main', '0037_alter_announcements_id_alter_attendance_id_and_more', '2025-03-22 05:19:18.868641'),
 (53, 'main', '0038_alter_students_roll_no', '2025-03-22 05:20:35.492631'),
 (54, 'main', '0039_auto_20250323_1236', '2025-03-23 07:06:39.955965'),
-(55, 'main', '0040_auto_20250323_1240', '2025-03-23 07:10:12.625290');
+(55, 'main', '0040_auto_20250323_1240', '2025-03-23 07:10:12.625290'),
+(56, 'main', '0041_delete_marks', '2025-03-30 09:54:59.077400'),
+(57, 'main', '0042_alter_attendance_status', '2025-03-30 09:59:17.313851');
 
 -- --------------------------------------------------------
 
@@ -372,13 +374,13 @@ CREATE TABLE `django_session` (
 INSERT INTO `django_session` (`session_key`, `session_data`, `expire_date`) VALUES
 ('0sqw8o0o8mhayjchrhtl2w6v0aj2l3kv', 'eyJjbGFzc19oZWFkX2lkIjoxM30:1teAY3:dJ_S_q8GBRIV6iObczDcnUlK_UUyEYQSl1M_imqWfVs', '2025-02-15 10:16:23.547677'),
 ('1gpyt7qf0zwgjv0ks3phj8kgky7sujui', 'e30:1tbIQB:POyn-rEoj-sxlUT5I0fZxGB8HipITsS_lEUf11In7UQ', '2025-02-07 12:04:23.929518'),
+('3m1qcd01qnn2065kbeis5otvxzde41kh', 'eyJzdWJqZWN0X2lkIjoyM30:1typKn:-sekGkszuM_hIuqRLYSJfStQfwGHhg2CIUM3nIs1k2c', '2025-04-13 09:52:05.724222'),
 ('h5pc1p9nec27wdykh2qt4mk3x722na02', 'e30:1tbZMT:FdwmYlisd-l-pxW7jS1z9YUv536sEY52rWlm1KIRT8c', '2025-02-08 06:09:41.949257'),
 ('iy50ymfvuabvrs6zzsg9qqt101y7m2cb', 'eyJjbGFzc19pZCI6MjB9:1towA5:dVEPMlhSNFYXBRQ6Vz46q-kGgEv5dupnuxIfe78K6h0', '2025-03-17 03:08:09.985790'),
 ('p9rbo3jfob45shgippf65xqmxcwm2px5', 'e30:1tbIQa:t8noblKYAHTQaK-nODwDQhiLUyUu8hZWLBGdoUAPH0Y', '2025-02-07 12:04:48.695025'),
 ('q2ry82ujy4xq0ubcekh7gjv27mmg3dkm', 'e30:1tbITs:iCq2XiI3lYkOS59VwFcfcfL3j2lOhn_KcFnK5fUGh6c', '2025-02-07 12:08:12.871277'),
 ('q663wz1plma1getb4y9gh3cxg8sa74yl', 'eyJ0ZWFjaGVyX2lkIjozfQ:1tbAhP:jrYiLIlKpvJjC8qWeaYEh0TyA7l_dr6t_ct2L3D6syg', '2025-02-07 03:49:39.794741'),
 ('s8bg8ppi7ld6bqexoeg4padni4qucqo6', 'eyJjbGFzc19oZWFkX2lkIjoxM30:1teAX7:4BgPYk55nnCIw1fMWIP3kj9QzQ7b9Ll-UfJUSznFPxg', '2025-02-15 10:15:25.661351'),
-('vlr8b57ebhnph935i0hp4aga5dbzlmav', '.eJyrVipILErNK4nPTFGyMjHRUUrOSSwuBvOMLXWUikuTslKTIbJGxkB-SWkKXLV5LQCHrBRg:1twz25:PfUGLl2zRqImg4uC_fXzFWVpZBl0wEQxhTtKPict8dg', '2025-04-08 07:49:09.168728'),
 ('xuiiy8d7orowqcmqn7wm0xlov7tttahu', 'e30:1tbZMi:Alo1mi87tOh2qUhsmwP8J5rkP9E8ZaqbzrNyep7wJrg', '2025-02-08 06:09:56.751798');
 
 -- --------------------------------------------------------
@@ -417,8 +419,10 @@ CREATE TABLE `main_attendance` (
 INSERT INTO `main_attendance` (`id`, `attendance_date`, `status`, `student_id`, `subject_id`, `created_at`, `hour`) VALUES
 (40, '2025-03-19', 'present', 47, 23, '2025-03-23 12:45:38.000000', 1),
 (41, '2025-03-18', 'present', 47, 23, '2025-03-23 12:45:51.000000', 1),
-(42, '2025-03-21', 'present', 47, 23, '2025-03-23 12:46:01.000000', 1),
-(43, '2025-03-27', 'absent', 47, 23, '2025-03-23 12:46:11.000000', 1);
+(42, '2025-03-21', 'absent', 47, 23, '2025-03-23 12:46:01.000000', 1),
+(43, '2025-03-27', 'absent', 47, 23, '2025-03-23 12:46:11.000000', 1),
+(44, '2025-03-30', 'present', 47, 23, '2025-03-30 15:30:04.000000', 1),
+(45, '2025-03-30', 'present', 48, 23, '2025-03-30 15:30:04.000000', 1);
 
 -- --------------------------------------------------------
 
@@ -489,26 +493,6 @@ INSERT INTO `main_institution` (`institution_id`, `email`, `institution_name`, `
 -- --------------------------------------------------------
 
 --
--- Table structure for table `main_marks`
---
-
-CREATE TABLE `main_marks` (
-  `id` bigint NOT NULL,
-  `mark_percentage` double NOT NULL,
-  `student_id` bigint NOT NULL,
-  `subject_id` bigint NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
---
--- Dumping data for table `main_marks`
---
-
-INSERT INTO `main_marks` (`id`, `mark_percentage`, `student_id`, `subject_id`) VALUES
-(44, 85, 47, 23);
-
--- --------------------------------------------------------
-
---
 -- Table structure for table `main_parents`
 --
 
@@ -525,7 +509,8 @@ CREATE TABLE `main_parents` (
 --
 
 INSERT INTO `main_parents` (`id`, `password`, `name`, `student_id`, `user_id`) VALUES
-(44, '1001', NULL, 47, 169);
+(44, '1001', NULL, 47, 169),
+(45, 'aaaa', NULL, 48, 171);
 
 -- --------------------------------------------------------
 
@@ -593,7 +578,8 @@ CREATE TABLE `main_studentevaluation` (
 --
 
 INSERT INTO `main_studentevaluation` (`id`, `study_time_rating`, `sleep_time_rating`, `class_participation_rating`, `academic_activity_rating`, `attendance_percentage`, `marks_percentage`, `student_id`, `subject_id`) VALUES
-(34, 71, 73.5, 90, 98, 75, 85, 47, 23);
+(34, 71, 73.5, 90, 98, 60, 10, 47, 23),
+(35, NULL, NULL, NULL, NULL, 100, 90, 48, 23);
 
 -- --------------------------------------------------------
 
@@ -616,7 +602,8 @@ CREATE TABLE `main_students` (
 --
 
 INSERT INTO `main_students` (`id`, `roll_no`, `password`, `class_obj_id`, `name`, `user_id`, `email`) VALUES
-(47, 'MCA-1001', '1001', 39, 'Jack White', 168, 'jack@example.com');
+(47, 'MCA-1001', '1001', 39, 'Jack White', 168, 'jack@example.com'),
+(48, 'MCA-1002', 'aaaa', 39, 'Alfred Fernandez', 170, 'alfred@example.com');
 
 -- --------------------------------------------------------
 
@@ -675,7 +662,9 @@ INSERT INTO `main_users` (`id`, `role`) VALUES
 (166, 'class_head'),
 (167, 'subject_head'),
 (168, 'student'),
-(169, 'parent');
+(169, 'parent'),
+(170, 'student'),
+(171, 'parent');
 
 --
 -- Indexes for dumped tables
@@ -784,14 +773,6 @@ ALTER TABLE `main_classes`
 ALTER TABLE `main_institution`
   ADD PRIMARY KEY (`institution_id`),
   ADD UNIQUE KEY `email` (`email`);
-
---
--- Indexes for table `main_marks`
---
-ALTER TABLE `main_marks`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `main_marks_student_id_46d8b040_fk` (`student_id`),
-  ADD KEY `main_marks_subject_id_cd277d76_fk` (`subject_id`);
 
 --
 -- Indexes for table `main_parents`
@@ -915,7 +896,7 @@ ALTER TABLE `django_content_type`
 -- AUTO_INCREMENT for table `django_migrations`
 --
 ALTER TABLE `django_migrations`
-  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=56;
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=58;
 
 --
 -- AUTO_INCREMENT for table `main_announcements`
@@ -948,16 +929,10 @@ ALTER TABLE `main_institution`
   MODIFY `institution_id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
 
 --
--- AUTO_INCREMENT for table `main_marks`
---
-ALTER TABLE `main_marks`
-  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=45;
-
---
 -- AUTO_INCREMENT for table `main_parents`
 --
 ALTER TABLE `main_parents`
-  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=45;
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=46;
 
 --
 -- AUTO_INCREMENT for table `main_quizquestions`
@@ -981,13 +956,13 @@ ALTER TABLE `main_quizzes`
 -- AUTO_INCREMENT for table `main_studentevaluation`
 --
 ALTER TABLE `main_studentevaluation`
-  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=35;
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=36;
 
 --
 -- AUTO_INCREMENT for table `main_students`
 --
 ALTER TABLE `main_students`
-  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=48;
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=49;
 
 --
 -- AUTO_INCREMENT for table `main_studymaterials`
@@ -1005,7 +980,7 @@ ALTER TABLE `main_subjects`
 -- AUTO_INCREMENT for table `main_users`
 --
 ALTER TABLE `main_users`
-  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=170;
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=172;
 
 --
 -- Constraints for dumped tables
@@ -1064,13 +1039,6 @@ ALTER TABLE `main_chat`
 ALTER TABLE `main_classes`
   ADD CONSTRAINT `main_classes_institution_id_5083f29a_fk` FOREIGN KEY (`institution_id`) REFERENCES `main_institution` (`institution_id`),
   ADD CONSTRAINT `main_classes_user_id_06af4a09_fk` FOREIGN KEY (`user_id`) REFERENCES `main_users` (`id`);
-
---
--- Constraints for table `main_marks`
---
-ALTER TABLE `main_marks`
-  ADD CONSTRAINT `main_marks_student_id_46d8b040_fk` FOREIGN KEY (`student_id`) REFERENCES `main_students` (`id`),
-  ADD CONSTRAINT `main_marks_subject_id_cd277d76_fk` FOREIGN KEY (`subject_id`) REFERENCES `main_subjects` (`id`);
 
 --
 -- Constraints for table `main_parents`
