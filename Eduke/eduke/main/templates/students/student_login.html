@@ -23,56 +23,259 @@
         <div class="grow w-full md:flex md:w-1/2 md:flex-col md:items-center md:justify-center md:py-20 sm:px-6 px-4">
             
             <div class="bg-white p-10 rounded-xl shadow-[4px_4px_30px_rgba(0,0,0,0.3)] w-full max-w-md">
-                <h2 class="text-2xl font-bold text-center mb-4 text-[#4f0074]">Student Login</h2>
-                <p class="text-sm text-gray-600 text-center mb-6">Continue to explore our amazing features.</p>
 
-                <form method="POST" novalidate>
-                    {% csrf_token %}
-                    <div class="mb-4">
-                        <label for="email" class="block text-sm font-medium text-gray-700 mb-2">Roll No</label>
-                        {{ form.roll_no }}
-                        {% if form.roll_no.errors %}
-                            <ul class="text-red-500 text-xs">
-                                {% for error in form.roll_no.errors %}
-                                    <li>{{ error }}</li>
-                                {% endfor %}
-                            </ul>
-                        {% endif %}
+                <!-- Login Form -->
+                <div id="login-form">
+                    <h2 class="text-2xl font-bold text-center mb-4 text-[#4f0074]">Student Login</h2>
+                    <p class="text-sm text-gray-600 text-center mb-6">Continue to explore our amazing features.</p>
+
+                    <form method="POST" novalidate>
+                        {% csrf_token %}
+                        <div class="mb-4">
+                            <label for="email" class="block text-sm font-medium text-gray-700 mb-2">Roll No</label>
+                            {{ form.roll_no }}
+                            {% if form.roll_no.errors %}
+                                <ul class="text-red-500 text-xs">
+                                    {% for error in form.roll_no.errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-1">
+                            <label for="password" class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                            {{ form.password }}
+                            {% if form.password.errors %}
+                                <ul class="text-red-500 text-xs">
+                                    {% for error in form.password.errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                        </div>
+                        <a href="#" class="text-sm text-[#4f0074] hover:underline mb-4 block text-right" id="forgot-password-link">Forgot Password?</a>
+
+                        <button type="submit" class="w-full bg-[#4f0074] text-white px-3 py-2 rounded-md hover:bg-[#670098] transition-colors">Sign In</button>
+                    </form>
+
+                    <div class="flex justify-between mt-5">                    
+                        <p class="text-sm"><a href="/" class="text-[#4f0074] hover:underline">Back to Home</a></p>
                     </div>
 
-                    <div class="mb-1">
-                        <label for="password" class="block text-sm font-medium text-gray-700 mb-2">Password</label>
-                        {{ form.password }}
-                        {% if form.password.errors %}
-                            <ul class="text-red-500 text-xs">
-                                {% for error in form.password.errors %}
-                                    <li>{{ error }}</li>
-                                {% endfor %}
-                            </ul>
-                        {% endif %}
-                    </div>
-                    <a href="#" class="text-sm text-[#4f0074] hover:underline mb-4 block text-right">Forgot Password?</a>
+                    {% if messages %}
+                        {% for message in messages %}
+                            <p class="text-sm text-center mx-auto mt-5
+                            {% if 'st_login_error' in message.tags %} text-red-600
+                            {% endif %}">
+                            {{ message }}
+                        </p>
+                        {% endfor %}
+                    {% endif %}
 
-                    <button type="submit" class="w-full bg-[#4f0074] text-white px-3 py-2 rounded-md hover:bg-[#670098] transition-colors">Sign In</button>
-                </form>
-
-                <div class="flex justify-between mt-5">                    
-                    <p class="text-sm"><a href="/" class="text-[#4f0074] hover:underline">Back to Home</a></p>
                 </div>
 
-                {% if messages %}
-                    {% for message in messages %}
-                        <p class="text-sm text-center mx-auto mt-5
-                        {% if 'st_login_error' in message.tags %} text-red-600
-                        {% endif %}">
-                        {{ message }}
-                    </p>
-                    {% endfor %}
-                {% endif %}
+                <!-- Forgot Password Form (Initially Hidden) -->
+                <div id="forgot-password-form" class="hidden">
+                    <h2 class="text-2xl font-bold text-center mb-4 text-[#4f0074]">Reset Password</h2>
+                    <p class="text-sm text-gray-600 text-center mb-6">Enter your email to receive an OTP.</p>
+
+                    <form method="POST" id="forgot-password-form-submit">
+                        {% csrf_token %}
+                        <div class="mb-4">
+                            <label for="forgot-email" class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                            <input type="email" name="email" id="forgot-email" required placeholder="Enter your email"
+                                class="w-full px-3 py-2 border border-gray-400 rounded-md">
+                        </div>
+
+                        <button type="submit" class="w-full bg-[#4f0074] text-white px-3 py-2 rounded-md hover:bg-[#670098] transition-colors">
+                            Send OTP
+                        </button>
+                    </form>
+
+                    <a href="#" id="back-to-login" class="text-sm text-[#4f0074] hover:underline mt-4 block text-center">
+                        Back to Login
+                    </a>
+                </div>
+
+                <!-- OTP Verification Form (Initially Hidden) -->
+                <div id="otp-verification-form" class="hidden">
+                    <h2 class="text-2xl font-bold text-center mb-4 text-[#4f0074]">Verify OTP</h2>
+                    <p class="text-sm text-gray-600 text-center mb-6">Enter the OTP sent to your email.</p>
+
+                    <form method="POST" id="otp-verification-form-submit">
+                        {% csrf_token %}
+                        
+                        <!-- Hidden field to store email -->
+                        <input type="hidden" id="otp-email">
+
+                        <div class="mb-4">
+                            <label for="otp" class="block text-sm font-medium text-gray-700 mb-2">OTP</label>
+                            <input type="text" name="otp" id="otp" required placeholder="Enter OTP"
+                                class="w-full px-3 py-2 border border-gray-400 rounded-md">
+                        </div>
+
+                        <button type="submit" class="w-full bg-[#4f0074] text-white px-3 py-2 rounded-md hover:bg-[#670098] transition-colors">
+                            Verify OTP
+                        </button>
+
+                        <p class="text-sm text-gray-600 text-center mt-4">
+                            Didn't receive OTP? <a href="#" id="resend-otp" class="text-[#4f0074] hover:underline">Resend OTP</a>
+                        </p>
+                    </form>
+
+                    <a href="#" id="back-to-login-otp" class="text-sm text-[#4f0074] hover:underline mt-4 block text-center">
+                        Back to Login
+                    </a>
+                </div>
+
+                <!-- Reset Password Form (Initially Hidden) -->
+                <div id="reset-password-form" class="hidden">
+                    <h2 class="text-2xl font-bold text-center mb-4 text-[#4f0074]">Set New Password</h2>
+                    <p class="text-sm text-gray-600 text-center mb-6">Enter a new password for your account.</p>
+
+                    <form method="POST" id="reset-password-form-submit">
+                        {% csrf_token %}
+
+                        <!-- Hidden field to store email -->
+                        <input type="hidden" id="reset-email">
+
+                        <div class="mb-4">
+                            <label for="new-password" class="block text-sm font-medium text-gray-700 mb-2">New Password</label>
+                            <input type="password" name="password" id="new-password" required placeholder="Enter new password"
+                                class="w-full px-3 py-2 border border-gray-400 rounded-md">
+                        </div>
+
+                        <button type="submit" class="w-full bg-[#4f0074] text-white px-3 py-2 rounded-md hover:bg-[#670098] transition-colors">
+                            Reset Password
+                        </button>
+                    </form>
+
+                    <a href="#" id="back-to-login-reset" class="text-sm text-[#4f0074] hover:underline mt-4 block text-center">
+                        Back to Login
+                    </a>
+                </div>
             </div>
 
         </div>
     </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // Switching to Forgot Password Form
+            document.getElementById("forgot-password-link").addEventListener("click", function (event) {
+                event.preventDefault();
+                document.getElementById("login-form").classList.add("hidden");
+                document.getElementById("forgot-password-form").classList.remove("hidden");
+            });
+
+            // Back to Login from Forgot Password Form
+            document.getElementById("back-to-login").addEventListener("click", function (event) {
+                event.preventDefault();
+                document.getElementById("forgot-password-form").classList.add("hidden");
+                document.getElementById("login-form").classList.remove("hidden");
+            });
+
+            // Handling Forgot Password Submission (Send OTP)
+            document.getElementById("forgot-password-form-submit").addEventListener("submit", function (event) {
+                event.preventDefault();
+                sendOtp();
+            });
+
+            // Handling Resend OTP
+            document.getElementById("resend-otp").addEventListener("click", function (event) {
+                event.preventDefault();
+                sendOtp(true);
+            });
+
+            function sendOtp(isResend = false) {
+                let email = document.getElementById("forgot-email").value || localStorage.getItem("resetEmail");
+
+                fetch("{% url 'forgot_password_student' %}", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                    body: `email=${email}`
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === "success") {
+                        localStorage.setItem("resetEmail", email);
+                        if (!isResend) {
+                            document.getElementById("forgot-password-form").classList.add("hidden");
+                            document.getElementById("otp-verification-form").classList.remove("hidden");
+                            document.getElementById("otp-email").value = email;
+                        }
+                        alert(isResend ? "OTP resent successfully!" : "OTP sent successfully!");
+                    } else {
+                        alert(data.message);
+                    }
+                })
+                .catch(error => console.error("Error:", error));
+            }
+
+            // Back to Forgot Password from OTP Form
+            document.getElementById("back-to-login-otp").addEventListener("click", function (event) {
+                event.preventDefault();
+                document.getElementById("otp-verification-form").classList.add("hidden");
+                document.getElementById("forgot-password-form").classList.remove("hidden");
+            });
+
+            // Handling OTP Verification
+            document.getElementById("otp-verification-form-submit").addEventListener("submit", function (event) {
+                event.preventDefault();
+                let email = localStorage.getItem("resetEmail");
+                let otp = document.getElementById("otp").value;
+
+                fetch("{% url 'verify_otp_student' %}", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                    body: `email=${email}&otp=${otp}`
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === "success") {
+                        document.getElementById("otp-verification-form").classList.add("hidden");
+                        document.getElementById("reset-password-form").classList.remove("hidden");
+                        document.getElementById("reset-email").value = email;
+                    } else {
+                        alert(data.message);
+                    }
+                })
+                .catch(error => console.error("Error:", error));
+            });
+
+            // Back to Login from Reset Password Form
+            document.getElementById("back-to-login-reset").addEventListener("click", function (event) {
+                event.preventDefault();
+                document.getElementById("reset-password-form").classList.add("hidden");
+                document.getElementById("login-form").classList.remove("hidden");
+            });
+
+            // Handling Reset Password Submission
+            document.getElementById("reset-password-form-submit").addEventListener("submit", function (event) {
+                event.preventDefault();
+                let email = localStorage.getItem("resetEmail");
+                let newPassword = document.getElementById("new-password").value;
+
+                fetch("{% url 'reset_password_student' %}", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                    body: `email=${email}&password=${newPassword}`
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === "success") {
+                        alert("Password reset successfully!");
+                        document.getElementById("reset-password-form").classList.add("hidden");
+                        document.getElementById("login-form").classList.remove("hidden");
+                    } else {
+                        alert(data.message);
+                    }
+                })
+                .catch(error => console.error("Error:", error));
+            });
+        });
+    </script>
     
 </body>
 </html>

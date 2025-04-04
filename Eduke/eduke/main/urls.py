@@ -4,6 +4,9 @@ from . import views
 urlpatterns = [
     path('', views.index, name='index'),  # Home page
     path('login/', views.login_view, name='login'),  # Login page
+    path('forgot-password/admin/', views.forgot_password_admin, name='forgot_password_admin'),
+    path('verify-otp/admin/', views.verify_otp_admin, name='verify_otp_admin'),
+    path('reset-password/admin/', views.reset_password_admin, name='reset_password_admin'),
     path('register/', views.register_institution, name='institution_register'),  # Registration page
     path('admin/dashboard/', views.admin_dashboard, name='admin_dashboard'),  # Admin dashboard
     path('admin/classes/', views.admin_classes, name='admin_classes'), # Admin classes
@@ -17,16 +20,17 @@ urlpatterns = [
     path('admin/student/<int:student_id>/', views.admin_student_performance, name='admin_student_performance'), # Admin student detail
     path('admin/profile/', views.admin_profile, name='admin_profile'),
     path('admin/logout/', views.logout, name='logout'),  # Admin logout
-
     path('admin/class/delete/<int:class_id>/', views.delete_class, name='admin_class_delete'),
     path('admin/subject/delete/<int:subject_id>/', views.delete_subject, name='admin_subject_delete'),
     path("admin/student/delete/<int:student_id>/", views.delete_student, name="admin_student_delete"),
-    
     path('upload_classes/', views.upload_classes, name='upload_classes'),
     path('upload_subjects/', views.upload_subjects, name='upload_subjects'),
     path('upload_students/', views.upload_students, name='upload_students'),
 
     path('class_head/login/', views.class_head_login, name='class_head_login'), # Class Head login
+    path('forgot-password-class-head/', views.forgot_password_class_head, name="forgot_password_class_head"),
+    path('verify-otp-class-head/', views.verify_otp_class_head, name="verify_otp_class_head"),
+    path('reset-password-class-head/', views.reset_password_class_head, name="reset_password_class_head"),
     path('class_head/dashboard/', views.class_head_dashboard, name='class_head_dashboard'), # Class Head dashboard
     path('class_head/class/', views.class_head_class, name='class_head_class'), # Class Head class
     path('class_head/students/', views.class_head_students, name='class_head_students'), # Class Head students
@@ -38,6 +42,9 @@ urlpatterns = [
     path('delete-attendance/', views.delete_attendance, name="delete_attendance"),
 
     path('subject_head/login/', views.subject_head_login, name='subject_head_login'), # Subject Head login
+    path('forgot-password-subject-head/', views.forgot_password_subject_head, name="forgot_password_subject_head"),
+    path('verify-otp-subject-head/', views.verify_otp_subject_head, name="verify_otp_subject_head"),
+    path('reset-password-subject-head/', views.reset_password_subject_head, name="reset_password_subject_head"),
     path('subject_head/dashboard/', views.subject_head_dashboard, name='subject_head_dashboard'), # Subject Head dashboard
     path('subject_head/profile/', views.subject_head_profile, name='subject_head_profile'), # Subject Head Profile
     path('subject_head/class/', views.subject_head_class, name='subject_head_class'), # Subject Head Class
@@ -55,6 +62,9 @@ urlpatterns = [
     path('subject_head/students/<int:student_id>/', views.subject_head_students, name='subject_head_students'), # Subject Head Performance
 
     path('student/login/', views.student_login, name='student_login'),
+    path('forgot-password-student/', views.forgot_password_student, name="forgot_password_student"),
+    path('verify-otp-student/', views.verify_otp_student, name="verify_otp_student"),
+    path('reset-password-student/', views.reset_password_student, name="reset_password_student"),
     path('student/dashboard/', views.student_dashboard, name='student_dashboard'),
     path('student/class/', views.student_class, name='student_class'),
     path('student/profile/', views.student_profile, name='student_profile'),

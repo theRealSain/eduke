@@ -14,6 +14,7 @@ import json
 from django.utils.timezone import now
 from django.http import HttpResponse
 from django.core.mail import send_mail
+from django.utils.crypto import get_random_string
 import pandas as pd
 from django.core.files.storage import FileSystemStorage
 import os, datetime
@@ -26,6 +27,9 @@ import joblib
 import numpy as np
 from django.conf import settings
 from ml.predict import predict_performance
+from django.contrib.auth.hashers import make_password
+from django.core.cache import cache  # Use Django cache
+
 
 
 # Index page
@@ -57,8 +61,7 @@ def send_account_creation_email(email, password, role, name, institution_email):
     Please log in and change your password.
 
     Regards,  
-    Eduke Administration  
-    ({institution_email})
+    Eduke Administration
     """
 
     send_mail(subject, message, institution_email, [email])
@@ -67,12 +70,6 @@ def send_account_creation_email(email, password, role, name, institution_email):
 
 ######################################################################################################################
 
-
-# Institution Registration
-from django.contrib import messages
-from django.shortcuts import render, redirect
-from .forms import InstitutionRegisterForm
-from .models import Institution
 
 def register_institution(request):
     if request.method == 'POST':
@@ -94,7 +91,26 @@ def register_institution(request):
                         email=email,
                         password=password  # Storing plain password
                     )
-                    messages.success(request, 'Institution registered successfully! Please log in.', extra_tags="reg_success")
+
+                    # Send confirmation email
+                    subject = "Eduke Registration Successful"
+                    message = f"""
+                    Dear {institution_name},
+
+                    Your institution has been successfully registered on Eduke.
+
+                    Login Credentials:
+                    Email: {email}
+                    Password: {password}
+
+                    Please log in and change your password for security.
+
+                    Regards,  
+                    Eduke Team
+                    """
+                    send_mail(subject, message, 'noreply@eduke.com', [email])
+
+                    messages.success(request, 'Institution registered successfully! A confirmation email has been sent.', extra_tags="reg_success")
                     return redirect('login')
                 except Exception as e:
                     print("DEBUG: Error while saving:", e)  # Debugging
@@ -104,7 +120,6 @@ def register_institution(request):
         form = InstitutionRegisterForm()
 
     return render(request, 'registration/institution_register.html', {'form': form})
-
 
 
 # Institution Login
@@ -133,6 +148,85 @@ def login_view(request):
         form = LoginForm()
 
     return render(request, 'login.html', {'form': form})
+
+
+otp_storage = {}
+
+# Temporary storage for OTPs (Use cache in production)
+def send_otp_email(email, otp):
+    """Send OTP to the given email."""
+    subject = "Your OTP for Password Reset"
+    message = f"Your OTP for password reset is: {otp}. This OTP is valid for 5 minutes."
+    
+    try:
+        send_mail(subject, message, settings.EMAIL_HOST_USER, [email], fail_silently=False)
+    except Exception as e:
+        print(f"Error sending email: {e}")
+
+
+@csrf_exempt  # Remove this if using CSRF protection properly
+def forgot_password_admin(request):
+    """Handles OTP generation and email sending for password reset."""
+    if request.method == "POST":    
+        email = request.POST.get("email")
+
+        # Step 1: Check if email exists in the institution table
+        if Institution.objects.filter(email=email).exists():
+            otp = str(random.randint(100000, 999999))  # Generate 6-digit OTP
+
+            # Store OTP in cache (valid for 5 minutes)
+            cache.set(email, otp, timeout=300)  
+
+            # Send OTP to email
+            send_otp_email(email, otp)
+
+            return JsonResponse({"status": "success", "message": "OTP sent successfully!", "email": email})
+        else:
+            return JsonResponse({"status": "error", "message": "Email not found!"})
+    
+    return JsonResponse({"status": "error", "message": "Invalid request"})
+
+
+@csrf_exempt  # Remove this if using CSRF protection properly
+def verify_otp_admin(request):
+    """Verifies the OTP entered by the user."""
+    if request.method == "POST":
+        email = request.POST.get("email")
+        otp_entered = request.POST.get("otp")
+
+        # Get OTP from cache
+        stored_otp = cache.get(email)
+
+        if stored_otp and stored_otp == otp_entered:
+            cache.delete(email)  # OTP is used, delete it
+            return JsonResponse({"status": "success", "message": "OTP verified!", "email": email})
+        else:
+            return JsonResponse({"status": "error", "message": "Invalid or expired OTP!"})
+
+    return JsonResponse({"status": "error", "message": "Invalid request"})
+
+
+@csrf_exempt  # Remove this if using CSRF protection properly
+def reset_password_admin(request):
+    """Handles password reset for the admin user."""
+    if request.method == "POST":
+        email = request.POST.get("email")
+        new_password = request.POST.get("password")
+
+        try:
+            institution = Institution.objects.get(email=email)
+
+            # Update password (plaintext as per your choice)
+            institution.password = new_password  # OR: use hashed password -> make_password(new_password)
+            institution.save()
+
+            return JsonResponse({"status": "success", "message": "Password reset successful!"})
+        except Institution.DoesNotExist:
+            return JsonResponse({"status": "error", "message": "User not found!"})
+
+    return JsonResponse({"status": "error", "message": "Invalid request"})
+
+
 
 # Admin Logout
 def logout(request):
@@ -1255,11 +1349,6 @@ def upload_students(request):
     return render(request, 'admin/admin_students.html', {'form': form})
 
 
-
-
-
-
-
 ######################################################################################################################
 
 
@@ -1298,6 +1387,65 @@ def class_head_login(request):
 
     return render(request, 'class_head/class_head_login.html', {'form': form})
 
+
+@csrf_exempt
+def forgot_password_class_head(request):
+    """Handles OTP generation and email sending for Class Head password reset."""
+    if request.method == "POST":
+        email = request.POST.get("email")
+
+        if Classes.objects.filter(email=email).exists():
+            otp = str(random.randint(100000, 999999))  # Generate OTP
+
+            # Store OTP in cache (valid for 5 minutes)
+            cache.set(email, otp, timeout=300)  
+
+            # Send OTP to email
+            send_otp_email(email, otp)
+
+            return JsonResponse({"status": "success", "message": "OTP sent successfully!", "email": email})
+        else:
+            return JsonResponse({"status": "error", "message": "Email not found!"})
+    
+    return JsonResponse({"status": "error", "message": "Invalid request"})
+
+@csrf_exempt
+def verify_otp_class_head(request):
+    """Verifies the OTP entered by the Class Head."""
+    if request.method == "POST":
+        email = request.POST.get("email")
+        otp_entered = request.POST.get("otp")
+
+        # Get OTP from cache
+        stored_otp = cache.get(email)
+
+        if stored_otp and stored_otp == otp_entered:
+            cache.delete(email)  # OTP is used, delete it
+            return JsonResponse({"status": "success", "message": "OTP verified!", "email": email})
+        else:
+            return JsonResponse({"status": "error", "message": "Invalid or expired OTP!"})
+
+    return JsonResponse({"status": "error", "message": "Invalid request"})
+
+@csrf_exempt
+def reset_password_class_head(request):
+    """Handles password reset for the Class Head."""
+    if request.method == "POST":
+        email = request.POST.get("email")
+        new_password = request.POST.get("password")
+
+        try:
+            class_head = Classes.objects.get(email=email)
+
+            # Update password (plaintext as per your choice)
+            class_head.password = new_password  # OR: use hashed password -> make_password(new_password)
+            class_head.save()
+
+            return JsonResponse({"status": "success", "message": "Password reset successful!"})
+        except Classes.DoesNotExist:
+            return JsonResponse({"status": "error", "message": "User not found!"})
+
+    return JsonResponse({"status": "error", "message": "Invalid request"})
 
 
 def class_head_dashboard(request):
@@ -1888,6 +2036,98 @@ def subject_head_login(request):
                 messages.error(request, 'No Subject Head found with this email!', extra_tags="sh_no_email")
 
     return render(request, 'subject_head/subject_head_login.html', {'form': form})
+
+
+
+@csrf_exempt
+def forgot_password_subject_head(request):
+    """Handles OTP generation and email sending for Subject Head password reset."""
+    print("Received request for forgot password")
+
+    if request.method == "POST":
+        email = request.POST.get("email", "").strip().lower()  # Normalize input
+        print(f"Email received: {email}")
+
+        # Debugging: Print all emails in the Subjects table
+        all_emails = list(Subjects.objects.values_list("email", flat=True))
+        print(f"All emails in database: {all_emails}")
+
+        # Debugging: Check for raw query results
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT email FROM main_subjects WHERE email = %s", [email])
+            raw_query_result = cursor.fetchall()
+        print(f"Raw Query Result: {raw_query_result}")
+
+        if Subjects.objects.filter(email__iexact=email).exists():
+            otp = str(random.randint(100000, 999999))  # Generate OTP
+            print(f"Generated OTP: {otp}")
+
+            cache.set(email, otp, timeout=300)  # Store OTP for 5 minutes
+            print("OTP stored in cache")
+
+            email_status = send_otp_email(email, otp)
+            print(f"Email sending status: {email_status}")
+
+            return JsonResponse({"status": "success", "message": "OTP sent successfully!", "email": email})
+        else:
+            print("Email not found in database")
+            return JsonResponse({"status": "error", "message": "Email not found!"})
+    
+    print("Invalid request method")
+    return JsonResponse({"status": "error", "message": "Invalid request"})
+
+
+@csrf_exempt
+def verify_otp_subject_head(request):
+    """Verifies the OTP entered by the Subject Head."""
+    print("Received request for OTP verification")
+
+    if request.method == "POST":
+        email = request.POST.get("email", "").strip().lower()
+        otp_entered = request.POST.get("otp")
+        print(f"Verifying OTP for email: {email}, Entered OTP: {otp_entered}")
+
+        stored_otp = cache.get(email)
+        print(f"Stored OTP: {stored_otp}")
+
+        if stored_otp and stored_otp == otp_entered:
+            cache.delete(email)  # OTP is used, delete it
+            print("OTP verified and deleted from cache")
+            return JsonResponse({"status": "success", "message": "OTP verified!", "email": email})
+        else:
+            print("Invalid or expired OTP")
+            return JsonResponse({"status": "error", "message": "Invalid or expired OTP!"})
+
+    print("Invalid request method for OTP verification")
+    return JsonResponse({"status": "error", "message": "Invalid request"})
+
+
+@csrf_exempt
+def reset_password_subject_head(request):
+    """Handles password reset for the Subject Head."""
+    print("Received request for password reset")
+
+    if request.method == "POST":
+        email = request.POST.get("email", "").strip().lower()
+        new_password = request.POST.get("password")
+        print(f"Resetting password for email: {email}")
+
+        try:
+            subject_head = Subjects.objects.get(email__iexact=email)
+            print(f"User found: {subject_head}")
+
+            subject_head.password = new_password  # Plaintext password
+            subject_head.save()
+
+            print("Password reset successful")
+            return JsonResponse({"status": "success", "message": "Password reset successful!"})
+        except Subjects.DoesNotExist:
+            print("User not found in database")
+            return JsonResponse({"status": "error", "message": "User not found!"})
+
+    print("Invalid request method for password reset")
+    return JsonResponse({"status": "error", "message": "Invalid request"})
+
 
 
 def subject_head_dashboard(request):
@@ -3347,6 +3587,96 @@ def student_login(request):
                 messages.error(request, 'Invalid Roll number or Password!', extra_tags="st_login_error")
 
     return render(request, 'students/student_login.html', {'form': form})
+
+
+@csrf_exempt
+def forgot_password_student(request):
+    """Handles OTP generation and email sending for Subject Head password reset."""
+    print("Received request for forgot password")
+
+    if request.method == "POST":
+        email = request.POST.get("email", "").strip().lower()  # Normalize input
+        print(f"Email received: {email}")
+
+        # Debugging: Print all emails in the Students table
+        all_emails = list(Students.objects.values_list("email", flat=True))
+        print(f"All emails in database: {all_emails}")
+
+        # Debugging: Check for raw query results
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT email FROM main_students WHERE email = %s", [email])
+            raw_query_result = cursor.fetchall()
+        print(f"Raw Query Result: {raw_query_result}")
+
+        if Students.objects.filter(email__iexact=email).exists():
+            otp = str(random.randint(100000, 999999))  # Generate OTP
+            print(f"Generated OTP: {otp}")
+
+            cache.set(email, otp, timeout=300)  # Store OTP for 5 minutes
+            print("OTP stored in cache")
+
+            email_status = send_otp_email(email, otp)
+            print(f"Email sending status: {email_status}")
+
+            return JsonResponse({"status": "success", "message": "OTP sent successfully!", "email": email})
+        else:
+            print("Email not found in database")
+            return JsonResponse({"status": "error", "message": "Email not found!"})
+    
+    print("Invalid request method")
+    return JsonResponse({"status": "error", "message": "Invalid request"})
+
+
+@csrf_exempt
+def verify_otp_student(request):
+    """Verifies the OTP entered by the Subject Head."""
+    print("Received request for OTP verification")
+
+    if request.method == "POST":
+        email = request.POST.get("email", "").strip().lower()
+        otp_entered = request.POST.get("otp")
+        print(f"Verifying OTP for email: {email}, Entered OTP: {otp_entered}")
+
+        stored_otp = cache.get(email)
+        print(f"Stored OTP: {stored_otp}")
+
+        if stored_otp and stored_otp == otp_entered:
+            cache.delete(email)  # OTP is used, delete it
+            print("OTP verified and deleted from cache")
+            return JsonResponse({"status": "success", "message": "OTP verified!", "email": email})
+        else:
+            print("Invalid or expired OTP")
+            return JsonResponse({"status": "error", "message": "Invalid or expired OTP!"})
+
+    print("Invalid request method for OTP verification")
+    return JsonResponse({"status": "error", "message": "Invalid request"})
+
+
+@csrf_exempt
+def reset_password_student(request):
+    """Handles password reset for the Subject Head."""
+    print("Received request for password reset")
+
+    if request.method == "POST":
+        email = request.POST.get("email", "").strip().lower()
+        new_password = request.POST.get("password")
+        print(f"Resetting password for email: {email}")
+
+        try:
+            subject_head = Students.objects.get(email__iexact=email)
+            print(f"User found: {subject_head}")
+
+            subject_head.password = new_password  # Plaintext password
+            subject_head.save()
+
+            print("Password reset successful")
+            return JsonResponse({"status": "success", "message": "Password reset successful!"})
+        except Students.DoesNotExist:
+            print("User not found in database")
+            return JsonResponse({"status": "error", "message": "User not found!"})
+
+    print("Invalid request method for password reset")
+    return JsonResponse({"status": "error", "message": "Invalid request"})
 
 
 def student_dashboard(request):
