@@ -199,15 +199,15 @@
                                 <form method="POST" action="{% url 'admin_subject_edit' subject.0 %}">
                                     {% csrf_token %}
                                     <td class="p-3 text-center subject-name">
-                                        <input type="text" name="subject_name" value="{{ subject.1 }}" class="hidden input-field p-2 rounded-md">
+                                        <input type="text" name="subject_name" value="{{ subject.1 }}" class="hidden input-field p-2 rounded-md border border-gray-300">
                                         <span class="display-field">{{ subject.1 }}</span>
                                     </td>
                                     <td class="p-3 text-center subject-head">
-                                        <input type="text" name="subject_head" value="{{ subject.2 }}" class="hidden input-field p-2 rounded-md">
+                                        <input type="text" name="subject_head" value="{{ subject.2 }}" class="hidden input-field p-2 rounded-md border border-gray-300">
                                         <span class="display-field">{{ subject.2 }}</span>
                                     </td>
                                     <td class="p-3 text-center email">
-                                        <input type="email" name="email" value="{{ subject.3 }}" class="hidden input-field p-2 rounded-md">
+                                        <input type="email" name="email" value="{{ subject.3 }}" class="hidden input-field p-2 rounded-md border border-gray-300">
                                         <a href="mailto:{{ subject.3 }}" class="display-field text-purple-700 hover:underline">{{ subject.3 }}</a>
                                     </td>
                                     <td class="p-3 text-center">

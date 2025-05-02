@@ -77,6 +77,9 @@ urlpatterns = [
     path('student/prediction/', views.student_prediction, name='student_prediction'),
 
     path('parent/login/', views.parent_login, name='parent_login'),
+    path('forgot-password-parent/', views.forgot_password_parent, name="forgot_password_parent"),
+    path('verify-otp-parent/', views.verify_otp_parent, name="verify_otp_parent"),
+    path('reset-password-parent/', views.reset_password_parent, name="reset_password_parent"),
     path('parent/dashboard/', views.parent_dashboard, name='parent_dashboard'),
     path('parent_teacher_profile/', views.parent_teacher_profile, name='parent_teacher_profile'),
     path('parent/class/', views.parent_class, name='parent_class'),

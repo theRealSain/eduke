@@ -322,12 +322,18 @@ def admin_classes(request):
         form = AddClassForm(request.POST)
 
         if form.is_valid():
-            with transaction.atomic():
-                class_name = form.cleaned_data['class_name']
-                class_head = form.cleaned_data['class_head']
-                email = form.cleaned_data['email']
-                password = form.cleaned_data['password']
+            class_name = form.cleaned_data['class_name']
+            class_head = form.cleaned_data['class_head']
+            email = form.cleaned_data['email']
+            password = form.cleaned_data['password']
 
+            # 🔥 Check if class name already exists for this institution
+            if Classes.objects.filter(class_name=class_name, institution_id=institution.institution_id).exists():
+                messages.error(request, "This class name already exists for this institution. Please choose a different name.")
+                print(f"🔴 Duplicate class name '{class_name}' detected for Institution ID {institution.institution_id}.")
+                return redirect('admin_classes')
+
+            with transaction.atomic():
                 print(f"🟢 New Class Data - Name: {class_name}, Head: {class_head}, Email: {email}")
 
                 user = Users.objects.create(role='class_head')
@@ -368,27 +374,60 @@ def admin_classes(request):
     return render(request, 'admin/admin_classes.html', context)
 
 
+
 def admin_class_edit(request, class_id):
     try:
         # Fetch the class object to be edited
         class_obj = Classes.objects.get(id=class_id)
 
         if request.method == "POST":
-            # Update class details based on the form input
-            class_obj.class_name = request.POST.get('class_name')
-            class_obj.class_head = request.POST.get('class_head')
-            class_obj.email = request.POST.get('email')
+            new_class_name = request.POST.get('class_name')
+            new_class_head = request.POST.get('class_head')
+            new_email = request.POST.get('email')
+
+            # Uniqueness check for class name within the same institution (excluding self)
+            existing_class = Classes.objects.filter(
+                institution_id=class_obj.institution_id,
+                class_name=new_class_name
+            ).exclude(id=class_obj.id).first()
+
+            if existing_class:
+                messages.error(request, "This class name already exists for the institution.")
+
+                # Instead of rendering a separate edit page, return to the admin_classes page with form pre-filled
+                institution = class_obj.institution
+                classes = Classes.objects.filter(institution_id=institution.institution_id)
+                form = AddClassForm(initial={
+                    'class_name': class_obj.class_name,
+                    'class_head': class_obj.class_head,
+                    'email': class_obj.email,
+                    'password': class_obj.password  # if you pre-fill password
+                })
+
+                context = {
+                    'institution_name': institution.institution_name,
+                    'classes': classes,
+                    'form': form,
+                    'editing': True,
+                    'editing_class': class_obj,  # use this in the template to conditionally show editing fields
+                }
+                return render(request, 'admin/admin_classes.html', context)
+
+            # Save updates
+            class_obj.class_name = new_class_name
+            class_obj.class_head = new_class_head
+            class_obj.email = new_email
             class_obj.save()
 
-            # Redirect to the class list page after successful update
-            return redirect('admin_classes')  # Adjust to the correct URL pattern for the class list
+            messages.success(request, "Class updated successfully!")
+            return redirect('admin_classes')
 
-        # Render the edit page with the class details
-        return render(request, 'admin/class_edit.html', {'class': class_obj})
-    
+        return redirect('admin_classes')
+
     except Classes.DoesNotExist:
-        # Handle the case when the class doesn't exist
-        return redirect('admin_classes')  # Redirect to the class list if class not found
+        messages.error(request, "Class not found.")
+        return redirect('admin_classes')
+
 
 
 def admin_class_detail(request, class_id):
@@ -490,6 +529,19 @@ def admin_subjects(request):
 
             print(f"DEBUG: Form Data - Subject: {subject_name}, Head: {subject_head}, Email: {email}, Class ID: {class_id}")
 
+            # 🔥 Check if subject name already exists under the same class
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                    SELECT id FROM main_subjects
+                    WHERE subject_name = %s AND class_obj_id = %s
+                """, [subject_name, class_id])
+                existing_subject = cursor.fetchone()
+
+            if existing_subject:
+                messages.error(request, "This subject name already exists for the selected class. Please choose a different name.")
+                print(f"🔴 Duplicate subject '{subject_name}' detected for Class ID {class_id}.")
+                return redirect('admin_subjects')
+
             with connection.cursor() as cursor:
                 try:
                     # Step 1: Insert into main_users table
@@ -509,7 +561,7 @@ def admin_subjects(request):
 
                     print(f"DEBUG: Inserted into main_subjects - Subject: {subject_name}, Class ID: {class_id}")
 
-                    # **Step 3: Send Account Creation Email**
+                    # Step 3: Send Account Creation Email
                     send_account_creation_email(email, password, "subject_head", subject_head, institution.email)
 
                     messages.success(request, "Subject added successfully!")
@@ -535,28 +587,63 @@ def admin_subjects(request):
 
 
 
+
 def admin_subject_edit(request, subject_id):
     try:
-        # Fetch the subject object to be edited
         subject_obj = Subjects.objects.get(id=subject_id)
+    except Subjects.DoesNotExist:
+        messages.error(request, "Subject not found.")
+        return redirect('admin_subjects')
 
-        if request.method == "POST":
-            # Update subject details based on the form input
-            subject_obj.subject_name = request.POST.get('subject_name')
-            subject_obj.subject_head = request.POST.get('subject_head')
-            subject_obj.email = request.POST.get('email')
-            subject_obj.class_id = request.POST.get('class_id')
+    if request.method == "POST":
+        new_subject_name = request.POST.get('subject_name')
+        new_subject_head = request.POST.get('subject_head')
+        new_email = request.POST.get('email')
+
+        # Check for duplicate subject name in the same class (excluding self)
+        duplicate = Subjects.objects.filter(
+            class_obj=subject_obj.class_obj,
+            subject_name=new_subject_name
+        ).exclude(id=subject_obj.id).exists()
+
+        if duplicate:
+            messages.error(request, "This subject name already exists under the same class.")
+
+        else:
+            subject_obj.subject_name = new_subject_name
+            subject_obj.subject_head = new_subject_head
+            subject_obj.email = new_email
             subject_obj.save()
 
-            # Redirect to the subject list page after successful update
-            return redirect('admin_subjects')  # Adjust to the correct URL pattern for the subject list
+            messages.success(request, "Subject updated successfully!")
 
-        # Render the edit page with the subject details
-        return render(request, 'admin/subject_edit.html', {'subject': subject_obj})
-    
-    except Subjects.DoesNotExist:
-        # Handle the case when the subject doesn't exist
-        return redirect('admin_subjects')  # Redirect to the subject list if subject not found
+    # Reload the admin_subjects page with updated context
+    institution_id = request.session.get('institution_id')
+    institution = Institution.objects.get(institution_id=institution_id)
+    classes = Classes.objects.filter(institution_id=institution_id).values('id', 'class_name')
+
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT 
+                ms.id, ms.subject_name, ms.subject_head, ms.email, 
+                c.class_name
+            FROM main_subjects ms
+            JOIN main_classes c ON ms.class_obj_id = c.id
+            WHERE c.institution_id = %s
+        """, [institution_id])
+        subjects = cursor.fetchall()
+
+    from main.forms import AddSubjectForm  # Assuming your form is named like this
+    form = AddSubjectForm()
+
+    context = {
+        'institution_name': institution.institution_name,
+        'form': form,
+        'classes': classes,
+        'subjects': subjects
+    }
+
+    return render(request, 'admin/admin_subjects.html', context)
 
 
 
@@ -4934,6 +5021,96 @@ def parent_login(request):
                 messages.error(request, "Invalid Roll number or Password!", extra_tags="p_login_error")
 
     return render(request, 'parents/parent_login.html', {'form': form})
+
+
+@csrf_exempt
+def forgot_password_parent(request):
+    """Handles OTP generation and email sending for Parent password reset."""
+    print("Received request for forgot password")
+
+    if request.method == "POST":
+        email = request.POST.get("email", "").strip().lower()  # Normalize input
+        print(f"Email received: {email}")
+
+        # Debugging: Print all emails in the parents table
+        parent_emails = list(Parents.objects.values_list("email", flat=True))
+        print(f"All emails in database: {parent_emails}")
+
+        # Debugging: Check for raw query results
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT email FROM main_parents WHERE email = %s", [email])
+            raw_query_result = cursor.fetchall()
+        print(f"Raw Query Result: {raw_query_result}")
+
+        if Parents.objects.filter(email__iexact=email).exists():
+            otp = str(random.randint(100000, 999999))  # Generate OTP
+            print(f"Generated OTP: {otp}")
+
+            cache.set(email, otp, timeout=300)  # Store OTP for 5 minutes
+            print("OTP stored in cache")
+
+            email_status = send_otp_email(email, otp)
+            print(f"Email sending status: {email_status}")
+
+            return JsonResponse({"status": "success", "message": "OTP sent successfully!", "email": email})
+        else:
+            print("Email not found in database")
+            return JsonResponse({"status": "error", "message": "Email not found!"})
+    
+    print("Invalid request method")
+    return JsonResponse({"status": "error", "message": "Invalid request"})
+
+
+@csrf_exempt
+def verify_otp_parent(request):
+    """Verifies the OTP entered by the Parent."""
+    print("Received request for OTP verification")
+
+    if request.method == "POST":
+        email = request.POST.get("email", "").strip().lower()
+        otp_entered = request.POST.get("otp")
+        print(f"Verifying OTP for email: {email}, Entered OTP: {otp_entered}")
+
+        stored_otp = cache.get(email)
+        print(f"Stored OTP: {stored_otp}")
+
+        if stored_otp and stored_otp == otp_entered:
+            cache.delete(email)  # OTP is used, delete it
+            print("OTP verified and deleted from cache")
+            return JsonResponse({"status": "success", "message": "OTP verified!", "email": email})
+        else:
+            print("Invalid or expired OTP")
+            return JsonResponse({"status": "error", "message": "Invalid or expired OTP!"})
+
+    print("Invalid request method for OTP verification")
+    return JsonResponse({"status": "error", "message": "Invalid request"})
+
+
+@csrf_exempt
+def reset_password_parent(request):
+    """Handles password reset for the Parent."""
+    print("Received request for password reset")
+
+    if request.method == "POST":
+        email = request.POST.get("email", "").strip().lower()
+        new_password = request.POST.get("password")
+        print(f"Resetting password for email: {email}")
+
+        try:
+            subject_head = Parents.objects.get(email__iexact=email)
+            print(f"User found: {subject_head}")
+
+            subject_head.password = new_password  # Plaintext password
+            subject_head.save()
+
+            print("Password reset successful")
+            return JsonResponse({"status": "success", "message": "Password reset successful!"})
+        except Students.DoesNotExist:
+            print("User not found in database")
+            return JsonResponse({"status": "error", "message": "User not found!"})
+
+    print("Invalid request method for password reset")
+    return JsonResponse({"status": "error", "message": "Invalid request"})
     
 
 
@@ -5125,20 +5302,23 @@ def parent_profile(request):
         # Handle profile update
         parent_name = request.POST.get('parent_name')
         password = request.POST.get('password')
+        parent_email = request.POST.get('parent_email')
 
+        # Update name, password, and email directly
         with connection.cursor() as cursor:
             cursor.execute("""
                 UPDATE main_parents 
-                SET name = %s, password = %s 
+                SET name = %s, password = %s, email = %s 
                 WHERE id = %s
-            """, [parent_name, password, parent_id])
+            """, [parent_name, password, parent_email, parent_id])
             messages.success(request, "Profile updated successfully!")
+
         return redirect('parent_profile')
 
     # Fetch parent's profile details
     with connection.cursor() as cursor:
         cursor.execute("""
-            SELECT p.name AS parent_name, p.password, 
+            SELECT p.name AS parent_name, p.password, p.email AS parent_email, 
                    s.name AS student_name, s.roll_no, 
                    c.class_name, 
                    c.class_head AS teacher_name, c.email AS teacher_email
@@ -5158,13 +5338,15 @@ def parent_profile(request):
     context = {
         'parent_name': parent_data[0] or "",
         'password': parent_data[1] or "",
-        'student_name': parent_data[2] or "N/A",
-        'student_roll_no': parent_data[3] or "N/A",
-        'class_name': parent_data[4] or "N/A",
-        'teacher_name': parent_data[5] or "N/A",
-        'teacher_email': parent_data[6] or "N/A",
+        'parent_email': parent_data[2] or "",  # Add the email to the context
+        'student_name': parent_data[3] or "N/A",
+        'student_roll_no': parent_data[4] or "N/A",
+        'class_name': parent_data[5] or "N/A",
+        'teacher_name': parent_data[6] or "N/A",
+        'teacher_email': parent_data[7] or "N/A",
     }
     return render(request, 'parents/parent_profile.html', context)
+
 
 
 

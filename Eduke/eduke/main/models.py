@@ -49,6 +49,8 @@ class Parents(models.Model):
     password = models.CharField(max_length=255)
     name = models.CharField(max_length=255, null=True, blank=True)
     user = models.ForeignKey(Users, on_delete=models.CASCADE)
+    email = models.EmailField(null=True, blank=True)  # Nullable, no unique constraint
+
 
 class Attendance(models.Model):
     class StatusChoices(models.TextChoices):
