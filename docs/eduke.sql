@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3307
--- Generation Time: Apr 08, 2025 at 01:04 PM
+-- Generation Time: May 07, 2025 at 06:23 PM
 -- Server version: 9.1.0
 -- PHP Version: 8.2.12
 
@@ -375,7 +375,8 @@ INSERT INTO `django_migrations` (`id`, `app`, `name`, `applied`) VALUES
 (76, 'main', '0061_alter_studymaterials_subject', '2025-04-08 10:52:59.916519'),
 (77, 'main', '0062_alter_studymaterials_subject', '2025-04-08 10:53:16.313558'),
 (78, 'main', '0063_alter_announcements_class_obj', '2025-04-08 10:56:44.265775'),
-(79, 'main', '0064_alter_announcements_class_obj', '2025-04-08 10:57:01.724521');
+(79, 'main', '0064_alter_announcements_class_obj', '2025-04-08 10:57:01.724521'),
+(80, 'main', '0065_parents_email', '2025-05-02 09:57:52.011211');
 
 -- --------------------------------------------------------
 
@@ -402,8 +403,8 @@ INSERT INTO `django_session` (`session_key`, `session_data`, `expire_date`) VALU
 ('q2ry82ujy4xq0ubcekh7gjv27mmg3dkm', 'e30:1tbITs:iCq2XiI3lYkOS59VwFcfcfL3j2lOhn_KcFnK5fUGh6c', '2025-02-07 12:08:12.871277'),
 ('q663wz1plma1getb4y9gh3cxg8sa74yl', 'eyJ0ZWFjaGVyX2lkIjozfQ:1tbAhP:jrYiLIlKpvJjC8qWeaYEh0TyA7l_dr6t_ct2L3D6syg', '2025-02-07 03:49:39.794741'),
 ('s8bg8ppi7ld6bqexoeg4padni4qucqo6', 'eyJjbGFzc19oZWFkX2lkIjoxM30:1teAX7:4BgPYk55nnCIw1fMWIP3kj9QzQ7b9Ll-UfJUSznFPxg', '2025-02-15 10:15:25.661351'),
-('w4bgthl1spuuii9lzfue8u32chumlyi2', '.eJyrVkrOSSwujs9MUbIyNdBRyswrLsksKS3JzM8Di1miCuUl5qYqWSm5pCoEJJbmKHhCpVIV8tMUgpMzU_OSUxUS81IUQlKTM_Lyc_LTK5VqAdLJI1E:1u26hR:KIWCabFZ9TlHmCev36H5M-E9UXibi9WbVRlGizHUIaY', '2025-04-22 11:01:01.935600'),
-('xuiiy8d7orowqcmqn7wm0xlov7tttahu', 'e30:1tbZMi:Alo1mi87tOh2qUhsmwP8J5rkP9E8ZaqbzrNyep7wJrg', '2025-02-08 06:09:56.751798');
+('xuiiy8d7orowqcmqn7wm0xlov7tttahu', 'e30:1tbZMi:Alo1mi87tOh2qUhsmwP8J5rkP9E8ZaqbzrNyep7wJrg', '2025-02-08 06:09:56.751798'),
+('z7fwq5ib61u6tntl790dka93ja9drjlj', 'eyJzdHVkZW50X2lkIjo3Nn0:1u2OJL:Vc64LRRU02LtPHUqimnF0gEPzfzOzHEki-BhQWj-dcM', '2025-04-23 05:49:19.692869');
 
 -- --------------------------------------------------------
 
@@ -434,6 +435,17 @@ CREATE TABLE `main_attendance` (
   `hour` smallint UNSIGNED NOT NULL
 ) ;
 
+--
+-- Dumping data for table `main_attendance`
+--
+
+INSERT INTO `main_attendance` (`id`, `attendance_date`, `status`, `student_id`, `subject_id`, `created_at`, `hour`) VALUES
+(50, '2025-04-08', 'present', 76, 35, '2025-04-08 17:18:09.000000', 1),
+(51, '2025-04-08', 'present', 77, 35, '2025-04-08 17:18:09.000000', 1),
+(52, '2025-04-08', 'present', 78, 35, '2025-04-08 17:18:09.000000', 1),
+(53, '2025-04-08', 'present', 79, 35, '2025-04-08 17:18:09.000000', 1),
+(54, '2025-04-08', 'present', 80, 35, '2025-04-08 17:18:09.000000', 1);
+
 -- --------------------------------------------------------
 
 --
@@ -447,6 +459,16 @@ CREATE TABLE `main_chat` (
   `sender_id` bigint NOT NULL,
   `created_at` datetime(6) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `main_chat`
+--
+
+INSERT INTO `main_chat` (`id`, `message`, `receiver_id`, `sender_id`, `created_at`) VALUES
+(100, 'Hello, Albert!', 253, 248, '2025-04-08 17:04:17.000000'),
+(101, 'Hii Sir!', 248, 253, '2025-04-08 17:41:17.000000'),
+(102, 'hii', 248, 253, '2025-04-09 11:24:23.000000'),
+(103, 'HIii', 251, 253, '2025-04-09 11:24:38.000000');
 
 -- --------------------------------------------------------
 
@@ -463,6 +485,17 @@ CREATE TABLE `main_classes` (
   `password` varchar(255) NOT NULL,
   `user_id` bigint NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `main_classes`
+--
+
+INSERT INTO `main_classes` (`id`, `institution_id`, `class_head`, `class_name`, `email`, `password`, `user_id`) VALUES
+(53, 9, 'Jack John', 'MCA', 'jack.john@example.com', 'jjjj', 248),
+(54, 9, 'John Doe', 'MA HRM', 'john.doe@example.com', 'jjjj', 249),
+(55, 9, 'Jane Smith', 'BA English', 'jane.smith@example.com', 'jjjj', 250),
+(57, 9, 'Sain', 'BCA', 'bca@example.com', 'bbbb', 264),
+(58, 17, 'Jiju', 'BCA', 'jiju@example.com', 'jjjj', 268);
 
 -- --------------------------------------------------------
 
@@ -496,8 +529,21 @@ CREATE TABLE `main_parents` (
   `password` varchar(255) NOT NULL,
   `name` varchar(255) DEFAULT NULL,
   `student_id` bigint NOT NULL,
-  `user_id` bigint NOT NULL
+  `user_id` bigint NOT NULL,
+  `email` varchar(254) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `main_parents`
+--
+
+INSERT INTO `main_parents` (`id`, `password`, `name`, `student_id`, `user_id`, `email`) VALUES
+(72, 'joseph', 'Joseph', 76, 254, 'sainsaburajpnc@gmail.com'),
+(73, 'MCA-1002', NULL, 77, 256, NULL),
+(74, 'MCA-1003', NULL, 78, 258, NULL),
+(75, 'MCA-1004', NULL, 79, 260, NULL),
+(76, 'MCA-1005', NULL, 80, 262, NULL),
+(77, '1001', NULL, 81, 266, NULL);
 
 -- --------------------------------------------------------
 
@@ -560,6 +606,18 @@ CREATE TABLE `main_studentevaluation` (
   `subject_id` bigint NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+--
+-- Dumping data for table `main_studentevaluation`
+--
+
+INSERT INTO `main_studentevaluation` (`id`, `study_time_rating`, `sleep_time_rating`, `class_participation_rating`, `academic_activity_rating`, `attendance_percentage`, `marks_percentage`, `student_id`, `subject_id`) VALUES
+(40, 93, 67.5, 83, 93.5, 100, 95, 76, 35),
+(41, NULL, NULL, 83, 87.5, 100, 56, 77, 35),
+(42, NULL, NULL, 81, 86, 100, 42, 78, 35),
+(43, NULL, NULL, 81, 87, 100, 85, 79, 35),
+(44, NULL, NULL, 81, 90, 100, 93, 80, 35),
+(45, 93, 67.5, NULL, NULL, NULL, NULL, 76, 34);
+
 -- --------------------------------------------------------
 
 --
@@ -575,6 +633,18 @@ CREATE TABLE `main_students` (
   `user_id` bigint NOT NULL,
   `email` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `main_students`
+--
+
+INSERT INTO `main_students` (`id`, `roll_no`, `password`, `class_obj_id`, `name`, `user_id`, `email`) VALUES
+(76, 'MCA-1001', 'aaaa', 53, 'Albert Joseph', 253, 'albert@example.com'),
+(77, 'MCA-1002', 'bbbb', 53, 'Bob Ben', 255, 'bob@example.com'),
+(78, 'MCA-1003', 'cccc', 53, 'Charles John', 257, 'charles@example.com'),
+(79, 'MCA-1004', 'dddd', 53, 'Dennis Ken', 259, 'dennis@example.com'),
+(80, 'MCA-1005', 'eeee', 53, 'Emily Jack', 261, 'emily@example.com'),
+(81, 'BCA-1001', '1001', 57, 'Jack', 265, 'jack@example.com');
 
 -- --------------------------------------------------------
 
@@ -607,6 +677,15 @@ CREATE TABLE `main_subjects` (
   `user_id` bigint NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+--
+-- Dumping data for table `main_subjects`
+--
+
+INSERT INTO `main_subjects` (`id`, `class_obj_id`, `email`, `password`, `subject_head`, `subject_name`, `user_id`) VALUES
+(34, 53, 'kein@example.com', 'kkkk', 'Kein', 'Computer Networks', 251),
+(35, 53, 'emily@example.com', 'eeee', 'Emily', 'Operating System', 252),
+(36, 57, 'jack@example.com', 'jjjj', 'Jack', 'Operating System', 267);
+
 -- --------------------------------------------------------
 
 --
@@ -617,6 +696,32 @@ CREATE TABLE `main_users` (
   `id` bigint NOT NULL,
   `role` varchar(20) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `main_users`
+--
+
+INSERT INTO `main_users` (`id`, `role`) VALUES
+(248, 'class_head'),
+(249, 'class_head'),
+(250, 'class_head'),
+(251, 'subject_head'),
+(252, 'subject_head'),
+(253, 'student'),
+(254, 'parent'),
+(255, 'student'),
+(256, 'parent'),
+(257, 'student'),
+(258, 'parent'),
+(259, 'student'),
+(260, 'parent'),
+(261, 'student'),
+(262, 'parent'),
+(264, 'class_head'),
+(265, 'student'),
+(266, 'parent'),
+(267, 'subject_head'),
+(268, 'class_head');
 
 --
 -- Indexes for dumped tables
@@ -848,7 +953,7 @@ ALTER TABLE `django_content_type`
 -- AUTO_INCREMENT for table `django_migrations`
 --
 ALTER TABLE `django_migrations`
-  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=80;
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=81;
 
 --
 -- AUTO_INCREMENT for table `main_announcements`
@@ -866,13 +971,13 @@ ALTER TABLE `main_attendance`
 -- AUTO_INCREMENT for table `main_chat`
 --
 ALTER TABLE `main_chat`
-  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=100;
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=104;
 
 --
 -- AUTO_INCREMENT for table `main_classes`
 --
 ALTER TABLE `main_classes`
-  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=53;
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=59;
 
 --
 -- AUTO_INCREMENT for table `main_institution`
@@ -884,7 +989,7 @@ ALTER TABLE `main_institution`
 -- AUTO_INCREMENT for table `main_parents`
 --
 ALTER TABLE `main_parents`
-  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=72;
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=78;
 
 --
 -- AUTO_INCREMENT for table `main_quizquestions`
@@ -908,13 +1013,13 @@ ALTER TABLE `main_quizzes`
 -- AUTO_INCREMENT for table `main_studentevaluation`
 --
 ALTER TABLE `main_studentevaluation`
-  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=40;
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=46;
 
 --
 -- AUTO_INCREMENT for table `main_students`
 --
 ALTER TABLE `main_students`
-  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=76;
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=82;
 
 --
 -- AUTO_INCREMENT for table `main_studymaterials`
@@ -926,13 +1031,13 @@ ALTER TABLE `main_studymaterials`
 -- AUTO_INCREMENT for table `main_subjects`
 --
 ALTER TABLE `main_subjects`
-  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=34;
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=37;
 
 --
 -- AUTO_INCREMENT for table `main_users`
 --
 ALTER TABLE `main_users`
-  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=248;
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=269;
 
 --
 -- Constraints for dumped tables
